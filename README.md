@@ -10,8 +10,9 @@ Check [PATCHER.md](Docs/PATCHER.md)
 
 Check [BUILD.md](Docs/BUILD.md).
 
-<https://doc.qt.io/qtforpython/deployment-nuitka.html>
-<https://doc.qt.io/qtforpython/deployment-fbs.html>
+- <https://doc.qt.io/qtforpython/deployment-nuitka.html>
+- <https://doc.qt.io/qtforpython/deployment-fbs.html>
+- <https://nuitka.net/doc/user-manual.html#onefile-finding-files>
 
 ## KFTinyUZ2 Commands
 

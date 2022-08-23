@@ -1,6 +1,6 @@
 # Contains lists with vanilla packages
 
-vanillaAnimations: list[str] = ['22PatchMesh.ukx', 'Foundry_anim.ukx', 'FrightYard_SKM.ukx', 'Gear_anm.ukx', 'HillbillyHorror_anim.ukx',
+vanillaAnimations: tuple =      ('22PatchMesh.ukx', 'Foundry_anim.ukx', 'FrightYard_SKM.ukx', 'Gear_anm.ukx', 'HillbillyHorror_anim.ukx',
                                 'KFBoss.ukx', 'KFCharacterModels.ukx', 'KFCharactersB.ukx', 'KFMapObjects.ukx', 'KFSoldiers.ukx',
                                 'KFVehicleModels.ukx', 'KFWeaponModels.ukx', 'KF_Freaks2_Trip.ukx', 'KF_Freaks2_Trip_CIRCUS.ukx',
                                 'KF_Freaks2_Trip_Halloween.ukx', 'KF_Freaks2_Trip_Xmas.ukx', 'KF_Freaks_Trip.ukx',
@@ -15,9 +15,9 @@ vanillaAnimations: list[str] = ['22PatchMesh.ukx', 'Foundry_anim.ukx', 'FrightYa
                                 'KF_Wep_KSG_Shotgun.ukx', 'KF_Wep_M4.ukx', 'KF_Wep_M4M203.ukx', 'KF_Wep_M7A3.ukx', 'KF_Wep_M99_Sniper.ukx',
                                 'KF_Wep_MedicNade.ukx', 'KF_Wep_MK23.ukx', 'KF_Wep_MKB42.ukx', 'KF_Wep_MP5.ukx', 'KF_Wep_Revolver.ukx',
                                 'KF_Wep_TrenchGun.ukx', 'KF_Wep_Vlad9000.ukx', 'KF_Wep_ZEDGun.ukx', 'KF_Wp3rdCAMO_Trip.ukx',
-                                'KF_Wp3rdGold_Trip.ukx', 'Patch2Anims.ukx', 'Pier_anim.ukx', 'Yahct_Anim.ukx']
+                                'KF_Wp3rdGold_Trip.ukx', 'Patch2Anims.ukx', 'Pier_anim.ukx', 'Yahct_Anim.ukx')
 
-vanillaSounds: list[str]     = ['AbusementParkSND.uax', 'AmbOutside.uax', 'Amb_Animals.uax', 'Amb_Constructions.uax',
+vanillaSounds: tuple =         ('AbusementParkSND.uax', 'AmbOutside.uax', 'Amb_Animals.uax', 'Amb_Constructions.uax',
                                 'Amb_ConstructionsTwo.uax', 'Amb_Destruction.uax', 'Amb_Destruction2.uax', 'Amb_Vehicles.uax',
                                 'Amb_Weather.uax', 'Amb_Weather01.uax', 'Amb_Weather02.uax', 'Artillery.uax', 'FreakCircus_Snd_two.uax',
                                 'Frightyard_snd.uax', 'Hellride_Snd.uax', 'HillbillyHorrorSND.uax', 'Inf_Player.uax', 'Inf_Weapons.uax',
@@ -51,9 +51,9 @@ vanillaSounds: list[str]     = ['AbusementParkSND.uax', 'AmbOutside.uax', 'Amb_A
                                 'KF_SP_LongmusketSnd.uax', 'KF_SP_OrcaSnd.uax', 'KF_SP_ThompsonSnd.uax', 'KF_SP_ZEDThrowerSnd.uax',
                                 'KF_Swansong_SND.uax', 'KF_Trader.uax', 'KF_Transit_Dialog_SND.uax', 'KF_XbowSnd.uax', 'KF_ZEDGunSnd.uax',
                                 'Miscsounds.uax', 'PatchSounds.uax', 'ProjectileSounds.uax', 'ROMenuSounds.uax', 'Steamland_SND.uax',
-                                'SummerBoardwalkDialogue.uax', 'Vehicle_Engines.uax', 'Vehicle_Weapons.uax', 'WoodBreakFX.uax']
+                                'SummerBoardwalkDialogue.uax', 'Vehicle_Engines.uax', 'Vehicle_Weapons.uax', 'WoodBreakFX.uax')
 
-vanillaStaticMeshes: list[str] = ['22Patch.usx', 'Asylum_SM.usx', 'BaksanValleySM.usx', 'CivilVehicles_SM.usx', 'DebugObjects.usx',
+vanillaStaticMeshes: tuple =     ('22Patch.usx', 'Asylum_SM.usx', 'BaksanValleySM.usx', 'CivilVehicles_SM.usx', 'DebugObjects.usx',
                                   'DepartedStatics.usx', 'DetailSM.usx', 'EffectsSM.usx', 'FallenHerosSM.usx', 'Filthscross_SM.usx',
                                   'Foundry_SM.usx', 'FreakCircus_SM_One.usx', 'FreakCircus_SM_Two.usx', 'FrightYard2_SM.usx', 'FrightYard_SM.usx',
                                   'FurnitureSM.usx', 'GKStaticMeshes.usx', 'HedgehogSM.usx', 'Hellride_SM.usx', 'HemispheresSM.usx',
@@ -70,15 +70,15 @@ vanillaStaticMeshes: list[str] = ['22Patch.usx', 'Asylum_SM.usx', 'BaksanValleyS
                                   'MrsFoster_DLC_Gore_SM.usx', 'MrsFoster_Steampunk_DLC_Gore_SM.usx', 'NewPatchSM.usx', 'OfficeStatics.usx',
                                   'PatchStatics.usx', 'Pier_SM.usx', 'Potato_S.usx', 'Props_ObjectiveMode.usx', 'ReligiousSM.usx', 'RuralSM.usx',
                                   'SpecialEffectsSM.usx', 'Stronghold_SM.usx', 'VegetationSM.usx', 'VegetationSM_Two.usx', 'Waterworks_SM.usx',
-                                  'Workshop_SM.usx', 'WyreStatics.usx', 'ZED_FX_SM.usx', 'ZED_Pieces.usx']
+                                  'Workshop_SM.usx', 'WyreStatics.usx', 'ZED_FX_SM.usx', 'ZED_Pieces.usx')
 
-vanillaSystem: list[str] = ['Core.u', 'Editor.u', 'Engine.u', 'Fire.u', 'FrightScript.u', 'GamePlay.u', 'GoodKarma.u',
+vanillaSystem: tuple =     ('Core.u', 'Editor.u', 'Engine.u', 'Fire.u', 'FrightScript.u', 'GamePlay.u', 'GoodKarma.u',
                             'GUI2K4.u', 'IpDrv.u', 'KFChar.u', 'KFGui.u', 'KFMod.u', 'KFMutators.u', 'KFStoryGame.u',
                             'KFStoryUI.u', 'Old2k4.u', 'ROEffects.u', 'ROEngine.u', 'ROInterface.u', 'SideshowScript.u',
                             'UnrealEd.u', 'UnrealGame.u', 'UTV2004c.u', 'UTV2004s.u', 'UWeb.u', 'XAdmin.u', 'XGame.u', 'XInterface.u',
-                            'XVoting.u', 'XWebAdmin.u']
+                            'XVoting.u', 'XWebAdmin.u')
 
-vanillaTextures: list[str] = ['20Credits.utx', '22CharTex.utx', '25Tex.utx', '2K4Menus.utx', 'Architecture_T.utx', 'Architecture_T2.utx',
+vanillaTextures: tuple =     ('20Credits.utx', '22CharTex.utx', '25Tex.utx', '2K4Menus.utx', 'Architecture_T.utx', 'Architecture_T2.utx',
                               'Architecture_T3.utx', 'Asylum_T.utx', 'Baksanvalley_T.utx', 'CellExample.utx', 'Characters_tex.utx',
                               'CivilVehicles_SMT.utx', 'Crash_T.utx', 'Danzig_T.utx', 'Danzig_T2.utx', 'Danzig_T3.utx', 'DepartedTextures.utx',
                               'DetailSMT.utx', 'Detailtextures_T.utx', 'DreamTex.utx', 'Effects_Tex.utx', 'Effects_Tex_Steampunk.utx',
@@ -115,4 +115,4 @@ vanillaTextures: list[str] = ['20Credits.utx', '22CharTex.utx', '25Tex.utx', '2K
                               'Placeholder_T.utx', 'Potato_T.utx', 'ReligiousSMT.utx', 'Ringmaster_Lockheart_T.utx', 'ROFonts.utx', 'ROFontsTwo.utx',
                               'ROFonts_Rus.utx', 'ROInterfaceArt.utx', 'RSDLC_1stP.utx', 'RSDLC_3rdP.utx', 'RuralSMT.utx', 'ScopeShaders.utx',
                               'SpecialEffects.utx', 'Stronghold_T.utx', 'VegetationSMT.utx', 'VegetationSMT_two.utx', 'Waterworks_T.utx',
-                              'Weapons1st_tex.utx', 'Workshop_T.utx', 'WyreTex.utx']
+                              'Weapons1st_tex.utx', 'Workshop_T.utx', 'WyreTex.utx')
