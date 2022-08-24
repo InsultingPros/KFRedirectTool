@@ -9,18 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from VanillaPackages import vanillaSystem
-from importlib.resources import files, as_file
 
-source = files('resources').joinpath('KFTinyUZ2.exe')
-with as_file(source) as eml:
-    print('done!')
-
-print(vanillaSystem)
-
-# with resources.path(resources, 'file.txt') as p:
-#   with open(p) as file:
-#     print('done!')
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
