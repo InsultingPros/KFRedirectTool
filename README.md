@@ -13,6 +13,7 @@ Check [BUILD.md](Docs/BUILD.md).
 - <https://doc.qt.io/qtforpython/deployment-nuitka.html>
 - <https://doc.qt.io/qtforpython/deployment-fbs.html>
 - <https://nuitka.net/doc/user-manual.html#onefile-finding-files>
+- <https://doc.qt.io/qt-6/designer-using-a-ui-file.html>
 
 ## KFTinyUZ2 Commands
 
