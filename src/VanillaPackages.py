@@ -116,3 +116,6 @@ vanillaTextures: tuple =     ('20Credits.utx', '22CharTex.utx', '25Tex.utx', '2K
                               'ROFonts_Rus.utx', 'ROInterfaceArt.utx', 'RSDLC_1stP.utx', 'RSDLC_3rdP.utx', 'RuralSMT.utx', 'ScopeShaders.utx',
                               'SpecialEffects.utx', 'Stronghold_T.utx', 'VegetationSMT.utx', 'VegetationSMT_two.utx', 'Waterworks_T.utx',
                               'Weapons1st_tex.utx', 'Workshop_T.utx', 'WyreTex.utx')
+
+# we are going to use this tuple most of the time
+disallowedPackages: tuple = (vanillaAnimations, vanillaSounds, vanillaStaticMeshes, vanillaSystem, vanillaTextures)
