@@ -4,14 +4,15 @@
 
 # various
 from sys import argv
-from os import chdir
+from os import chdir, walk
 from subprocess import run
+from pathlib import Path
 # QT
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QLabel
 from PyQt5.QtCore import QSettings
 from PyQt5 import uic
 # packages
-# from VanillaPackages import disallowedPackages
+from VanillaPackages import unrealExtensions, disallowedPackages
 import importlib.resources # import files, as_file
 
 
@@ -25,39 +26,28 @@ class MainWindow(QMainWindow):
         # KFTinyUZ2 = files('resources').joinpath('KFTinyUZ2.exe')
         self.KFTinyUZ2 = importlib.resources.path('resources', 'KFTinyUZ2.exe')
         self.myDir = self.KFTinyUZ2.parent
+        self.filesToCompress: list[str] = []
 
+        self.gameFolder = ''
+        self.outputFolder = ''
+        self.settings = QSettings('KFRedirectTool', 'RedirectTool')
+        self.readSettings()
+
+        self.refreshFilesToCompress()
+        print(self.filesToCompress)
         # set working directory
         chdir(self.myDir)
 
-        # enable drag-n-drop support
-        self.setAcceptDrops(True)
         # output field
-        # at first check the last used output folder
-        self.settings = QSettings('KFRedirectTool', 'RedirectTool')
-        if self.settings.contains('OutputDirectory'):
-            self.output = self.settings.value('OutputDirectory')
-            print(self.settings.value('OutputDirectory'))
-        else:
-            print('Output folder not found it config file')
-
-        self.updateLabels(self.label_3, self.output)
-        self.pushButton_5.clicked.connect(lambda: self.select_Output())
-        self.toolButton_3.clicked.connect(lambda: self.toolbtn_Output())
-
-        # tabs
-        self.tabWidget.tabBarClicked.connect(lambda: self.clckTab())
+        self.updateLabels(self.label_3, self.outputFolder)
+        self.pushButton_5.clicked.connect(lambda: self.selectFolders())
 
         # tab #1
         # self.listWidget.setDragDropMode()
         self.pushButton.clicked.connect(lambda: self.compress())
         self.pushButton_2.clicked.connect(lambda: self.deCompress())
-        self.toolButton.clicked.connect(lambda: self.toolbtn_Output())
-
-        # tab #2
-        self.toolButton_5.clicked.connect(lambda: self.toolbtn_Output())
-        self.pushButton_9.clicked.connect(lambda: self.select_GameFolder())
         self.pushButton_3.clicked.connect(lambda: self.open_Output())
-        self.pushButton_4.clicked.connect(lambda: self.compressAll())
+        self.pushButton_4.clicked.connect(lambda: self.clearSelection())
 
         # menu bar
         self.menuHelp.triggered.connect(lambda: self.clckHelp())
@@ -76,11 +66,12 @@ class MainWindow(QMainWindow):
 
     def execKFTinyUZ2(self, mode: int, pathToFile) -> None:
         """start to compress / decompress files with KFTinyUZ2"""
+        print('execKFTinyUZ2 called!')
         match mode:
             case 'compress':
-                run(('KFTinyUZ2.exe', '-c', '-o', self.output, pathToFile))
+                run(('KFTinyUZ2.exe', '-c', '-o', self.outputFolder, pathToFile))
             case 'decompress':
-                run(('KFTinyUZ2.exe', '-d', '-o', self.output, pathToFile))
+                run(('KFTinyUZ2.exe', '-d', '-o', self.outputFolder, pathToFile))
             case 'info':
                 run(('KFTinyUZ2.exe', '-s', pathToFile))
             case 'test':
@@ -99,6 +90,24 @@ class MainWindow(QMainWindow):
 
         # print(disallowedPackages)
 
+    def readSettings(self) -> None:
+        """read and reuse last used output and game directories"""
+        if self.settings.contains('OutputDirectory'):
+            self.outputFolder = self.settings.value('OutputDirectory')
+            print(self.settings.value('OutputDirectory'))
+
+    def refreshFilesToCompress(self):
+        """Is this a real game folder or you porn folder?"""
+        self.filesToCompress.clear()
+        if not Path(self.gameFolder).exists:
+            print('This is not a valid path!')
+            pass
+        else:
+            for root, dirs, files in walk(self.gameFolder):
+                for file in files:
+                    if file.endswith(unrealExtensions) and file.lower() not in disallowedPackages:
+                        self.filesToCompress.append(file)
+
     def updateLabels(self, QLabel: QLabel, content: str) -> None:
         """comment"""
         print('labels updated')
@@ -112,25 +121,13 @@ class MainWindow(QMainWindow):
         """comment"""
         print('open output clicked!')
 
-    def compressAll(self) -> None:
-        """comment"""
-        print('compress all clicked!')
-
-    def select_Output(self) -> None:
-        """comment"""
+    def selectFolders(self) -> None:
+        """Select Output and Game folders."""
         print('output clicked!')
-        self.output = QFileDialog.getExistingDirectory(self, "Select Directory")
-        self.settings.setValue('OutputDirectory', self.output)
-        self.updateLabels(self.label_3, self.output)
-        print(f'settings file saved with {self.output}')
-
-    def select_GameFolder(self):
-        """comment"""
-        print('game folder clicked!')
-
-    def toolbtn_Output(self):
-        """comment"""
-        print('toolbtn clicked!')
+        self.outputFolder = QFileDialog.getExistingDirectory(self, "Select Directory")
+        self.settings.setValue('OutputDirectory', self.outputFolder)
+        self.updateLabels(self.label_3, self.outputFolder)
+        print(f'settings file saved with {self.outputFolder}')
 
     def compress(self):
         """comment"""
@@ -140,9 +137,9 @@ class MainWindow(QMainWindow):
         """comment"""
         print('decompress clicked!')
 
-    def clckTab(self):
+    def clearSelection(self):
         """comment"""
-        print('tabs clicked!')
+        print('clearSelection clicked!')
 
 
 if __name__ == "__main__":
