@@ -28,7 +28,6 @@ class MainWindow(QMainWindow):
         self.myDir = self.KFTinyUZ2.parent
         self.filesToCompress: list[str] = []
 
-        self.gameFolder = ''
         self.outputFolder = ''
         self.settings = QSettings('KFRedirectTool', 'RedirectTool')
         self.readSettings()
@@ -97,16 +96,16 @@ class MainWindow(QMainWindow):
             print(self.settings.value('OutputDirectory'))
 
     def refreshFilesToCompress(self):
-        """Is this a real game folder or you porn folder?"""
+        """Is this a real game folder with UE packages?"""
         self.filesToCompress.clear()
-        if not Path(self.gameFolder).exists:
+        if not Path(self.outputFolder).exists:
             print('This is not a valid path!')
             pass
         else:
-            for root, dirs, files in walk(self.gameFolder):
+            for root, dirs, files in walk(self.outputFolder):
                 for file in files:
                     if file.endswith(unrealExtensions) and file.lower() not in disallowedPackages:
-                        self.filesToCompress.append(file)
+                        self.filesToCompress.append(Path(root) / file)
 
     def updateLabels(self, QLabel: QLabel, content: str) -> None:
         """comment"""
@@ -132,6 +131,8 @@ class MainWindow(QMainWindow):
     def compress(self):
         """comment"""
         print('compress clicked!')
+        for x in self.filesToCompress:
+            self.execKFTinyUZ2('compress', x)
 
     def deCompress(self):
         """comment"""
@@ -142,10 +143,14 @@ class MainWindow(QMainWindow):
         print('clearSelection clicked!')
 
 
-if __name__ == "__main__":
+def main() -> None:
     app = QApplication(argv)
 
     window = MainWindow()
     window.show()
 
     app.exec_()
+
+
+if __name__ == "__main__":
+    main()
