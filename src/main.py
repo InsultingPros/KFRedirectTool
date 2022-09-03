@@ -1,6 +1,7 @@
 # The only KF 1 Redirect tool you want to use
 # Author        : NikC-
 # Home Repo     : https://github.com/InsultingPros/KFRedirectTool
+# License       : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 # various
 from sys import argv
