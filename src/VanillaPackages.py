@@ -526,6 +526,49 @@ vanillaTextures: list[str] = [
     "wyretex.utx",
 ]
 
+vanillaMaps: list[str] = [
+    "entry.rom",
+    "kf-abusementpark.rom",
+    "kf-aperture.rom",
+    "kf-bedlam.rom",
+    "kf-biohazard.rom",
+    "kf-bioticslab.rom",
+    "kf-clandestine.rom",
+    "kf-crash.rom",
+    "kf-departed.rom",
+    "kf-evilsantaslair.rom",
+    "kf-farm.rom",
+    "kf-filthscross.rom",
+    "kf-forgotten.rom",
+    "kf-foundry.rom",
+    "kf-frightyard.rom",
+    "kf-hell.rom",
+    "kf-hellride.rom",
+    "kf-hillbillyhorror.rom",
+    "kf-hospitalhorrors.rom",
+    "kf-icebreaker.rom",
+    "kf-icecave.rom",
+    "kf-manor.rom",
+    "kf-menu.rom",
+    "kf-moonbase.rom",
+    "kf-mountainpass.rom",
+    "kf-offices.rom",
+    "kf-sirensbelch.rom",
+    "kf-steamland.rom",
+    "kf-stronghold.rom",
+    "kf-suburbia.rom",
+    "kf-thrillschills.rom",
+    "kf-transit.rom",
+    "kf-waterworks.rom",
+    "kf-westlondon.rom",
+    "kf-wyre.rom",
+    "kfintro.rom",
+    "kfo-frightyard.rom",
+    "kfo-steamland.rom",
+    "kfo-transit.rom",
+    "nointro.rom",
+]
+
 # we are going to use this tuple most of the time
 disallowedPackages: list[str] = (
     vanillaAnimations
@@ -533,6 +576,7 @@ disallowedPackages: list[str] = (
     + vanillaStaticMeshes
     + vanillaSystem
     + vanillaTextures
+    + vanillaMaps
 )
 
-unrealExtensions: tuple = (".u", ".utx", ".usx", ".ukx", ".uax")
+unrealExtensions: tuple = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom")

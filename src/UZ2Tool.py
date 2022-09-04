@@ -23,7 +23,7 @@ CHUNKSIZE_COMPRESSED: int = 33096
 CHUNKSIZE_UNCOMPRESSED: int = 32768
 
 
-class renameMeLater:
+class UZ2API:
     """Shiny shiny tool!"""
 
     def __init__(self) -> None:
@@ -32,7 +32,7 @@ class renameMeLater:
         self.chunks: int
 
     # reference : https://wiki.beyondunreal.com/UZ2_file#File_format
-    def compress(self, inputfile, outputfile) -> bool:
+    def compress(self, inputfile: str, outputDir: str = None) -> bool:
         """Compress passed Unreal Packages"""
 
         if not Path(inputfile).exists():
@@ -67,7 +67,7 @@ class renameMeLater:
                 self.chunks += 1
             LOG.info(f"inputFile hash is: {sha2.hexdigest()}")
 
-        # start to write the output
+        outputfile = self.get_output_dest(inputfile, outputDir, idx=1)
         with open(outputfile, "wb") as y:
             for z in chunk_list:
                 # compress the chunk
@@ -92,7 +92,7 @@ class renameMeLater:
 
         return True
 
-    def uncompress(self, inputfile, outputfile) -> bool:
+    def uncompress(self, inputfile: str, outputDir: str = None) -> bool:
 
         if not Path(inputfile).exists():
             LOG.error(r"Package doesn't exist!")
@@ -122,7 +122,7 @@ class renameMeLater:
                 try:
                     yyy = decompress(data, bufsize=uncmprChunkSize)
                 except (error):
-                    LOG.error("Something is wrong with input file!")
+                    LOG.error("Compressed file is invalid.")
                     return False
                 if not bCorrectFile:
                     if KFFILETAG in yyy[:4]:
@@ -134,6 +134,7 @@ class renameMeLater:
             self.filesize_original = f.tell()
             LOG.info(f"inputFile hash is: {sha4.hexdigest()}")
 
+        outputfile = self.get_output_dest(inputfile, outputDir, idx=10)
         with open(outputfile, "wb") as f:
             for z in chunk_list:
                 f.write(z)
@@ -142,6 +143,41 @@ class renameMeLater:
             LOG.info(f"outputFile hash is: {sha5.hexdigest()}")
 
         return True
+
+    def get_output_dest(
+        self, inptDir: str, otptDir: str = None, idx: int = None
+    ) -> str:
+        match idx:
+            # compression
+            case 1:
+                if not otptDir:
+                    x = Path(inptDir).with_suffix(Path(inptDir).suffix + ".uz2")
+                    return str(x)
+
+                ext = Path(inptDir).suffix
+                name = Path(inptDir).stem
+                potptDir = Path(otptDir)
+
+                if not potptDir.exists():
+                    potptDir.mkdir()
+
+                y = potptDir / name
+                return str(y.with_suffix(ext + ".uz2"))
+
+            # uncompression
+            case _:
+                if not otptDir:
+                    z = str(Path(inptDir)).removesuffix(".uz2")
+                    return z
+
+                name = Path(inptDir).stem
+                potptDir = Path(otptDir)
+
+                if not potptDir.exists():
+                    potptDir.mkdir()
+
+                y = potptDir / name
+                return str(y)
 
 
 def main():
@@ -152,10 +188,12 @@ def main():
     uz2_File = r"D:\Games\KF Dedicated Server\Redirect\KF2HUD.u.uz2"
     # test file for testing decompression
     u_Test_File = r"D:\Games\KF Dedicated Server\System\KF2HUDTEST.u"
+    # test output
+    OUTPUT = r"D:\Games\KF Dedicated Server\TESTTTTT"
 
-    r = renameMeLater()
-    LOG.info(f"Compressing {u_File} to {uz2_File}!")
-    if r.compress(u_File, uz2_File):
+    r = UZ2API()
+    LOG.info(f"Compressing: {u_File}, output: {OUTPUT}!")
+    if r.compress(u_File, OUTPUT):
         LOG.info(f"{r.chunks=}")
         LOG.info(f"inputFile size is: {r.filesize_original} bytes")
         LOG.info(f"outputFile size is: {r.filesize_modified} bytes")
@@ -165,8 +203,8 @@ def main():
         )
 
     print("\n")
-    LOG.info(f"DeCompressing {uz2_File} to {u_Test_File}!")
-    if r.uncompress(uz2_File, u_Test_File):
+    LOG.info(f"DeCompressing: {uz2_File}, output: {OUTPUT}!")
+    if r.uncompress(uz2_File, OUTPUT):
         LOG.info(f"inputFile size is: {r.filesize_original} bytes")
         LOG.info(f"outputFile size is: {r.filesize_modified} bytes")
         LOG.info(
