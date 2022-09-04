@@ -4,7 +4,7 @@
 # License       : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 from hashlib import sha1
-from zlib import compress, decompress
+from zlib import compress, decompress, error
 from pathlib import Path
 from os import path
 from sys import argv
@@ -71,7 +71,11 @@ class renameMeLater:
         with open(outputfile, "wb") as y:
             for z in chunk_list:
                 # compress the chunk
-                res = compress(z, 7)
+                try:
+                    res = compress(z, 7)
+                except (error):
+                    LOG.error("Something went wrong while trying to compress the data!")
+                    return False
                 # get compressed data length in 4 bytes
                 resl = len(res).to_bytes(4, byteorder="little")
                 # get chunks length in 4 bytes
@@ -101,6 +105,7 @@ class renameMeLater:
         chunk_list: list[bytes] = []
         sha4, sha5 = sha1(), sha1()
 
+        bCorrectFile: bool = False
         with open(inputfile, "rb") as f:
             while cmprChunkSizeB := f.read(4):
                 sha4.update(cmprChunkSizeB)
@@ -114,8 +119,17 @@ class renameMeLater:
 
                 data = f.read(cmprChunkSize)
                 sha4.update(data)
-                yyy = decompress(data, bufsize=uncmprChunkSize)
-                # TODO check first 4 bytes from first chunk
+                try:
+                    yyy = decompress(data, bufsize=uncmprChunkSize)
+                except (error):
+                    LOG.error("Something is wrong with input file!")
+                    return False
+                if not bCorrectFile:
+                    if KFFILETAG in yyy[:4]:
+                        bCorrectFile = True
+                    else:
+                        LOG.error("This is not an Unreal Package!")
+                        return False
                 chunk_list.append(yyy)
             self.filesize_original = f.tell()
             LOG.info(f"inputFile hash is: {sha4.hexdigest()}")
@@ -126,12 +140,6 @@ class renameMeLater:
                 sha5.update(z)
             self.filesize_modified = f.tell()
             LOG.info(f"outputFile hash is: {sha5.hexdigest()}")
-
-            # read first 4 bytes and check the file typ
-            # filetag = f.read(4)
-            # if not KFFILETAG in filetag:
-            #     LOG.info('This is not an Unreal Package!')
-            #     return False
 
         return True
 
