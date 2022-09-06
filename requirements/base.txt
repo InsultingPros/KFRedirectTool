@@ -1,7 +1,0 @@
-# compiler
-Nuitka=1.0.5
-zstandard=0.18.0
-ordered-set=4.1.0
-# qt
-PySide6=6.3.1
-PyQt5=5.15.7
