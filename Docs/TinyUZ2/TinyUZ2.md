@@ -1,16 +1,16 @@
 # TinyUZ2 Info
 
-> [Go back to README](../README.md)
+> [Go back to README](../../README.md)
 
 > Yeah we are using our python based script instead of this app, but this was used originally and all the info can be useful for someone.
 
-To use this for KF 1, we need to patche [`TinyUZ2.exe`](https://forums.epicgames.com/unreal-tournament-2003-2004/user-maps-mods/full-releases/93640-tinyuz2)'s unreal package [header](https://wiki.beyondunreal.com/Unreal_package#Package_header) `9E2A83C1` (`2653586369`) to KF1 compatible `9E2A83C2` (`2653586370`).
+To use this for KF 1, we need to patch [`TinyUZ2.exe`](https://forums.epicgames.com/unreal-tournament-2003-2004/user-maps-mods/full-releases/93640-tinyuz2)'s unreal package [header](https://wiki.beyondunreal.com/Unreal_package#Package_header) `9E2A83C1` (`2653586369`) to KF1 compatible `9E2A83C2` (`2653586370`).
 
-- Install [Python 3.10.x](https://www.python.org/).
+- Install [Python >3.10.x](https://www.python.org/)
 - Put [script](TinyUZ2Patcher.py) in the same directory with `TinyUZ2.exe`.
 - Run and follow the instructions.
   - You can apply the patch / revert the patch / exit the script.
-- If you plan to share it - do not forget to refer the [license](LICENSE-TinyUZ2).
+- If you plan to share the patched executable - check the [TinyUZ2 license](LICENSE-TinyUZ2).
 - Enjoy.
 
 ## TinyUZ2 Commands
