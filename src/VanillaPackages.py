@@ -579,4 +579,4 @@ disallowedPackages: list[str] = (
     + vanillaMaps
 )
 
-unrealExtensions: tuple = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom")
+unrealExtensions: tuple[str, ...] = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom")
