@@ -3,6 +3,7 @@
 # Home Repo     : https://github.com/InsultingPros/KFRedirectTool
 # License       : https://www.gnu.org/licenses/gpl-3.0.en.html
 
+from enum import Enum
 from hashlib import sha1
 from zlib import compress, decompress, error
 from pathlib import Path
@@ -10,6 +11,10 @@ from os import path
 from sys import argv
 import argparse
 import logging
+
+class STATE(Enum):
+    COMPRESSION = 0
+    DECOMPRESSION = 1
 
 # reference: https://github.com/Vel-San/gitlab-migrator/blob/main/scripts/migrate.py#L20-L24
 __appname__ = path.splitext(path.basename(argv[0]))[0]
@@ -68,7 +73,7 @@ class UZ2API:
                 self.chunks += 1
             LOG.info(f"inputFile hash is: {sha2.hexdigest()}")
 
-        outputfile = self.get_output_dest(inputfile, outputDir, idx=1)
+        outputfile = self.get_output_dest(inputfile, STATE.COMPRESSION, outputDir)
         with open(outputfile, "wb") as y:
             for z in chunk_list:
                 # compress the chunk
@@ -135,7 +140,7 @@ class UZ2API:
             self.filesize_original = f.tell()
             LOG.info(f"inputFile hash is: {sha4.hexdigest()}")
 
-        outputfile = self.get_output_dest(inputfile, outputDir, idx=10)
+        outputfile = self.get_output_dest(inputfile, STATE.DECOMPRESSION, outputDir)
         with open(outputfile, "wb") as f:
             for z in chunk_list:
                 f.write(z)
@@ -146,11 +151,11 @@ class UZ2API:
         return True
 
     def get_output_dest(
-        self, inptDir: str, otptDir: str = None, idx: int = None
+        self, inptDir: str, state: STATE, otptDir: str = None
     ) -> str:
-        match idx:
+        match state:
             # compression
-            case 1:
+            case STATE.COMPRESSION:
                 if not otptDir:
                     x = Path(inptDir).with_suffix(Path(inptDir).suffix + ".uz2")
                     return str(x)
@@ -166,7 +171,7 @@ class UZ2API:
                 return str(y.with_suffix(ext + ".uz2"))
 
             # uncompression
-            case _:
+            case STATE.DECOMPRESSION:
                 if not otptDir:
                     z = str(Path(inptDir)).removesuffix(".uz2")
                     return z
