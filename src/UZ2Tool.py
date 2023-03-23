@@ -5,6 +5,7 @@
 
 from enum import Enum
 from hashlib import sha1
+import sys
 from zlib import compress, decompress, error
 from pathlib import Path
 from os import path
@@ -186,7 +187,7 @@ class UZ2API:
                 return str(y)
 
 
-def main() -> None:
+def main(input_args: list[str]) -> None:
     parser = argparse.ArgumentParser()
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -194,7 +195,7 @@ def main() -> None:
     group.add_argument("--d", "--decompress", type=str)
 
     parser.add_argument("--o",'--output', type=str, required=False)
-    args: argparse.Namespace = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args(input_args)
 
     uz2_api = UZ2API()
     try:
@@ -208,4 +209,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
