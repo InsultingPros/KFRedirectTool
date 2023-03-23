@@ -8,6 +8,7 @@ from zlib import compress, decompress, error
 from pathlib import Path
 from os import path
 from sys import argv
+import argparse
 import logging
 
 # reference: https://github.com/Vel-San/gitlab-migrator/blob/main/scripts/migrate.py#L20-L24
@@ -51,7 +52,7 @@ class UZ2API:
         with open(inputfile, "rb") as f:
             # read first 4 bytes and check the file type
             file_tag = f.read(4)
-            if not KFFILETAG in file_tag:
+            if KFFILETAG not in file_tag:
                 LOG.error("This is not an Unreal Package!")
                 return False
 
@@ -180,37 +181,25 @@ class UZ2API:
                 return str(y)
 
 
-def main():
-    # testing area, we don't need this in final version
-    # SHA1 = 3baedd1ff630afc35dc3bf3a97e5aa0a0c3bcc6f
-    u_File = r"D:\Games\KF Dedicated Server\System\KF2HUD.u"
-    # SHA1 = e08a34fa758336a8350371ff0641d683feea7393
-    uz2_File = r"D:\Games\KF Dedicated Server\Redirect\KF2HUD.u.uz2"
-    # test file for testing decompression
-    u_Test_File = r"D:\Games\KF Dedicated Server\System\KF2HUDTEST.u"
-    # test output
-    OUTPUT = r"D:\Games\KF Dedicated Server\TESTTTTT"
+def main() -> None:
+    parser = argparse.ArgumentParser()
 
-    r = UZ2API()
-    LOG.info(f"Compressing: {u_File}, output: {OUTPUT}!")
-    if r.compress(u_File, OUTPUT):
-        LOG.info(f"{r.chunks=}")
-        LOG.info(f"inputFile size is: {r.filesize_original} bytes")
-        LOG.info(f"outputFile size is: {r.filesize_modified} bytes")
-        LOG.info(
-            "Compression ratio: "
-            + "{:.1%}".format(r.filesize_modified / r.filesize_original)
-        )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--c", "--compress", type=str)
+    group.add_argument("--d", "--decompress", type=str)
 
-    print("\n")
-    LOG.info(f"DeCompressing: {uz2_File}, output: {OUTPUT}!")
-    if r.uncompress(uz2_File, OUTPUT):
-        LOG.info(f"inputFile size is: {r.filesize_original} bytes")
-        LOG.info(f"outputFile size is: {r.filesize_modified} bytes")
-        LOG.info(
-            "Compression ratio: "
-            + "{:.1%}".format(r.filesize_original / r.filesize_modified)
-        )
+    parser.add_argument("--o",'--output', type=str, required=False)
+    args: argparse.Namespace = parser.parse_args()
+
+    uz2_api = UZ2API()
+    try:
+        if args.c:
+            uz2_api.compress(args.c, args.o)
+        if args.d:
+            uz2_api.uncompress(args.d, args.o)
+
+    except Exception as e:
+        print("Error while trying to execute: ", str(e))
 
 
 if __name__ == "__main__":
