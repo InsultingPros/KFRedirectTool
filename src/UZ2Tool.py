@@ -38,7 +38,7 @@ class UZ2API:
         self.chunks: int
 
     # reference : https://wiki.beyondunreal.com/UZ2_file#File_format
-    def compress(self, inputfile: str, outputDir: str = None) -> bool:
+    def compress(self, inputfile: str, outputDir: str = "") -> bool:
         """Compress passed Unreal Packages"""
 
         if not Path(inputfile).exists():
@@ -98,7 +98,7 @@ class UZ2API:
 
         return True
 
-    def uncompress(self, inputfile: str, outputDir: str = None) -> bool:
+    def uncompress(self, inputfile: str, outputDir: str = "") -> bool:
 
         if not Path(inputfile).exists():
             LOG.error(r"Package doesn't exist!")
@@ -151,7 +151,7 @@ class UZ2API:
         return True
 
     def get_output_dest(
-        self, inptDir: str, state: STATE, otptDir: str = None
+        self, inptDir: str, state: STATE, otptDir: str = ""
     ) -> str:
         match state:
             # compression
