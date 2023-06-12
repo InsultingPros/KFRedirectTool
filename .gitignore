@@ -16,3 +16,4 @@ Cargo.lock
 *.pdb
 
 # src/Test/*
+kfuz2_tkinter_gui/src/*.exe
