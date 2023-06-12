@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "kfuz2",
+    "kfuz2_gui",
+    "tests",
+]
+
+[profile.release]
+lto = true
+codegen-units = 1

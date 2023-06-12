@@ -1,0 +1,32 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package]
+name = "kfuz2"
+version = "1.0.0"
+edition = "2021"
+authors = ["Shtoyan", "dkanus"]
+description = "placeholder"
+repository = "https://github.com/InsultingPros/KFRedirectTool"
+license = "GPL-3.0-or-later"
+readme = "README.md"
+categories = ["command-line-utilities"]
+include = ["/src", "/tests", "/Docs"]
+
+[[bin]]
+name = "kfuz2"
+path = "src/main.rs"
+
+[lib]
+name = "kfuz2_lib"
+path = "src/lib.rs"
+
+[dependencies]
+# flate2 = "1.0.25"
+flate2 = { version = "1.0.26", features = [
+    "zlib-ng-compat",
+], default-features = false }
+sha1_smol = "1.0.0"
+gumdrop = "0.8.1"
+byteorder = "1.4.3"
+
+[dev-dependencies]
+serial_test = "2.0.0"
