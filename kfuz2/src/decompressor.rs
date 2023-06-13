@@ -5,6 +5,7 @@
 use crate::{
     constants,
     utility::{self, print_verbose_information},
+    InputArguments,
 };
 
 use byteorder::ByteOrder;
@@ -20,14 +21,14 @@ use std::{
 pub fn decompress(
     mut input_stream: BufReader<File>,
     mut output_stream: BufWriter<File>,
-    verbose_mode: bool,
+    input_arguments: &InputArguments,
 ) -> io::Result<()> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::CHUNK_SIZE_COMPRESSED];
     let mut first_4byte_header: Vec<u8> = vec![0u8; 4];
     let mut second_4byte_header: Vec<u8> = vec![0u8; 4];
     let mut decoder: ZlibDecoder<Vec<u8>> = ZlibDecoder::new(Vec::new());
-    let mut hasher: Option<Sha1> = utility::get_sha1_hasher(verbose_mode);
+    let mut hasher: Option<Sha1> = utility::get_sha1_hasher(input_arguments.verbose);
 
     // benchmark start
     let start: Instant = Instant::now();
@@ -75,7 +76,7 @@ pub fn decompress(
     // benchmark end
     println!("File decompressed in {:?}", start.elapsed());
     // additional info
-    if verbose_mode {
+    if input_arguments.verbose {
         print_verbose_information(&input_stream, &output_stream, &hasher, chunk_count)?;
     }
 

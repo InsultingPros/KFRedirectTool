@@ -13,7 +13,6 @@ use kfuz2_lib::{compressor, decompressor, State};
 use std::{
     fs::File,
     io::{self, BufReader, BufWriter},
-    path::PathBuf,
     process::ExitCode,
 };
 
@@ -41,14 +40,15 @@ fn main() -> ExitCode {
         std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE));
     });
 
-    process_file(
-        &input_path,
-        &output_path,
-        &app_state,
-        arguments.verbose,
-        arguments.nocheck,
-    )
-    .unwrap_or_else(|e| {
+    let input_arguments: &kfuz2_lib::InputArguments<'_> = &kfuz2_lib::InputArguments {
+        input_path: &input_path,
+        output_path: &output_path,
+        app_state: &app_state,
+        verbose: arguments.verbose,
+        nocheck: arguments.nocheck,
+    };
+
+    process_file(input_arguments).unwrap_or_else(|e| {
         eprintln!("Terminated with error: {}", e);
         std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE));
     });
@@ -57,27 +57,19 @@ fn main() -> ExitCode {
 }
 
 /// Do stuff with files depending on application states
-fn process_file(
-    input_file_path: &PathBuf,
-    output_file_path: &PathBuf,
-    state: &State,
-    verbose_mode: bool,
-    disable_kf_checks: bool,
-) -> io::Result<()> {
-    let input_stream: BufReader<File> =
-        open_input_ue_stream(input_file_path, state, disable_kf_checks)?;
-    let output_stream: BufWriter<File> = open_output_ue_stream(output_file_path)?;
+fn process_file(input_arguments: &kfuz2_lib::InputArguments) -> io::Result<()> {
+    let input_stream: BufReader<File> = open_input_ue_stream(input_arguments)?;
+    let output_stream: BufWriter<File> = open_output_ue_stream(input_arguments)?;
 
-    let processing_function: fn(BufReader<File>, BufWriter<File>, bool) -> Result<(), io::Error> =
-        match state {
-            State::Decompression => decompressor::decompress,
-            State::Compression => compressor::compress,
-        };
+    let processing_function = match input_arguments.app_state {
+        State::Decompression => decompressor::decompress,
+        State::Compression => compressor::compress,
+    };
 
     let result: Result<(), io::Error> =
-        processing_function(input_stream, output_stream, verbose_mode);
+        processing_function(input_stream, output_stream, input_arguments);
     if result.is_err() {
-        std::fs::remove_file(output_file_path)?;
+        std::fs::remove_file(input_arguments.output_path)?;
     }
     result
 }

@@ -13,3 +13,11 @@ pub enum State {
     Compression,
     Decompression,
 }
+
+pub struct InputArguments<'a> {
+    pub input_path: &'a std::path::PathBuf,
+    pub output_path: &'a std::path::PathBuf,
+    pub app_state: &'a State,
+    pub verbose: bool,
+    pub nocheck: bool,
+}

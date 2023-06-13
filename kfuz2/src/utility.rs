@@ -2,7 +2,7 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-use crate::{constants, State};
+use crate::{constants, InputArguments, State};
 use sha1_smol::Sha1;
 use std::ffi::OsStr;
 use std::fs::{self, File};
@@ -10,29 +10,28 @@ use std::io::{self, prelude::*, BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 
 /// Spawn a `BufWriter` for input.
-pub fn open_output_ue_stream(input_file: &PathBuf) -> io::Result<BufWriter<File>> {
-    Ok(BufWriter::new(File::create(input_file)?))
+pub fn open_output_ue_stream(input_arguments: &InputArguments) -> io::Result<BufWriter<File>> {
+    Ok(BufWriter::new(File::create(input_arguments.output_path)?))
 }
 
 /// Validate and spawn a `BufReader` for input.
-pub fn open_input_ue_stream(
-    input_file: &PathBuf,
-    state: &State,
-    disable_kf_checks: bool,
-) -> io::Result<BufReader<File>> {
-    let mut reader: BufReader<File> = BufReader::new(File::open(input_file)?);
+pub fn open_input_ue_stream(input_arguments: &InputArguments) -> io::Result<BufReader<File>> {
+    let mut reader: BufReader<File> = BufReader::new(File::open(input_arguments.input_path)?);
 
     // skip any signature checks
-    if disable_kf_checks {
+    if input_arguments.nocheck {
         Ok(reader)
     } else {
-        match state {
+        match input_arguments.app_state {
             State::Decompression => Ok(reader),
             State::Compression => match file_header_is_correct(&mut reader) {
                 Ok(_) => Ok(reader),
                 Err(_) => Err(std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
-                    format!("{input_file:#?}: file IS NOT a kf package!"),
+                    format!(
+                        "{:#?}: file IS NOT a kf package!",
+                        input_arguments.input_path
+                    ),
                 )),
             },
         }

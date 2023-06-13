@@ -5,6 +5,7 @@
 use crate::{
     constants,
     utility::{self, print_verbose_information},
+    InputArguments,
 };
 use flate2::{write::ZlibEncoder, Compression};
 use sha1_smol::Sha1;
@@ -18,12 +19,12 @@ use std::{
 pub fn compress(
     mut input_stream: BufReader<File>,
     mut output_stream: BufWriter<File>,
-    verbose_mode: bool,
+    input_arguments: &InputArguments,
 ) -> io::Result<()> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::CHUNK_SIZE_UNCOMPRESSED];
     let mut encoder: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::default());
-    let mut hasher: Option<Sha1> = utility::get_sha1_hasher(verbose_mode);
+    let mut hasher: Option<Sha1> = utility::get_sha1_hasher(input_arguments.verbose);
 
     // benchmark start
     let start: Instant = Instant::now();
@@ -46,7 +47,7 @@ pub fn compress(
     // benchmark end
     println!("File compressed in {:?}", start.elapsed());
     // additional info
-    if verbose_mode {
+    if input_arguments.verbose {
         print_verbose_information(&input_stream, &output_stream, &hasher, chunk_count)?;
     }
 
