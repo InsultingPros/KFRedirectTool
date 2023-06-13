@@ -14,6 +14,8 @@ First step: install [Python >3.10.x](https://www.python.org/) and download the l
 - Check the progress in the console.
 - Done!
 
+Supported operating systems: Windows, Linux, MacOS.
+
 ## Credits
 
 - [dkanus](https://github.com/dkanus) - for helping me with dumb questions.
