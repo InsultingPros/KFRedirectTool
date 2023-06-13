@@ -1,7 +1,7 @@
-# # tkinter powered app for UZ2Tool
-# # Author        : NikC-
-# # Home Repo     : https://github.com/InsultingPros/KFRedirectTool
-# # License       : https://www.gnu.org/licenses/gpl-3.0.en.html
+# tkinter powered app for kfuz2
+# Author        : Shtoyan
+# Home Repo     : https://github.com/InsultingPros/KFRedirectTool
+# License       : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 import os
 import tkinter as tk
