@@ -17,3 +17,4 @@ Cargo.lock
 
 # src/Test/*
 kfuz2_tkinter_gui/src/*.exe
+.DS_Store
