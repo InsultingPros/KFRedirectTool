@@ -1,10 +1,10 @@
-[release]: https://github.com/InsultingPros/KFRedirectTool/releases
-
 # Tkinter GUI for `KFUZ2`
+
+[![GitHub all releases](https://img.shields.io/github/downloads/InsultingPros/KFRedirectTool/total)](https://github.com/InsultingPros/KFRedirectTool/releases)
 
 ![IMG](../Docs/media/tkinter.PNG)
 
-First step: install [Python >3.10.x](https://www.python.org/) and download the latest [release].
+First step: install [Python >3.10.x](https://www.python.org/) and download the latest release.
 
 - Run the **tkinterGUI.py**.
 - Choose `Input` folder, which contains game packages.
