@@ -1,0 +1,74 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish-rust:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+      id-token: write
+      issues: write
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: kfuz2
+            asset_name: kfuz2-linux-amd64
+          - os: windows-latest
+            artifact_name: kfuz2.exe
+            asset_name: kfuz2-windows-amd64
+          - os: macos-latest
+            artifact_name: kfuz2
+            asset_name: kfuz2-macos-amd64
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Restore Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-home_and_target-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Publish Rust Binary
+      uses: taiki-e/upload-rust-binary-action@v1
+      with:
+        # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.# Note that glob pattern is not supported yet.
+        bin: kfuz2
+        # (optional) On which platform to distribute the .tar.gz file.# [default value: unix]# [possible values: all, unix, windows, none]
+        tar: unix
+        zip: windows
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-gui:
+    needs: publish-rust
+    name: Publish gui files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Upload tkinter gui to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: kfuz2_tkinter_gui/src/tkinterGUI.py
+          asset_name: tkinterGUI.py
+          tag: ${{ github.ref }}
+          # overwrite: true

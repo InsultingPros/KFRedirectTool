@@ -1,0 +1,53 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  start:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    name: Start `cargo build / test` on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Restore `mtime`
+        uses: chetan/git-restore-mtime-action@v2
+
+      # When rustup is updated, it tries to replace its binary, which on Windows is somehow locked.
+      # This can result in the CI failure, see: https://github.com/rust-lang/rustup/issues/3029
+      - name: Disable `rustup` update
+        run: |
+          rustup set auto-self-update disable
+          rustup toolchain install stable --profile minimal
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-home_and_target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build Release
+        run: cargo build --release
+
+      - name: Run CLI Tests
+        run: cargo test
