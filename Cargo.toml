@@ -1,9 +1,5 @@
 [workspace]
-members = [
-    "kfuz2",
-    "kfuz2_gui",
-    "tests",
-]
+members = ["kfuz2", "tests"]
 
 [profile.release]
 lto = true
