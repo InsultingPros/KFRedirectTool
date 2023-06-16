@@ -7,16 +7,16 @@ use sha1_smol::Sha1;
 use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::{self, prelude::*, BufReader, BufWriter};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Spawn a `BufWriter` for input.
 pub fn open_output_ue_stream(input_arguments: &InputArguments) -> io::Result<BufWriter<File>> {
-    Ok(BufWriter::new(File::create(input_arguments.output_path)?))
+    Ok(BufWriter::new(File::create(&input_arguments.output_path)?))
 }
 
 /// Validate and spawn a `BufReader` for input.
 pub fn open_input_ue_stream(input_arguments: &InputArguments) -> io::Result<BufReader<File>> {
-    let mut reader: BufReader<File> = BufReader::new(File::open(input_arguments.input_path)?);
+    let mut reader: BufReader<File> = BufReader::new(File::open(&input_arguments.input_path)?);
 
     // skip any signature checks
     if input_arguments.nocheck {
@@ -39,23 +39,23 @@ pub fn open_input_ue_stream(input_arguments: &InputArguments) -> io::Result<BufR
 }
 
 /// Validate input-output files and return `PathBuf` array
-pub fn get_input_output_paths(
-    input_file: &String,
-    output_file: &Option<String>,
-    state: &State,
-    disable_kf_checks: bool,
-) -> Result<[PathBuf; 2], std::io::Error> {
+pub fn validate_input_output_paths(
+    input_arguments: &mut InputArguments,
+) -> Result<(), std::io::Error> {
     // check if input is a file
-    let input_file_path: &Path = Path::new(input_file);
+    let input_file_path: &Path = Path::new(&input_arguments.input_file_str);
     if !input_file_path.is_file() {
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
-            format!("Input file `{}` doesn't exist!", input_file),
+            format!(
+                "Input file `{}` doesn't exist!",
+                &input_arguments.input_file_str
+            ),
         ));
     }
 
     // validate file extension
-    validate_input_file_extension(input_file_path, state)?;
+    validate_input_file_extension(input_file_path, input_arguments.app_state)?;
 
     // get the file name for further use
     let file_name: &str = input_file_path
@@ -63,20 +63,23 @@ pub fn get_input_output_paths(
         .and_then(OsStr::to_str)
         .expect("Could not extract string from OsStr!");
 
-    if !disable_kf_checks {
+    if !input_arguments.nocheck {
         // omit vanilla files
         if constants::KF_DEFAULT_PACKAGES.contains(&file_name.to_lowercase().as_str()) {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("{} is a default game package. Skipping it!", input_file),
+                format!(
+                    "{} is a default game package. Skipping it!",
+                    input_arguments.input_file_str
+                ),
             ));
         }
     }
 
     // 1. try to extract output path
-    let output_file_path: &Path = match output_file {
+    let output_file_path: &Path = match &input_arguments.output_file_str {
         Some(result) => {
-            let dir_path = Path::new(result);
+            let dir_path: &Path = Path::new(result);
             if !dir_path.exists() {
                 match fs::create_dir(dir_path) {
                     Ok(_) => (),
@@ -84,7 +87,7 @@ pub fn get_input_output_paths(
                         println!("{}", e);
                         return Err(std::io::Error::new(
                             std::io::ErrorKind::Other,
-                            format!("Input file `{}` doesn't exist!", input_file),
+                            format!("Can not create output directory `{}`!", result),
                         ));
                     }
                 }
@@ -95,15 +98,15 @@ pub fn get_input_output_paths(
     };
 
     // get a proper name for output file
-    let output_file_name: String = match state {
+    let output_file_name: String = match input_arguments.app_state {
         State::Decompression => file_name.replace(".uz2", ""),
         State::Compression => format!("{}.uz2", file_name),
     };
 
-    Ok([
-        input_file_path.to_path_buf(),
-        output_file_path.join(output_file_name),
-    ])
+    input_arguments.input_path = input_file_path.to_path_buf();
+    input_arguments.output_path = output_file_path.join(output_file_name);
+
+    Ok(())
 }
 
 pub fn validate_input_file_extension(

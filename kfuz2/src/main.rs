@@ -7,9 +7,12 @@
 #![allow(clippy::uninlined_format_args, clippy::cargo_common_metadata)]
 #![crate_name = "kfuz2"]
 use kfuz2_lib::constants::exit_codes;
-use kfuz2_lib::utility::{get_input_output_paths, open_input_ue_stream, open_output_ue_stream};
+use kfuz2_lib::utility::{
+    open_input_ue_stream, open_output_ue_stream, validate_input_output_paths,
+};
 use kfuz2_lib::{compressor, decompressor, State};
 
+use std::path::PathBuf;
 use std::{
     fs::File,
     io::{self, BufReader, BufWriter},
@@ -20,33 +23,31 @@ fn main() -> ExitCode {
     // on failure returns 2
     let arguments: kfuz2_lib::cli::Options = gumdrop::Options::parse_args_default_or_exit();
 
-    let (input_file_str, app_state) = if let Some(decompress_argument) = arguments.decompress {
-        (decompress_argument, State::Decompression)
+    let mut input_arguments: &mut kfuz2_lib::InputArguments<'_> = &mut kfuz2_lib::InputArguments {
+        input_path: PathBuf::new(),
+        output_path: PathBuf::new(),
+        app_state: &State::Compression,
+        verbose: arguments.verbose,
+        nocheck: arguments.nocheck,
+        input_file_str: String::new(),
+        output_file_str: Some(String::new()),
+    };
+
+    if let Some(decompress_argument) = arguments.decompress {
+        input_arguments.input_file_str = decompress_argument;
+        input_arguments.app_state = &State::Decompression;
     } else {
         if arguments.free.is_empty() {
             return ExitCode::from(exit_codes::ERROR_BAD_ARGUMENTS);
         }
-        (arguments.free[0].to_string(), State::Compression)
+        input_arguments.input_file_str = arguments.free[0].to_string();
     };
 
-    let [input_path, output_path] = get_input_output_paths(
-        &input_file_str,
-        &arguments.output,
-        &app_state,
-        arguments.nocheck,
-    )
-    .unwrap_or_else(|e| {
+    input_arguments.output_file_str = arguments.output;
+    validate_input_output_paths(input_arguments).unwrap_or_else(|e| {
         eprintln!("Terminated with error: {}", e);
         std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE));
     });
-
-    let input_arguments: &kfuz2_lib::InputArguments<'_> = &kfuz2_lib::InputArguments {
-        input_path: &input_path,
-        output_path: &output_path,
-        app_state: &app_state,
-        verbose: arguments.verbose,
-        nocheck: arguments.nocheck,
-    };
 
     process_file(input_arguments).unwrap_or_else(|e| {
         eprintln!("Terminated with error: {}", e);
@@ -69,7 +70,7 @@ fn process_file(input_arguments: &kfuz2_lib::InputArguments) -> io::Result<()> {
     let result: Result<(), io::Error> =
         processing_function(input_stream, output_stream, input_arguments);
     if result.is_err() {
-        std::fs::remove_file(input_arguments.output_path)?;
+        std::fs::remove_file(&input_arguments.output_path)?;
     }
     result
 }

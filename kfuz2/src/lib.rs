@@ -15,8 +15,12 @@ pub enum State {
 }
 
 pub struct InputArguments<'a> {
-    pub input_path: &'a std::path::PathBuf,
-    pub output_path: &'a std::path::PathBuf,
+    pub input_path: std::path::PathBuf,
+    pub output_path: std::path::PathBuf,
+    /// Input file argument, only used to cast `input_path`
+    pub input_file_str: String,
+    /// Output directory argument, only used to cast `output_path`
+    pub output_file_str: Option<String>,
     pub app_state: &'a State,
     pub verbose: bool,
     pub nocheck: bool,
