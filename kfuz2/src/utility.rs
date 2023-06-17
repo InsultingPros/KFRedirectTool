@@ -48,7 +48,7 @@ pub fn validate_input_output_paths(input_arguments: &mut InputArguments) -> Resu
     }
 
     // validate file extension
-    validate_input_file_extension(input_file_path, input_arguments.app_state)?;
+    validate_input_file_extension(input_file_path, input_arguments)?;
 
     // get the file name for further use
     let file_name: &str = input_file_path
@@ -93,11 +93,13 @@ pub fn validate_input_output_paths(input_arguments: &mut InputArguments) -> Resu
     Ok(())
 }
 
-pub fn validate_input_file_extension(input_file_path: &Path, state: &State) -> Result<()> {
+pub fn validate_input_file_extension(
+    input_file_path: &Path,
+    input_arguments: &InputArguments,
+) -> Result<()> {
     let input_is_uz2: bool = file_has_compressed_extension(input_file_path);
-    let input_is_kf_package: bool = file_has_kf_extension(input_file_path);
 
-    match state {
+    match input_arguments.app_state {
         State::Compression => {
             // can't compress compressed files
             if input_is_uz2 {
@@ -107,26 +109,31 @@ pub fn validate_input_file_extension(input_file_path: &Path, state: &State) -> R
                 ),)
             }
 
-            // can't compress files with invalid extensions
-            if !input_is_kf_package {
-                bail!(format!(
-                    "Input file `{:?}` doesn't have valid extension. Can not compress it!",
-                    input_file_path
-                ))
-            } else {
+            if input_arguments.nocheck {
                 Ok(())
+            } else {
+                let input_is_kf_package: bool = file_has_kf_extension(input_file_path);
+                // can't compress files with invalid extensions
+                if !input_is_kf_package {
+                    bail!(format!(
+                        "Input file `{:?}` doesn't have valid extension. Can not compress it!",
+                        input_file_path
+                    ))
+                } else {
+                    Ok(())
+                }
             }
         }
 
+        // decompress only `uz2` files
         State::Decompression => {
-            // can't decompress not compressed files
-            if !input_is_uz2 {
+            if input_is_uz2 {
+                Ok(())
+            } else {
                 bail!(format!(
                     "Input file `{:?}` doesn't have 'uz2' extension. Can not decompress it!",
                     input_file_path
                 ))
-            } else {
-                Ok(())
             }
         }
     }
