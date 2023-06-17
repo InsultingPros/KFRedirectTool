@@ -17,7 +17,7 @@ from time import time
 
 # This gui is mainly built for KF1, so you might want to manually
 # add file extensions of your UE2-based game
-KF_EXTENSIONS: tuple[str, ...] = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom")
+KF_EXTENSIONS: tuple[str, ...] = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom", ".uz2")
 
 
 class App(tk.Tk):
