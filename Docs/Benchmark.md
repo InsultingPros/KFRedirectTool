@@ -18,4 +18,4 @@ Compression, time checked with python script.
 
 | kfuz2 | [uzLib] | [tinyuz2] |
 |---|---|---|
-| 136s | 224.4s | 222.8s |
+| 122.3s | 224.4s | 222.8s |
