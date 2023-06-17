@@ -123,7 +123,7 @@ class App(tk.Tk):
             onvalue=1,
             offvalue=0,
             state="disabled",
-            command=self.switch_cb_quiet,
+            command=lambda: self.switch_cb_quiet(cb_verbose),
         )
         cb_var2 = IntVar()
         cb_var2.set(1)
@@ -134,7 +134,7 @@ class App(tk.Tk):
             onvalue=1,
             offvalue=0,
             state="disabled",
-            command=self.switch_cb_verbose,
+            command=lambda: self.switch_cb_verbose(cb_quiet),
         )
 
         # Grid
@@ -151,11 +151,19 @@ class App(tk.Tk):
         cb_quiet.grid(column=1, row=3, columnspan=2, sticky=tk.NS, padx=5, pady=5)
         cb_verbose.grid(column=2, row=3, columnspan=2, sticky=tk.NS, padx=5, pady=5)
 
-    def switch_cb_quiet(self) -> None:
+    def switch_cb_quiet(self, cb_verbose: ttk.Checkbutton) -> None:
         self.quiet = not self.quiet
+        if self.quiet:
+            cb_verbose.config(state="disabled")
+        else:
+            cb_verbose.config(state="enabled")
 
-    def switch_cb_verbose(self) -> None:
+    def switch_cb_verbose(self, cb_quiet: ttk.Checkbutton) -> None:
         self.verbose = not self.verbose
+        if self.verbose:
+            cb_quiet.config(state="disabled")
+        else:
+            cb_quiet.config(state="enabled")
 
     def add_Menus(self) -> None:
         menu = tk.Menu(self)
