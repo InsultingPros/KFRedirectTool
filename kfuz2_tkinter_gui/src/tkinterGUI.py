@@ -5,7 +5,7 @@
 
 import os
 import tkinter as tk
-from tkinter import ttk
+from tkinter import IntVar, ttk
 from tkinter import filedialog
 from typing import Any
 from webbrowser import open_new
@@ -32,7 +32,7 @@ class App(tk.Tk):
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
             exit()
-        self.Disable_Checks: bool = True
+        self.quiet_execution: bool = True
         self.File_List: list[str] = []
         self.Input: str = ""
         self.Output: str = ""
@@ -59,6 +59,8 @@ class App(tk.Tk):
                 return "kfuz2"
 
     def run_cli(self, args: list[Any]) -> None:
+        if self.quiet_execution:
+            args.insert(0, "-q")
         if self.Output != "":
             args.insert(0, self.Output)
             args.insert(0, "-o")
@@ -77,7 +79,9 @@ class App(tk.Tk):
             self,
             width=15,
             text="Select Input",
-            command=lambda: self.select_input(lb_input, btn_Compress, btn_Uncompress),
+            command=lambda: self.select_input(
+                lb_input, btn_Compress, btn_Uncompress, cb_quiet
+            ),
         )
         btn_select_output = ttk.Button(
             self,
@@ -106,6 +110,18 @@ class App(tk.Tk):
             state="disabled",
             command=self.start_Uncompression,
         )
+        # a little hack to uncheck this checkbox by default
+        cb_var = IntVar()
+        cb_var.set(1)
+        cb_quiet = ttk.Checkbutton(
+            self,
+            text="Quiet execution.",
+            variable=cb_var,
+            onvalue=1,
+            offvalue=0,
+            state="disabled",
+            command=self.set_cb_quiet_status,
+        )
 
         # Grid
         # Labels
@@ -117,9 +133,11 @@ class App(tk.Tk):
         btn_open_output.grid(column=0, row=3, sticky=tk.S, padx=5, pady=5)
         btn_Compress.grid(column=2, row=5, sticky=tk.S, padx=5, pady=5)
         btn_Uncompress.grid(column=3, row=5, sticky=tk.S, padx=5, pady=5)
+        # Check box
+        cb_quiet.grid(column=1, row=3, columnspan=2, sticky=tk.NS, padx=5, pady=5)
 
-    def set_check_status(self) -> None:
-        self.Disable_Checks = not self.Disable_Checks
+    def set_cb_quiet_status(self) -> None:
+        self.quiet_execution = not self.quiet_execution
 
     def add_Menus(self) -> None:
         menu = tk.Menu(self)
@@ -163,10 +181,7 @@ class App(tk.Tk):
         else:
             for root, _, files in walk(self.Input):
                 for file in files:
-                    if not self.Disable_Checks:
-                        if file.endswith(KF_EXTENSIONS):
-                            self.File_List.append(str(Path(root) / file))
-                    else:
+                    if file.endswith(KF_EXTENSIONS):
                         self.File_List.append(str(Path(root) / file))
 
     def select_output(self, label: ttk.Label, button: ttk.Button) -> str:
@@ -182,6 +197,7 @@ class App(tk.Tk):
         label: ttk.Label,
         btn_compress: ttk.Button,
         btn_uncompress: ttk.Button,
+        cb_quiet: ttk.Checkbutton,
     ) -> str:
         self.Input = filedialog.askdirectory(title="Select Input Folder")
         if self.Input != "":
@@ -189,6 +205,8 @@ class App(tk.Tk):
             label.config(background="lightgreen")
             btn_compress.config(state="enabled")
             btn_uncompress.config(state="enabled")
+            cb_quiet.config(state="enabled")
+            cb_quiet.invoke()
         return self.Input
 
     def open_output(self) -> None:
