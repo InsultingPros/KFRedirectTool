@@ -2,7 +2,13 @@
 
 [![GitHub all releases](https://img.shields.io/github/downloads/InsultingPros/KFRedirectTool/total)](https://github.com/InsultingPros/KFRedirectTool/releases)
 
+This GUI app is meant to be used with Killing Floor 1.
+
+*N.B.* If you want to use it with any other UE2-based games, you need to do few small modifications - disable KF1 specific checks and edit default extension list.
+
 ![IMG](../Docs/media/tkinter.PNG)
+
+## Usage
 
 First step: install [Python >3.10.x](https://www.python.org/) and download the latest release.
 
