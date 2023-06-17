@@ -65,10 +65,7 @@ class App(tk.Tk):
 
         args.insert(0, self.cli)
 
-        try:
-            run(args, check=True)
-        except Exception as e:
-            print(str(e))
+        run(args)
 
     def create_widgets(self) -> None:
         lb_input = ttk.Label(self, text="Input: ...", width=80, background="lightgrey")
