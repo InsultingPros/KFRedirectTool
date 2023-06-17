@@ -32,7 +32,8 @@ class App(tk.Tk):
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
             exit()
-        self.quiet_execution: bool = True
+        self.verbose: bool = True
+        self.quiet: bool = True
         self.File_List: list[str] = []
         self.Input: str = ""
         self.Output: str = ""
@@ -59,7 +60,9 @@ class App(tk.Tk):
                 return "kfuz2"
 
     def run_cli(self, args: list[Any]) -> None:
-        if self.quiet_execution:
+        if self.verbose:
+            args.insert(0, "-v")
+        if self.quiet:
             args.insert(0, "-q")
         if self.Output != "":
             args.insert(0, self.Output)
@@ -80,7 +83,7 @@ class App(tk.Tk):
             width=15,
             text="Select Input",
             command=lambda: self.select_input(
-                lb_input, btn_Compress, btn_Uncompress, cb_quiet
+                lb_input, btn_Compress, btn_Uncompress, cb_quiet, cb_verbose
             ),
         )
         btn_select_output = ttk.Button(
@@ -120,7 +123,18 @@ class App(tk.Tk):
             onvalue=1,
             offvalue=0,
             state="disabled",
-            command=self.set_cb_quiet_status,
+            command=self.switch_cb_quiet,
+        )
+        cb_var2 = IntVar()
+        cb_var2.set(1)
+        cb_verbose = ttk.Checkbutton(
+            self,
+            text="Be verbose.",
+            variable=cb_var2,
+            onvalue=1,
+            offvalue=0,
+            state="disabled",
+            command=self.switch_cb_verbose,
         )
 
         # Grid
@@ -133,11 +147,15 @@ class App(tk.Tk):
         btn_open_output.grid(column=0, row=3, sticky=tk.S, padx=5, pady=5)
         btn_Compress.grid(column=2, row=5, sticky=tk.S, padx=5, pady=5)
         btn_Uncompress.grid(column=3, row=5, sticky=tk.S, padx=5, pady=5)
-        # Check box
+        # Check boxes
         cb_quiet.grid(column=1, row=3, columnspan=2, sticky=tk.NS, padx=5, pady=5)
+        cb_verbose.grid(column=2, row=3, columnspan=2, sticky=tk.NS, padx=5, pady=5)
 
-    def set_cb_quiet_status(self) -> None:
-        self.quiet_execution = not self.quiet_execution
+    def switch_cb_quiet(self) -> None:
+        self.quiet = not self.quiet
+
+    def switch_cb_verbose(self) -> None:
+        self.verbose = not self.verbose
 
     def add_Menus(self) -> None:
         menu = tk.Menu(self)
@@ -198,6 +216,7 @@ class App(tk.Tk):
         btn_compress: ttk.Button,
         btn_uncompress: ttk.Button,
         cb_quiet: ttk.Checkbutton,
+        cb_verbose: ttk.Checkbutton,
     ) -> str:
         self.Input = filedialog.askdirectory(title="Select Input Folder")
         if self.Input != "":
@@ -207,6 +226,8 @@ class App(tk.Tk):
             btn_uncompress.config(state="enabled")
             cb_quiet.config(state="enabled")
             cb_quiet.invoke()
+            cb_verbose.config(state="enabled")
+            cb_verbose.invoke()
         return self.Input
 
     def open_output(self) -> None:
