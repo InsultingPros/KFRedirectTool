@@ -32,6 +32,7 @@ fn main() -> ExitCode {
         nocheck: arguments.nocheck,
         input_file_str: String::new(),
         output_file_str: Some(String::new()),
+        quiet: arguments.quiet,
     };
 
     if let Some(decompress_argument) = arguments.decompress {
@@ -46,12 +47,16 @@ fn main() -> ExitCode {
 
     input_arguments.output_file_str = arguments.output;
     validate_input_output_paths(input_arguments).unwrap_or_else(|e| {
-        eprintln!("Terminated with error: {}", e);
+        if !input_arguments.quiet {
+            eprintln!("Terminated with error: {}", e);
+        }
         std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE));
     });
 
     process_file(input_arguments).unwrap_or_else(|e| {
-        eprintln!("Terminated with error: {}", e);
+        if !input_arguments.quiet {
+            eprintln!("Terminated with error: {}", e);
+        }
         std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE));
     });
 

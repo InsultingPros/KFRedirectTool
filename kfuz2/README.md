@@ -14,6 +14,7 @@ KF UZ2 is yet another compressor-decompressor designed for UE2-based games, offe
 The following optional arguments can be used:
 
 - `-h` / `--help`: Prints the help message.
+- `-q` / `--quiet`: Displays no information during file processing.
 - `-v` / `--verbose`: Displays additional information during file processing.
 - `-o` / `--output <directory>`: Specifies the target directory. If not provided, processed files will be saved in the same directory as the input file.
 - `-d` / `--decompress <file>`: Decompresses the input file. If not used, the input file will be compressed.

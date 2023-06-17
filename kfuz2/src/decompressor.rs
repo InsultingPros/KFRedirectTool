@@ -70,9 +70,11 @@ pub fn decompress(
         chunk_count += 1;
     }
 
-    println!("File decompressed in {:?}", start.elapsed());
-    if input_arguments.verbose {
-        print_verbose_information(&input_stream, &output_stream, &hasher, chunk_count)?;
+    if !input_arguments.quiet {
+        println!("File decompressed in {:?}", start.elapsed());
+        if input_arguments.verbose {
+            print_verbose_information(&input_stream, &output_stream, &hasher, chunk_count)?;
+        }
     }
 
     Ok(())

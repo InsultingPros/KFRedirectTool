@@ -3,7 +3,7 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::{constants, InputArguments, State};
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use sha1_smol::Sha1;
 use std::ffi::OsStr;
 use std::fs::{self, File};
@@ -66,18 +66,15 @@ pub fn validate_input_output_paths(input_arguments: &mut InputArguments) -> Resu
         }
     }
 
+    // .with_context(|| format!("Failed to read instrs from {}", path.display()))?;
+
     // 1. try to extract output path
     let output_file_path: &Path = match &input_arguments.output_file_str {
         Some(result) => {
             let dir_path: &Path = Path::new(result);
             if !dir_path.exists() {
-                match fs::create_dir(dir_path) {
-                    Ok(_) => (),
-                    Err(e) => {
-                        println!("{}", e);
-                        bail!(format!("Can not create output directory `{}`!", result))
-                    }
-                }
+                fs::create_dir(dir_path)
+                    .context(format!("Can not create output directory `{}`!", result))?;
             }
             dir_path
         }

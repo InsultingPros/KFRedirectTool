@@ -24,4 +24,5 @@ pub struct InputArguments<'a> {
     pub app_state: &'a State,
     pub verbose: bool,
     pub nocheck: bool,
+    pub quiet: bool,
 }

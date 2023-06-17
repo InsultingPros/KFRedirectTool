@@ -179,6 +179,22 @@ fn compression_correct_output_verbose() {
 
 #[test]
 #[serial]
+fn compression_correct_output_verbose_quiet() {
+    assert_eq!(
+        execution_result(Some(&[
+            "-q",
+            "-v",
+            "-o",
+            common::OUTPUT_COMPRESSED,
+            common::VALIDATION_FILE
+        ])),
+        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+    );
+    assert_or_panic_hash(common::FILE_COMPRESSED_OUTPUT, common::SHA1_COMPRESSED);
+}
+
+#[test]
+#[serial]
 fn compression_correct_output() {
     assert_eq!(
         execution_result(Some(&[

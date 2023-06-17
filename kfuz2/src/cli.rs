@@ -9,12 +9,15 @@ pub struct Options {
     /// `-h` : print help information.
     #[options(help = "Prints the help message.")]
     pub help: bool,
-    /// `-v` : print lots of additional information during file processing.
+    /// `-v` / `--verbose` : print lots of additional information during file processing.
     #[options(
         short = "v",
         help = "Displays additional information during file processing."
     )]
     pub verbose: bool,
+    /// `-q` / `--quiet` : print lots of additional information during file processing.
+    #[options(short = "q", help = "Displays no information during file processing.")]
+    pub quiet: bool,
     /// `-o <dir>` : output directory for processed files.
     ///
     /// If omitted, processed files will be saved in the same directory as input file.
