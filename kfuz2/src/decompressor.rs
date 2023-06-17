@@ -7,13 +7,14 @@ use crate::{
     utility::{self, print_verbose_information},
     InputArguments,
 };
+use anyhow::{bail, Result};
 
 use byteorder::ByteOrder;
 use flate2::write::ZlibDecoder;
 use sha1_smol::Sha1;
 use std::{
     fs::File,
-    io::{self, prelude::*, BufReader, BufWriter},
+    io::{prelude::*, BufReader, BufWriter},
     time::Instant,
 };
 
@@ -22,7 +23,7 @@ pub fn decompress(
     mut input_stream: BufReader<File>,
     mut output_stream: BufWriter<File>,
     input_arguments: &InputArguments,
-) -> io::Result<()> {
+) -> Result<()> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::CHUNK_SIZE_COMPRESSED];
     let mut first_4byte_header: Vec<u8> = vec![0u8; 4];
@@ -30,9 +31,7 @@ pub fn decompress(
     let mut decoder: ZlibDecoder<Vec<u8>> = ZlibDecoder::new(Vec::new());
     let mut hasher: Option<Sha1> = utility::get_sha1_hasher(input_arguments.verbose);
 
-    // benchmark start
     let start: Instant = Instant::now();
-    // iterate over binary file in chunks!
     loop {
         let first_header_read: usize = input_stream.read(&mut first_4byte_header)?;
         if first_header_read == 0 {
@@ -49,10 +48,7 @@ pub fn decompress(
         let chunk_size_compressed: usize =
             byteorder::LittleEndian::read_u32(&first_4byte_header) as usize;
         if chunk_size_compressed > constants::CHUNK_SIZE_COMPRESSED {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Error while decompressing. Broken data?",
-            ));
+            bail!("Error while decompressing. Broken data?")
         }
         let chunk_size_original: usize =
             byteorder::LittleEndian::read_u32(&second_4byte_header) as usize;
@@ -73,9 +69,8 @@ pub fn decompress(
 
         chunk_count += 1;
     }
-    // benchmark end
+
     println!("File decompressed in {:?}", start.elapsed());
-    // additional info
     if input_arguments.verbose {
         print_verbose_information(&input_stream, &output_stream, &hasher, chunk_count)?;
     }
@@ -83,13 +78,9 @@ pub fn decompress(
     Ok(())
 }
 
-// throw an error if length < 4
-fn validate_buffer_len(input_buffer: &Vec<u8>) -> Result<(), io::Error> {
+fn validate_buffer_len(input_buffer: &Vec<u8>) -> Result<()> {
     if input_buffer.len() < 4 {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Error while reading header buffer. It has an incorrect lenght!",
-        ))
+        bail!("Error while reading header buffer. It has an incorrect lenght!")
     } else {
         Ok(())
     }
@@ -103,7 +94,7 @@ fn decompress_chunk(
     output_stream: &mut BufWriter<File>,
     decoder: &mut ZlibDecoder<Vec<u8>>,
     hasher: Option<&mut Sha1>,
-) -> Result<(), io::Error> {
+) -> Result<()> {
     decoder.write_all(&buffer[..chunk_size_compressed])?;
     let writer: &Vec<u8> = &decoder.reset(Vec::new())?;
 
@@ -114,9 +105,6 @@ fn decompress_chunk(
         }
         Ok(())
     } else {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Error while decompressing. Invalid archive.",
-        ))
+        bail!("Error while decompressing. Invalid archive.")
     }
 }

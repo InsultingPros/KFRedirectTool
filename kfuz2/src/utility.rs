@@ -3,19 +3,20 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::{constants, InputArguments, State};
+use anyhow::{bail, Result};
 use sha1_smol::Sha1;
 use std::ffi::OsStr;
 use std::fs::{self, File};
-use std::io::{self, prelude::*, BufReader, BufWriter};
+use std::io::{prelude::*, BufReader, BufWriter};
 use std::path::Path;
 
 /// Spawn a `BufWriter` for input.
-pub fn open_output_ue_stream(input_arguments: &InputArguments) -> io::Result<BufWriter<File>> {
+pub fn open_output_ue_stream(input_arguments: &InputArguments) -> Result<BufWriter<File>> {
     Ok(BufWriter::new(File::create(&input_arguments.output_path)?))
 }
 
 /// Validate and spawn a `BufReader` for input.
-pub fn open_input_ue_stream(input_arguments: &InputArguments) -> io::Result<BufReader<File>> {
+pub fn open_input_ue_stream(input_arguments: &InputArguments) -> Result<BufReader<File>> {
     let mut reader: BufReader<File> = BufReader::new(File::open(&input_arguments.input_path)?);
 
     // skip any signature checks
@@ -26,32 +27,24 @@ pub fn open_input_ue_stream(input_arguments: &InputArguments) -> io::Result<BufR
             State::Decompression => Ok(reader),
             State::Compression => match file_header_is_correct(&mut reader) {
                 Ok(_) => Ok(reader),
-                Err(_) => Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    format!(
-                        "{:#?}: file IS NOT a kf package!",
-                        input_arguments.input_path
-                    ),
-                )),
+                Err(_) => bail!(format!(
+                    "{:#?}: file IS NOT a kf package!",
+                    input_arguments.input_path
+                ),),
             },
         }
     }
 }
 
 /// Validate input-output files and return `PathBuf` array
-pub fn validate_input_output_paths(
-    input_arguments: &mut InputArguments,
-) -> Result<(), std::io::Error> {
+pub fn validate_input_output_paths(input_arguments: &mut InputArguments) -> Result<()> {
     // check if input is a file
     let input_file_path: &Path = Path::new(&input_arguments.input_file_str);
     if !input_file_path.is_file() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!(
-                "Input file `{}` doesn't exist!",
-                &input_arguments.input_file_str
-            ),
-        ));
+        bail!(format!(
+            "Input file `{}` doesn't exist!",
+            &input_arguments.input_file_str
+        ))
     }
 
     // validate file extension
@@ -66,13 +59,10 @@ pub fn validate_input_output_paths(
     if !input_arguments.nocheck {
         // omit vanilla files
         if constants::KF_DEFAULT_PACKAGES.contains(&file_name.to_lowercase().as_str()) {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!(
-                    "{} is a default game package. Skipping it!",
-                    input_arguments.input_file_str
-                ),
-            ));
+            bail!(format!(
+                "{} is a default game package. Skipping it!",
+                input_arguments.input_file_str
+            ))
         }
     }
 
@@ -85,10 +75,7 @@ pub fn validate_input_output_paths(
                     Ok(_) => (),
                     Err(e) => {
                         println!("{}", e);
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::Other,
-                            format!("Can not create output directory `{}`!", result),
-                        ));
+                        bail!(format!("Can not create output directory `{}`!", result))
                     }
                 }
             }
@@ -109,10 +96,7 @@ pub fn validate_input_output_paths(
     Ok(())
 }
 
-pub fn validate_input_file_extension(
-    input_file_path: &Path,
-    state: &State,
-) -> Result<(), std::io::Error> {
+pub fn validate_input_file_extension(input_file_path: &Path, state: &State) -> Result<()> {
     let input_is_uz2: bool = file_has_compressed_extension(input_file_path);
     let input_is_kf_package: bool = file_has_kf_extension(input_file_path);
 
@@ -120,23 +104,17 @@ pub fn validate_input_file_extension(
         State::Compression => {
             // can't compress compressed files
             if input_is_uz2 {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!(
-                        "Input file `{:?}` has 'uz2' extension. Can not compress it!",
-                        input_file_path
-                    ),
-                ));
+                bail!(format!(
+                    "Input file `{:?}` has 'uz2' extension. Can not compress it!",
+                    input_file_path
+                ),)
             }
 
             // can't compress files with invalid extensions
             if !input_is_kf_package {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!(
-                        "Input file `{:?}` doesn't have valid extension. Can not compress it!",
-                        input_file_path
-                    ),
+                bail!(format!(
+                    "Input file `{:?}` doesn't have valid extension. Can not compress it!",
+                    input_file_path
                 ))
             } else {
                 Ok(())
@@ -146,12 +124,9 @@ pub fn validate_input_file_extension(
         State::Decompression => {
             // can't decompress not compressed files
             if !input_is_uz2 {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!(
-                        "Input file `{:?}` doesn't have 'uz2' extension. Can not decompress it!",
-                        input_file_path
-                    ),
+                bail!(format!(
+                    "Input file `{:?}` doesn't have 'uz2' extension. Can not decompress it!",
+                    input_file_path
                 ))
             } else {
                 Ok(())
@@ -177,7 +152,7 @@ fn file_has_compressed_extension(input_path: &Path) -> bool {
 }
 
 /// Check if this file is a valid UE package.
-fn file_header_is_correct(reader: &mut BufReader<File>) -> Result<(), std::io::Error> {
+fn file_header_is_correct(reader: &mut BufReader<File>) -> Result<()> {
     let mut buf_file_header: Vec<u8> = vec![0u8; 4];
     reader.read_exact(&mut buf_file_header)?;
     reader.rewind()?;
@@ -185,10 +160,7 @@ fn file_header_is_correct(reader: &mut BufReader<File>) -> Result<(), std::io::E
     if buf_file_header == constants::KF_SIGNATURE {
         Ok(())
     } else {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Unsupported,
-            "Incorrect file header!",
-        ))
+        bail!("Incorrect file header!")
     }
 }
 
@@ -208,7 +180,7 @@ pub fn print_verbose_information(
     output_stream: &BufWriter<File>,
     hasher: &Option<Sha1>,
     chunk_count: u32,
-) -> Result<(), std::io::Error> {
+) -> Result<()> {
     if let Some(sha1) = hasher {
         println!("> SHA1: {:?}", sha1.digest());
     }

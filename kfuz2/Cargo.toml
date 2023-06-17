@@ -27,6 +27,7 @@ flate2 = { version = "1.0.26", features = [
 sha1_smol = "1.0.0"
 gumdrop = "0.8.1"
 byteorder = "1.4.3"
+anyhow = "1.0.71"
 
 [dev-dependencies]
 serial_test = "2.0.0"

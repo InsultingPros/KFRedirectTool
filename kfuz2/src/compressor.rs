@@ -7,11 +7,12 @@ use crate::{
     utility::{self, print_verbose_information},
     InputArguments,
 };
+use anyhow::Result;
 use flate2::{write::ZlibEncoder, Compression};
 use sha1_smol::Sha1;
 use std::{
     fs::File,
-    io::{self, prelude::*, BufReader, BufWriter},
+    io::{BufReader, BufWriter, Read, Write},
     time::Instant,
 };
 
@@ -20,13 +21,12 @@ pub fn compress(
     mut input_stream: BufReader<File>,
     mut output_stream: BufWriter<File>,
     input_arguments: &InputArguments,
-) -> io::Result<()> {
+) -> Result<()> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::CHUNK_SIZE_UNCOMPRESSED];
     let mut encoder: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::default());
     let mut hasher: Option<Sha1> = utility::get_sha1_hasher(input_arguments.verbose);
 
-    // benchmark start
     let start: Instant = Instant::now();
     // Compression for UZ2 files is done chunk-by-chunk, for more details see:
     // https://wiki.beyondunreal.com/UZ2_file#File_format
@@ -44,9 +44,8 @@ pub fn compress(
         )?;
         chunk_count += 1;
     }
-    // benchmark end
+
     println!("File compressed in {:?}", start.elapsed());
-    // additional info
     if input_arguments.verbose {
         print_verbose_information(&input_stream, &output_stream, &hasher, chunk_count)?;
     }
@@ -61,7 +60,7 @@ fn compress_chunk(
     output_stream: &mut BufWriter<File>,
     encoder: &mut ZlibEncoder<Vec<u8>>,
     hasher: Option<&mut Sha1>,
-) -> Result<(), io::Error> {
+) -> Result<()> {
     let chunk_size_original: &[u8] = &buffer[..bytes_read].len().to_le_bytes()[..4];
     encoder.write_all(&buffer[..bytes_read])?;
     let compressed_chunk: Vec<u8> = encoder.reset(Vec::new())?;

@@ -12,10 +12,11 @@ use kfuz2_lib::utility::{
 };
 use kfuz2_lib::{compressor, decompressor, State};
 
+use anyhow::Result;
 use std::path::PathBuf;
 use std::{
     fs::File,
-    io::{self, BufReader, BufWriter},
+    io::{BufReader, BufWriter},
     process::ExitCode,
 };
 
@@ -58,7 +59,7 @@ fn main() -> ExitCode {
 }
 
 /// Do stuff with files depending on application states
-fn process_file(input_arguments: &kfuz2_lib::InputArguments) -> io::Result<()> {
+fn process_file(input_arguments: &kfuz2_lib::InputArguments) -> Result<()> {
     let input_stream: BufReader<File> = open_input_ue_stream(input_arguments)?;
     let output_stream: BufWriter<File> = open_output_ue_stream(input_arguments)?;
 
@@ -67,8 +68,7 @@ fn process_file(input_arguments: &kfuz2_lib::InputArguments) -> io::Result<()> {
         State::Compression => compressor::compress,
     };
 
-    let result: Result<(), io::Error> =
-        processing_function(input_stream, output_stream, input_arguments);
+    let result: Result<()> = processing_function(input_stream, output_stream, input_arguments);
     if result.is_err() {
         std::fs::remove_file(&input_arguments.output_path)?;
     }
