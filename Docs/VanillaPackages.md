@@ -2,7 +2,7 @@
 
 > [Go back to README](../README.md)
 
-This is a complete list of vanilla game packages. Same as in [VanillaPackages.py](../src/VanillaPackages.py), but much more readable.
+This is a complete list of vanilla game packages.
 
 ## Animations
 
