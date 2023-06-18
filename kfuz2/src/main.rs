@@ -39,10 +39,10 @@ fn main() -> ExitCode {
         input_arguments.input_file_str = decompress_argument;
         input_arguments.app_state = &State::Decompression;
     } else {
-        if arguments.free.is_empty() {
+        if arguments.input_file.is_empty() {
             return ExitCode::from(exit_codes::ERROR_BAD_ARGUMENTS);
         }
-        input_arguments.input_file_str = arguments.free[0].to_string();
+        input_arguments.input_file_str = arguments.input_file[0].to_string();
     };
 
     input_arguments.output_file_str = arguments.output;

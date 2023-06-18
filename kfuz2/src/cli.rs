@@ -40,7 +40,7 @@ pub struct Options {
     #[options(
         short = "d",
         meta = "<file>",
-        help = "Decompresses the input file. If not used, the input file will be compressed."
+        help = "Decompresses the `input_file`. If not used, the input file will be compressed."
     )]
     pub decompress: Option<String>,
     /// `--nocheck` : Disables the additional check for verifying if the input file matches KF1's format or belongs to one of its built-in packages.
@@ -50,7 +50,7 @@ pub struct Options {
         help = "Disables the additional check for verifying if the input file matches KF1's format or belongs to one of its built-in packages."
     )]
     pub nocheck: bool,
-    /// Not argumented input (`<file>`) will be used for compression.
+    /// File to compress (or decompress when '-d' option is specified).
     #[options(free)]
-    pub free: Vec<String>,
+    pub input_file: Vec<String>,
 }
