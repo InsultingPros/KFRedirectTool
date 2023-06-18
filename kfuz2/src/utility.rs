@@ -23,7 +23,7 @@ pub fn open_input_ue_stream(input_arguments: &InputArguments) -> Result<BufReade
     if input_arguments.nocheck {
         Ok(reader)
     } else {
-        match input_arguments.app_state {
+        match input_arguments.operation_type {
             State::Decompression => Ok(reader),
             State::Compression => match file_header_is_correct(&mut reader) {
                 Ok(_) => Ok(reader),
@@ -82,7 +82,7 @@ pub fn validate_input_output_paths(input_arguments: &mut InputArguments) -> Resu
     };
 
     // get a proper name for output file
-    let output_file_name: String = match input_arguments.app_state {
+    let output_file_name: String = match input_arguments.operation_type {
         State::Decompression => file_name.replace(".uz2", ""),
         State::Compression => format!("{}.uz2", file_name),
     };
@@ -99,7 +99,7 @@ pub fn validate_input_file_extension(
 ) -> Result<()> {
     let input_is_uz2: bool = file_has_compressed_extension(input_file_path);
 
-    match input_arguments.app_state {
+    match input_arguments.operation_type {
         State::Compression => {
             // can't compress compressed files
             if input_is_uz2 {

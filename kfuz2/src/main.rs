@@ -27,7 +27,7 @@ fn main() -> ExitCode {
     let mut input_arguments: &mut kfuz2_lib::InputArguments<'_> = &mut kfuz2_lib::InputArguments {
         input_path: PathBuf::new(),
         output_path: PathBuf::new(),
-        app_state: &State::Compression,
+        operation_type: &State::Compression,
         verbose: arguments.verbose,
         nocheck: arguments.nocheck,
         input_file_str: String::new(),
@@ -37,7 +37,7 @@ fn main() -> ExitCode {
 
     if let Some(decompress_argument) = arguments.decompress {
         input_arguments.input_file_str = decompress_argument;
-        input_arguments.app_state = &State::Decompression;
+        input_arguments.operation_type = &State::Decompression;
     } else {
         if arguments.input_file.is_empty() {
             return ExitCode::from(exit_codes::ERROR_BAD_ARGUMENTS);
@@ -68,7 +68,7 @@ fn process_file(input_arguments: &kfuz2_lib::InputArguments) -> Result<()> {
     let input_stream: BufReader<File> = open_input_ue_stream(input_arguments)?;
     let output_stream: BufWriter<File> = open_output_ue_stream(input_arguments)?;
 
-    let processing_function = match input_arguments.app_state {
+    let processing_function = match input_arguments.operation_type {
         State::Decompression => decompressor::decompress,
         State::Compression => compressor::compress,
     };

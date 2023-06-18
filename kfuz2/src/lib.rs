@@ -21,7 +21,7 @@ pub struct InputArguments<'a> {
     pub input_file_str: String,
     /// Output directory argument, only used to cast `output_path`
     pub output_file_str: Option<String>,
-    pub app_state: &'a State,
+    pub operation_type: &'a State,
     pub verbose: bool,
     pub nocheck: bool,
     pub quiet: bool,
