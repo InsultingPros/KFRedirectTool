@@ -9,14 +9,23 @@ pub struct Options {
     /// `-h` : print help information.
     #[options(help = "Prints the help message.")]
     pub help: bool,
-    /// `-v` / `--verbose` : print lots of additional information during file processing.
+    /// `-v` / `--verbose`: This option enables detailed operation, displaying extensive information during file processing.
+    ///
+    /// If both this and the `-q` option are active, the quiet mode will take precedence, suppressing the verbose output.
     #[options(
         short = "v",
-        help = "Displays additional information during file processing."
+        help = "This option enables detailed operation, displaying extensive information during file processing.
+                            If both this and the `-q` option are active, the quiet mode will take precedence, suppressing the verbose output."
     )]
     pub verbose: bool,
-    /// `-q` / `--quiet` : print lots of additional information during file processing.
-    #[options(short = "q", help = "Displays no information during file processing.")]
+    /// `-q` / `--quiet`: This option ensures silent operation, providing no feedback or information during file processing.
+    ///
+    /// Activating this mode will override `-v` option.
+    #[options(
+        short = "q",
+        help = "This option ensures silent operation, providing no feedback or information during file processing.
+                            Activating this mode will override `-v` option."
+    )]
     pub quiet: bool,
     /// `-o <dir>` : output directory for processed files.
     ///

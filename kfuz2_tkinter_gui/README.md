@@ -2,7 +2,7 @@
 
 [![GitHub all releases](https://img.shields.io/github/downloads/InsultingPros/KFRedirectTool/total)](https://github.com/InsultingPros/KFRedirectTool/releases)
 
-This GUI app is meant to be used with Killing Floor 1.
+This GUI app is meant to be used with Killing Floor 1 and supports multithreading (leading to x2-3 speed up compared to one by one file processing).
 
 *N.B.* If you want to use it with any other UE2-based games, you need to do few small modifications - disable KF1 specific checks and edit default extension list.
 
