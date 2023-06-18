@@ -3,10 +3,11 @@
 # Home Repo     : https://github.com/InsultingPros/KFRedirectTool
 # License       : https://www.gnu.org/licenses/gpl-3.0.en.html
 
+from enum import Enum
+from multiprocessing import Pool, cpu_count
 import os
 import tkinter as tk
-from tkinter import IntVar, ttk
-from tkinter import filedialog
+from tkinter import IntVar, ttk, filedialog
 from typing import Any
 from webbrowser import open_new
 from subprocess import run
@@ -20,8 +21,13 @@ from time import time
 KF_EXTENSIONS: tuple[str, ...] = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom", ".uz2")
 
 
+class OPERATION_TYPE(Enum):
+    Compression = 0
+    Decompression = 1
+
+
 class App(tk.Tk):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # what platform is this?
         self.current_system: str = uname().system
@@ -59,18 +65,30 @@ class App(tk.Tk):
             case _:
                 return "kfuz2"
 
-    def run_cli(self, args: list[Any]) -> None:
-        if self.verbose:
-            args.insert(0, "-v")
-        if self.quiet:
-            args.insert(0, "-q")
-        if self.Output != "":
-            args.insert(0, self.Output)
-            args.insert(0, "-o")
+    def get_args(
+        self, type: OPERATION_TYPE = OPERATION_TYPE.Compression
+    ) -> list[list[str]]:
+        result: list[list[str]] = []
+        self.refresh_file_list()
 
-        args.insert(0, self.cli)
+        for file in self.File_List:
+            iter: list[Any] = []
 
-        run(args)
+            iter.insert(0, file)
+            if type == OPERATION_TYPE.Decompression:
+                iter.insert(0, "-d")
+            # tmp.insert(0, "--nocheck")
+            if self.verbose:
+                iter.insert(0, "-v")
+            if self.quiet:
+                iter.insert(0, "-q")
+            if self.Output != "":
+                iter.insert(0, self.Output)
+                iter.insert(0, "-o")
+
+            iter.insert(0, self.cli)
+            result.insert(0, iter)
+        return result
 
     def create_widgets(self) -> None:
         lb_input = ttk.Label(self, text="Input: ...", width=80, background="lightgrey")
@@ -181,27 +199,29 @@ class App(tk.Tk):
 
     def start_Compression(self) -> None:
         print("=============== COMPRESSION START ===============")
-        self.refresh_file_list()
+        input_args: list[list[str]] = self.get_args()
         start: float = time()
-        for file in self.File_List:
-            self.run_cli([file])
+        # print(f"!!! Cpu count is {cpu_count()}")
+        with Pool(processes=cpu_count()) as pool:
+            pool.map(ext_run, input_args)
         end: float = time()
         print(f"Exectution time {end - start}")
         print("=============== COMPRESSION END ===============")
 
     def start_Uncompression(self) -> None:
         print("=============== DECOMPRESSION START ===============")
-        self.refresh_file_list()
+        input_args: list[list[str]] = self.get_args(type=OPERATION_TYPE.Decompression)
         start: float = time()
-        for file in self.File_List:
-            self.run_cli(["-d", file])
+        # print(f"!!! Cpu count is {cpu_count()}")
+        with Pool(processes=cpu_count()) as pool:
+            pool.map(ext_run, input_args)
         end: float = time()
         print(f"Exectution time {end - start}")
         print("=============== DECOMPRESSION END ===============")
 
     def refresh_file_list(self) -> None:
         self.File_List.clear()
-        if not Path(self.Input).exists:
+        if not Path(self.Input).exists():
             print("This is not a valid path!")
             pass
         else:
@@ -256,6 +276,10 @@ class App(tk.Tk):
 
     def exitProgram(self) -> None:
         exit()
+
+
+def ext_run(args: list[Any]) -> None:
+    run(args)
 
 
 def main() -> None:
