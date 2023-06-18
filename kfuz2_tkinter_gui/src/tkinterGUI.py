@@ -46,13 +46,15 @@ class App(tk.Tk):
 
         self.geometry("750x190")
         self.title("Killing Floor 1 Redirect Tool")
+        # Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
+        self["background"] = "#264653"
         self.add_Menus()
 
         self.columnconfigure(0, weight=0)
         self.columnconfigure(1, weight=0)
         self.columnconfigure(2, weight=0)
         self.columnconfigure(3, weight=0)
-        self.columnconfigure(4, weight=1)
+        self.columnconfigure(4, weight=0)
         self.columnconfigure(5, weight=1)
 
         self.create_widgets()
@@ -100,9 +102,7 @@ class App(tk.Tk):
             self,
             width=15,
             text="Select Input",
-            command=lambda: self.select_input(
-                lb_input, btn_Compress, btn_Uncompress, cb_quiet, cb_verbose
-            ),
+            command=lambda: self.select_input(lb_input, btn_Compress, btn_Uncompress),
         )
         btn_select_output = ttk.Button(
             self,
@@ -119,69 +119,75 @@ class App(tk.Tk):
         )
         btn_Compress = ttk.Button(
             self,
-            width=30,
+            width=20,
             text="Compress",
             state="disabled",
             command=self.start_Compression,
         )
         btn_Uncompress = ttk.Button(
             self,
-            width=30,
+            width=20,
             text="Uncompress",
             state="disabled",
             command=self.start_Uncompression,
         )
-        # a little hack to uncheck this checkbox by default
-        cb_var = IntVar()
-        cb_var.set(1)
-        cb_quiet = ttk.Checkbutton(
+
+        var = IntVar()
+        var.set(0)
+        rb_1 = ttk.Radiobutton(
             self,
-            text="Quiet execution.",
-            variable=cb_var,
-            onvalue=1,
-            offvalue=0,
-            state="disabled",
-            command=lambda: self.switch_cb_quiet(cb_verbose),
+            width=20,
+            text="Default Log",
+            variable=var,
+            value=0,
+            command=lambda: self.set_log_level(var),
         )
-        cb_var2 = IntVar()
-        cb_var2.set(1)
-        cb_verbose = ttk.Checkbutton(
+        rb_2 = ttk.Radiobutton(
             self,
-            text="Be verbose.",
-            variable=cb_var2,
-            onvalue=1,
-            offvalue=0,
-            state="disabled",
-            command=lambda: self.switch_cb_verbose(cb_quiet),
+            width=20,
+            text="Verbose Log",
+            variable=var,
+            value=1,
+            command=lambda: self.set_log_level(var),
+        )
+        rb_3 = ttk.Radiobutton(
+            self,
+            width=20,
+            text="Disable Log",
+            variable=var,
+            value=2,
+            command=lambda: self.set_log_level(var),
         )
 
         # Grid
-        # Labels
         lb_input.grid(column=1, row=0, columnspan=5, sticky=tk.EW, padx=5, pady=5)
-        lb_output.grid(column=1, row=1, columnspan=5, sticky=tk.EW, padx=5, pady=5)
-        # Buttons
         btn_select_input.grid(column=0, row=0, padx=5, pady=5)
+
+        lb_output.grid(column=1, row=1, columnspan=5, sticky=tk.EW, padx=5, pady=5)
         btn_select_output.grid(column=0, row=1, sticky=tk.S, padx=5, pady=5)
-        btn_open_output.grid(column=0, row=3, sticky=tk.S, padx=5, pady=5)
-        btn_Compress.grid(column=2, row=5, sticky=tk.S, padx=5, pady=5)
-        btn_Uncompress.grid(column=3, row=5, sticky=tk.S, padx=5, pady=5)
-        # Check boxes
-        cb_quiet.grid(column=1, row=3, columnspan=2, sticky=tk.NS, padx=5, pady=5)
-        cb_verbose.grid(column=2, row=3, columnspan=2, sticky=tk.NS, padx=5, pady=5)
 
-    def switch_cb_quiet(self, cb_verbose: ttk.Checkbutton) -> None:
-        self.quiet = not self.quiet
-        if self.quiet:
-            cb_verbose.config(state="disabled")
-        else:
-            cb_verbose.config(state="enabled")
+        btn_open_output.grid(column=0, row=2, sticky=tk.S, padx=5, pady=5)
+        rb_1.grid(column=1, row=2, columnspan=1, sticky=tk.NW, padx=5, pady=5)
+        rb_2.grid(column=2, row=2, columnspan=1, sticky=tk.NW, padx=5, pady=5)
+        rb_3.grid(column=3, row=2, columnspan=1, sticky=tk.NW, padx=5, pady=5)
 
-    def switch_cb_verbose(self, cb_quiet: ttk.Checkbutton) -> None:
-        self.verbose = not self.verbose
-        if self.verbose:
-            cb_quiet.config(state="disabled")
-        else:
-            cb_quiet.config(state="enabled")
+        btn_Compress.grid(column=1, row=5, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
+        btn_Uncompress.grid(
+            column=2, row=5, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
+        )
+
+    def set_log_level(self, level: IntVar) -> None:
+        num: int = level.get()
+        match num:
+            case 0:
+                self.quiet = False
+                self.verbose = False
+            case 1:
+                self.quiet = False
+                self.verbose = True
+            case _:
+                self.quiet = True
+                self.verbose = False
 
     def add_Menus(self) -> None:
         menu = tk.Menu(self)
@@ -234,28 +240,22 @@ class App(tk.Tk):
         self.Output = filedialog.askdirectory(title="Select Output Folder")
         if self.Output != "":
             label.config(text=self.Output)
-            label.config(background="lightgreen")
+            label.config(background="#e9c46a")
             button.config(state="enabled")
         return self.Output
 
     def select_input(
         self,
-        label: ttk.Label,
+        lb_input: ttk.Label,
         btn_compress: ttk.Button,
         btn_uncompress: ttk.Button,
-        cb_quiet: ttk.Checkbutton,
-        cb_verbose: ttk.Checkbutton,
     ) -> str:
         self.Input = filedialog.askdirectory(title="Select Input Folder")
         if self.Input != "":
-            label.config(text=self.Input)
-            label.config(background="lightgreen")
+            lb_input.config(text=self.Input)
+            lb_input.config(background="#e9c46a")
             btn_compress.config(state="enabled")
             btn_uncompress.config(state="enabled")
-            cb_quiet.config(state="enabled")
-            cb_quiet.invoke()
-            cb_verbose.config(state="enabled")
-            cb_verbose.invoke()
         return self.Input
 
     def open_output(self) -> None:
