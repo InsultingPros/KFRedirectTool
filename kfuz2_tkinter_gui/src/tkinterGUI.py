@@ -3,11 +3,11 @@
 # Home Repo     : https://github.com/InsultingPros/KFRedirectTool
 # License       : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-from enum import Enum
+from enum import IntEnum, StrEnum, auto
 from multiprocessing import Pool, cpu_count
 import os
 import tkinter as tk
-from tkinter import IntVar, ttk, filedialog
+from tkinter import BooleanVar, StringVar, ttk, filedialog
 from typing import Any
 from webbrowser import open_new
 from subprocess import run
@@ -21,9 +21,15 @@ from time import time
 KF_EXTENSIONS: tuple[str, ...] = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom", ".uz2")
 
 
-class OPERATION_TYPE(Enum):
-    Compression = 0
-    Decompression = 1
+class OPERATION_TYPE(IntEnum):
+    Compression = auto()
+    Decompression = auto()
+
+
+class LOG_LEVEL(StrEnum):
+    Default = "Log Level - Default"
+    Verbose = "Log Level - Verbose"
+    Silent = "Log Level - Silent"
 
 
 class App(tk.Tk):
@@ -42,6 +48,11 @@ class App(tk.Tk):
         self.columnconfigure(3, weight=0)
         self.columnconfigure(4, weight=0)
         self.columnconfigure(5, weight=1)
+        # Style
+        # style = ttk.Style()
+        # style.theme_use("clam")
+        # style.configure("TButton", background="#E76F51")
+        # style.configure("TMenubutton", background="#E76F51")
         # Widgets
         self.add_Menus()
         self.create_widgets()
@@ -59,29 +70,33 @@ class App(tk.Tk):
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
             exit()
-        self.verbose: bool = True
-        self.quiet: bool = True
+        self.verbose: bool = False
+        self.quiet: bool = False
+        self.disable_multi_threading: bool = False
         self.File_List: list[str] = []
         self.Input: str = ""
         self.Output: str = ""
 
     def add_Menus(self) -> None:
-        menu = tk.Menu(self)
-        self.config(menu=menu)
+        menus = tk.Menu(self)
 
-        fileMenu = tk.Menu(menu, tearoff=0)
-        fileMenu2 = tk.Menu(fileMenu, tearoff=0)
-        fileMenu.add_cascade(label="Recent Output", menu=fileMenu2)
-        fileMenu.add_command(label="Exit", command=lambda: self.destroy())
-        menu.add_cascade(label="File", menu=fileMenu)
+        menu_file = tk.Menu(menus, tearoff=0)
+        menu_input = tk.Menu(menu_file, tearoff=0)
+        menu_file.add_cascade(label="Recent Output", menu=menu_input)
+        menu_output = tk.Menu(menu_file, tearoff=0)
+        menu_file.add_cascade(label="Recent Output", menu=menu_output)
+        menu_file.add_separator()
+        menu_file.add_command(label="Exit", command=lambda: self.destroy())
+        menus.add_cascade(label="File", menu=menu_file)
 
-        menu_About = tk.Menu(menu, tearoff=0)
-        menu_About.add_command(
+        menu_help = tk.Menu(menus, tearoff=0)
+        menu_help.add_command(
             label="Github",
             command=lambda: open_new("https://github.com/InsultingPros/KFRedirectTool"),
         )
+        menus.add_cascade(label="Help", menu=menu_help)
 
-        menu.add_cascade(label="Info", menu=menu_About)
+        self.config(menu=menus)
 
     def create_widgets(self) -> None:
         lb_input = ttk.Label(self, text="Input: ...", width=80, background="lightgrey")
@@ -123,44 +138,49 @@ class App(tk.Tk):
             command=lambda: self.process_files(OPERATION_TYPE.Decompression),
         )
 
-        var = IntVar()
-        var.set(0)
-        rb_1 = ttk.Radiobutton(
+        om_var = StringVar()
+        options: list[LOG_LEVEL] = [
+            LOG_LEVEL.Default,
+            LOG_LEVEL.Verbose,
+            LOG_LEVEL.Silent,
+        ]
+        om_log_level = ttk.OptionMenu(
             self,
-            width=20,
-            text="Default Log",
-            variable=var,
-            value=0,
-            command=lambda: self.set_log_level(var),
+            om_var,
+            LOG_LEVEL.Default,
+            *options,
+            command=lambda _: self.set_log_level(om_var),
         )
-        rb_2 = ttk.Radiobutton(
+        om_log_level.config(width=20)
+
+        cb_var = BooleanVar()
+        cb_var.set(False)
+        cb_multi_thread = ttk.Checkbutton(
             self,
             width=20,
-            text="Verbose Log",
-            variable=var,
-            value=1,
-            command=lambda: self.set_log_level(var),
-        )
-        rb_3 = ttk.Radiobutton(
-            self,
-            width=20,
-            text="Disable Log",
-            variable=var,
-            value=2,
-            command=lambda: self.set_log_level(var),
+            text="Disable Multithreading",
+            variable=cb_var,
+            command=lambda: self.set_multi_threading(cb_var),
         )
 
         # Grid
         lb_input.grid(column=1, row=0, columnspan=5, sticky=tk.EW, padx=5, pady=5)
-        btn_select_input.grid(column=0, row=0, padx=5, pady=5)
+        btn_select_input.grid(
+            column=0, columnspan=1, row=0, sticky=tk.NSEW, padx=5, pady=5
+        )
 
         lb_output.grid(column=1, row=1, columnspan=5, sticky=tk.EW, padx=5, pady=5)
-        btn_select_output.grid(column=0, row=1, sticky=tk.S, padx=5, pady=5)
+        btn_select_output.grid(
+            column=0, columnspan=1, row=1, sticky=tk.NSEW, padx=5, pady=5
+        )
 
-        btn_open_output.grid(column=0, row=2, sticky=tk.S, padx=5, pady=5)
-        rb_1.grid(column=1, row=2, columnspan=1, sticky=tk.NW, padx=5, pady=5)
-        rb_2.grid(column=2, row=2, columnspan=1, sticky=tk.NW, padx=5, pady=5)
-        rb_3.grid(column=3, row=2, columnspan=1, sticky=tk.NW, padx=5, pady=5)
+        btn_open_output.grid(
+            column=0, row=2, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
+        )
+        om_log_level.grid(column=1, row=2, columnspan=1, sticky=tk.EW, padx=5, pady=5)
+        cb_multi_thread.grid(
+            column=2, row=2, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
+        )
 
         btn_Compress.grid(column=1, row=5, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
         btn_Uncompress.grid(
@@ -202,18 +222,21 @@ class App(tk.Tk):
             case _:
                 run(["xdg-open", "--", path_output])
 
-    def set_log_level(self, level: IntVar) -> None:
-        num: int = level.get()
-        match num:
-            case 0:
+    def set_log_level(self, level: StringVar) -> None:
+        cmp: str = level.get()
+        match cmp:
+            case LOG_LEVEL.Default:
                 self.quiet = False
                 self.verbose = False
-            case 1:
+            case LOG_LEVEL.Verbose:
                 self.quiet = False
                 self.verbose = True
             case _:
                 self.quiet = True
                 self.verbose = False
+
+    def set_multi_threading(self, switch: BooleanVar) -> None:
+        self.disable_multi_threading = switch.get()
 
     def process_files(self, type: OPERATION_TYPE = OPERATION_TYPE.Compression) -> None:
         if type == OPERATION_TYPE.Decompression:
@@ -224,9 +247,13 @@ class App(tk.Tk):
         print(f"=============== {prefix}COMPRESSION START ===============")
         input_args: list[list[str]] = self.get_args(type)
         start: float = time()
-        # print(f"!!! Cpu count is {cpu_count()}")
-        with Pool(processes=cpu_count()) as pool:
-            pool.map(ext_run, input_args)
+
+        if self.disable_multi_threading:
+            for arg in input_args:
+                ext_run(arg)
+        else:
+            with Pool(processes=cpu_count()) as pool:
+                pool.map(ext_run, input_args)
         end: float = time()
         print(f"Exectution time {end - start}")
         print(f"=============== {prefix}COMPRESSION END ===============")
