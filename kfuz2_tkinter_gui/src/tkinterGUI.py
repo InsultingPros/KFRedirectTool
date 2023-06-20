@@ -29,9 +29,30 @@ class OPERATION_TYPE(Enum):
 class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
+        self.init_variables()
+
+        self.geometry("750x150")
+        self.title("Killing Floor 1 Redirect Tool")
+        # Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
+        self["background"] = "#264653"
+        # Grid
+        self.columnconfigure(0, weight=0)
+        self.columnconfigure(1, weight=0)
+        self.columnconfigure(2, weight=0)
+        self.columnconfigure(3, weight=0)
+        self.columnconfigure(4, weight=0)
+        self.columnconfigure(5, weight=1)
+        # Widgets
+        self.add_Menus()
+        self.create_widgets()
+
+    def init_variables(self) -> None:
         # what platform is this?
         self.current_system: str = uname().system
-        self.kfuz2: str = self.executable_name()
+        if self.current_system == "Windows":
+            self.kfuz2 = "kfuz2.exe"
+        else:
+            self.kfuz2 = "kfuz2"
 
         path_script: Path = Path(os.path.realpath(__file__))
         self.cli: Path = path_script.parent.joinpath(self.kfuz2)
@@ -44,53 +65,23 @@ class App(tk.Tk):
         self.Input: str = ""
         self.Output: str = ""
 
-        self.geometry("750x190")
-        self.title("Killing Floor 1 Redirect Tool")
-        # Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
-        self["background"] = "#264653"
-        self.add_Menus()
+    def add_Menus(self) -> None:
+        menu = tk.Menu(self)
+        self.config(menu=menu)
 
-        self.columnconfigure(0, weight=0)
-        self.columnconfigure(1, weight=0)
-        self.columnconfigure(2, weight=0)
-        self.columnconfigure(3, weight=0)
-        self.columnconfigure(4, weight=0)
-        self.columnconfigure(5, weight=1)
+        fileMenu = tk.Menu(menu, tearoff=0)
+        fileMenu2 = tk.Menu(fileMenu, tearoff=0)
+        fileMenu.add_cascade(label="Recent Output", menu=fileMenu2)
+        fileMenu.add_command(label="Exit", command=lambda: self.destroy())
+        menu.add_cascade(label="File", menu=fileMenu)
 
-        self.create_widgets()
-        self.mainloop()
+        menu_About = tk.Menu(menu, tearoff=0)
+        menu_About.add_command(
+            label="Github",
+            command=lambda: open_new("https://github.com/InsultingPros/KFRedirectTool"),
+        )
 
-    def executable_name(self) -> str:
-        match self.current_system:
-            case "Windows":
-                return "kfuz2.exe"
-            case _:
-                return "kfuz2"
-
-    def get_args(
-        self, type: OPERATION_TYPE = OPERATION_TYPE.Compression
-    ) -> list[list[str]]:
-        result: list[list[str]] = []
-        self.refresh_file_list()
-
-        for file in self.File_List:
-            iter: list[Any] = []
-
-            iter.insert(0, file)
-            if type == OPERATION_TYPE.Decompression:
-                iter.insert(0, "-d")
-            # tmp.insert(0, "--nocheck")
-            if self.verbose:
-                iter.insert(0, "-v")
-            if self.quiet:
-                iter.insert(0, "-q")
-            if self.Output != "":
-                iter.insert(0, self.Output)
-                iter.insert(0, "-o")
-
-            iter.insert(0, self.cli)
-            result.insert(0, iter)
-        return result
+        menu.add_cascade(label="Info", menu=menu_About)
 
     def create_widgets(self) -> None:
         lb_input = ttk.Label(self, text="Input: ...", width=80, background="lightgrey")
@@ -122,14 +113,14 @@ class App(tk.Tk):
             width=20,
             text="Compress",
             state="disabled",
-            command=self.start_Compression,
+            command=lambda: self.process_files(),
         )
         btn_Uncompress = ttk.Button(
             self,
             width=20,
             text="Uncompress",
             state="disabled",
-            command=self.start_Uncompression,
+            command=lambda: self.process_files(OPERATION_TYPE.Decompression),
         )
 
         var = IntVar()
@@ -176,66 +167,6 @@ class App(tk.Tk):
             column=2, row=5, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
         )
 
-    def set_log_level(self, level: IntVar) -> None:
-        num: int = level.get()
-        match num:
-            case 0:
-                self.quiet = False
-                self.verbose = False
-            case 1:
-                self.quiet = False
-                self.verbose = True
-            case _:
-                self.quiet = True
-                self.verbose = False
-
-    def add_Menus(self) -> None:
-        menu = tk.Menu(self)
-        self.config(menu=menu)
-
-        fileMenu = tk.Menu(menu, tearoff=0)
-        fileMenu2 = tk.Menu(fileMenu, tearoff=0)
-        fileMenu.add_cascade(label="Recent Output", menu=fileMenu2)
-        fileMenu.add_command(label="Exit", command=self.exitProgram)
-        menu.add_cascade(label="File", menu=fileMenu)
-
-        menu_About = tk.Menu(menu, tearoff=0)
-        menu_About.add_command(label="Github", command=self.open_Repo)
-        menu.add_cascade(label="Info", menu=menu_About)
-
-    def start_Compression(self) -> None:
-        print("=============== COMPRESSION START ===============")
-        input_args: list[list[str]] = self.get_args()
-        start: float = time()
-        # print(f"!!! Cpu count is {cpu_count()}")
-        with Pool(processes=cpu_count()) as pool:
-            pool.map(ext_run, input_args)
-        end: float = time()
-        print(f"Exectution time {end - start}")
-        print("=============== COMPRESSION END ===============")
-
-    def start_Uncompression(self) -> None:
-        print("=============== DECOMPRESSION START ===============")
-        input_args: list[list[str]] = self.get_args(type=OPERATION_TYPE.Decompression)
-        start: float = time()
-        # print(f"!!! Cpu count is {cpu_count()}")
-        with Pool(processes=cpu_count()) as pool:
-            pool.map(ext_run, input_args)
-        end: float = time()
-        print(f"Exectution time {end - start}")
-        print("=============== DECOMPRESSION END ===============")
-
-    def refresh_file_list(self) -> None:
-        self.File_List.clear()
-        if not Path(self.Input).exists():
-            print("This is not a valid path!")
-            pass
-        else:
-            for root, _, files in walk(self.Input):
-                for file in files:
-                    if file.endswith(KF_EXTENSIONS):
-                        self.File_List.append(str(Path(root) / file))
-
     def select_output(self, label: ttk.Label, button: ttk.Button) -> str:
         self.Output = filedialog.askdirectory(title="Select Output Folder")
         if self.Output != "":
@@ -271,20 +202,77 @@ class App(tk.Tk):
             case _:
                 run(["xdg-open", "--", path_output])
 
-    def open_Repo(self) -> None:
-        open_new("https://github.com/InsultingPros/KFRedirectTool")
+    def set_log_level(self, level: IntVar) -> None:
+        num: int = level.get()
+        match num:
+            case 0:
+                self.quiet = False
+                self.verbose = False
+            case 1:
+                self.quiet = False
+                self.verbose = True
+            case _:
+                self.quiet = True
+                self.verbose = False
 
-    def exitProgram(self) -> None:
-        exit()
+    def process_files(self, type: OPERATION_TYPE = OPERATION_TYPE.Compression) -> None:
+        if type == OPERATION_TYPE.Decompression:
+            prefix: str = "DE"
+        else:
+            prefix: str = ""
+
+        print(f"=============== {prefix}COMPRESSION START ===============")
+        input_args: list[list[str]] = self.get_args(type)
+        start: float = time()
+        # print(f"!!! Cpu count is {cpu_count()}")
+        with Pool(processes=cpu_count()) as pool:
+            pool.map(ext_run, input_args)
+        end: float = time()
+        print(f"Exectution time {end - start}")
+        print(f"=============== {prefix}COMPRESSION END ===============")
+
+    def get_args(
+        self, type: OPERATION_TYPE = OPERATION_TYPE.Compression
+    ) -> list[list[str]]:
+        result: list[list[str]] = []
+        self.refresh_file_list()
+
+        for file in self.File_List:
+            iter: list[Any] = []
+
+            iter.insert(0, file)
+            if type == OPERATION_TYPE.Decompression:
+                iter.insert(0, "-d")
+            # tmp.insert(0, "--nocheck")
+            if self.verbose:
+                iter.insert(0, "-v")
+            if self.quiet:
+                iter.insert(0, "-q")
+            if self.Output != "":
+                iter.insert(0, self.Output)
+                iter.insert(0, "-o")
+
+            iter.insert(0, self.cli)
+            result.insert(0, iter)
+        return result
+
+    def refresh_file_list(self) -> None:
+        self.File_List.clear()
+        if not Path(self.Input).exists():
+            print("This is not a valid path!")
+            pass
+        else:
+            for root, _, files in walk(self.Input):
+                for file in files:
+                    if file.endswith(KF_EXTENSIONS):
+                        self.File_List.append(str(Path(root) / file))
 
 
+# thread pool throws exception on pickle, have to extract this from class
 def ext_run(args: list[Any]) -> None:
     run(args)
 
 
-def main() -> None:
-    App()
-
-
 if __name__ == "__main__":
-    main()
+    tkintergui = App()
+    tkintergui.mainloop()
