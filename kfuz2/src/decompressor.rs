@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::{bail, Result};
 
-use byteorder::ByteOrder;
 use flate2::write::ZlibDecoder;
 use sha1_smol::Sha1;
 use std::{
@@ -26,8 +25,8 @@ pub fn decompress(
 ) -> Result<()> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::CHUNK_SIZE_COMPRESSED];
-    let mut first_4byte_header: Vec<u8> = vec![0u8; 4];
-    let mut second_4byte_header: Vec<u8> = vec![0u8; 4];
+    let mut first_4byte_header: [u8; 4] = [0u8; 4];
+    let mut second_4byte_header: [u8; 4] = [0u8; 4];
     let mut decoder: ZlibDecoder<Vec<u8>> = ZlibDecoder::new(Vec::new());
     let mut hasher: Option<Sha1> = utility::get_sha1_hasher(input_arguments.verbose);
 
@@ -37,21 +36,17 @@ pub fn decompress(
         if first_header_read == 0 {
             break;
         }
-        validate_buffer_len(&first_4byte_header)?;
 
         let second_header_read: usize = input_stream.read(&mut second_4byte_header)?;
         if second_header_read == 0 {
             break;
         }
-        validate_buffer_len(&second_4byte_header)?;
 
-        let chunk_size_compressed: usize =
-            byteorder::LittleEndian::read_u32(&first_4byte_header) as usize;
+        let chunk_size_compressed: usize = u32::from_le_bytes(first_4byte_header) as usize;
         if chunk_size_compressed > constants::CHUNK_SIZE_COMPRESSED {
             bail!("Error while decompressing. Broken data?")
         }
-        let chunk_size_original: usize =
-            byteorder::LittleEndian::read_u32(&second_4byte_header) as usize;
+        let chunk_size_original: usize = u32::from_le_bytes(second_4byte_header) as usize;
 
         input_stream.read_exact(&mut buffer[..chunk_size_compressed])?;
         if buffer.is_empty() {
@@ -78,14 +73,6 @@ pub fn decompress(
     }
 
     Ok(())
-}
-
-fn validate_buffer_len(input_buffer: &Vec<u8>) -> Result<()> {
-    if input_buffer.len() < 4 {
-        bail!("Error while reading header buffer. It has an incorrect lenght!")
-    } else {
-        Ok(())
-    }
 }
 
 /// Decompress single chunk and write to `output_stream`.
