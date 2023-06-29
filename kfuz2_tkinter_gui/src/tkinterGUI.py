@@ -7,6 +7,7 @@ from enum import IntEnum, StrEnum, auto
 from multiprocessing import Pool, cpu_count
 import os
 import tkinter as tk
+import pickle
 from tkinter import BooleanVar, StringVar, ttk, filedialog
 from typing import Any
 from webbrowser import open_new
@@ -18,6 +19,7 @@ from time import time
 
 # This gui is mainly built for KF1, so you might want to manually
 # add file extensions of your UE2-based game
+PICKLE_NAME: str = "tkinterGUI"
 KF_EXTENSIONS: tuple[str, ...] = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom", ".uz2")
 
 
@@ -35,6 +37,7 @@ class LOG_LEVEL(StrEnum):
 class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
+        self.wm_protocol("WM_DELETE_WINDOW", lambda: self.on_close())
         self.init_variables()
 
         self.geometry("750x150")
@@ -57,6 +60,32 @@ class App(tk.Tk):
         self.add_Menus()
         self.create_widgets()
 
+        self.mainloop()
+
+    def on_close(self) -> None:
+        self.save_state()
+        self.destroy()
+
+    def save_state(self) -> None:
+        my_pickle: Path = Path(os.path.realpath(__file__)).parent.joinpath(PICKLE_NAME)
+        try:
+            with open(my_pickle, "wb") as f:
+                pickle.dump(
+                    obj=[self.Input, self.Output, self.disable_multi_threading], file=f
+                )
+        except Exception as e:
+            print("Error appeared while trying to pickle stuff: " + str(e))
+
+    def load_state(self) -> bool:
+        my_pickle: Path = Path(os.path.realpath(__file__)).parent.joinpath(PICKLE_NAME)
+        try:
+            with open(my_pickle, "rb") as f:
+                self.Input, self.Output, self.disable_multi_threading = pickle.load(f)
+            return True
+        except Exception as e:
+            print("Error appeared while trying to pickle stuff: " + str(e))
+            return False
+
     def init_variables(self) -> None:
         # what platform is this?
         self.current_system: str = uname().system
@@ -69,24 +98,21 @@ class App(tk.Tk):
         self.cli: Path = path_script.parent.joinpath(self.kfuz2)
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
-            exit()
+            self.on_close()
         self.verbose: bool = False
         self.quiet: bool = False
-        self.disable_multi_threading: bool = False
         self.File_List: list[str] = []
-        self.Input: str = ""
-        self.Output: str = ""
+
+        if not self.load_state():
+            self.disable_multi_threading: bool = False
+            self.Input: str = ""
+            self.Output: str = ""
 
     def add_Menus(self) -> None:
         menus = tk.Menu(self)
 
         menu_file = tk.Menu(menus, tearoff=0)
-        menu_input = tk.Menu(menu_file, tearoff=0)
-        menu_file.add_cascade(label="Recent Output", menu=menu_input)
-        menu_output = tk.Menu(menu_file, tearoff=0)
-        menu_file.add_cascade(label="Recent Output", menu=menu_output)
-        menu_file.add_separator()
-        menu_file.add_command(label="Exit", command=lambda: self.destroy())
+        menu_file.add_command(label="Exit", command=lambda: self.on_close())
         menus.add_cascade(label="File", menu=menu_file)
 
         menu_help = tk.Menu(menus, tearoff=0)
@@ -99,9 +125,18 @@ class App(tk.Tk):
         self.config(menu=menus)
 
     def create_widgets(self) -> None:
-        lb_input = ttk.Label(self, text="Input: ...", width=80, background="lightgrey")
+        lb_input = ttk.Label(
+            self,
+            text=self.Input if self.Input != "" else "Input: ...",
+            width=80,
+            background="#e9c46a" if self.Input != "" else "lightgrey",
+        )
+
         lb_output = ttk.Label(
-            self, text="Output: ...", width=80, background="lightgrey"
+            self,
+            text=self.Output if self.Output != "" else "Output: ...",
+            width=80,
+            background="#e9c46a" if self.Output != "" else "lightgrey",
         )
 
         btn_select_input = ttk.Button(
@@ -120,7 +155,7 @@ class App(tk.Tk):
             self,
             width=15,
             text="Open Output",
-            state="disabled",
+            state="enabled" if self.Output != "" else "disabled",
             command=self.open_output,
         )
         btn_Compress = ttk.Button(
@@ -138,7 +173,7 @@ class App(tk.Tk):
             command=lambda: self.process_files(OPERATION_TYPE.Decompression),
         )
 
-        om_var = StringVar()
+        om_var = StringVar(self)
         options: list[LOG_LEVEL] = [
             LOG_LEVEL.Default,
             LOG_LEVEL.Verbose,
@@ -153,8 +188,8 @@ class App(tk.Tk):
         )
         om_log_level.config(width=20)
 
-        cb_var = BooleanVar()
-        cb_var.set(False)
+        cb_var = BooleanVar(self)
+        cb_var.set(self.disable_multi_threading)
         cb_multi_thread = ttk.Checkbutton(
             self,
             width=20,
@@ -301,5 +336,7 @@ def ext_run(args: list[Any]) -> None:
 
 
 if __name__ == "__main__":
-    tkintergui = App()
-    tkintergui.mainloop()
+    try:
+        my_app = App()
+    except Exception as e:
+        print("Error appeared: " + str(e))
