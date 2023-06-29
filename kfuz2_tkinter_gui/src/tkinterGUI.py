@@ -40,7 +40,8 @@ class App(tk.Tk):
         self.wm_protocol("WM_DELETE_WINDOW", lambda: self.on_close())
         self.init_variables()
 
-        self.geometry("750x150")
+        self.geometry(f"{self.win_x}x{self.win_y}")
+
         self.title("Killing Floor 1 Redirect Tool")
         # Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
         self["background"] = "#264653"
@@ -71,7 +72,15 @@ class App(tk.Tk):
         try:
             with open(my_pickle, "wb") as f:
                 pickle.dump(
-                    obj=[self.Input, self.Output, self.disable_multi_threading], file=f
+                    obj=[
+                        self.winfo_width(),
+                        self.winfo_height(),
+                        self.Input,
+                        self.Output,
+                        self.disable_multi_threading,
+                        self.log_level,
+                    ],
+                    file=f,
                 )
         except Exception as e:
             print("Error appeared while trying to pickle stuff: " + str(e))
@@ -80,7 +89,14 @@ class App(tk.Tk):
         my_pickle: Path = Path(os.path.realpath(__file__)).parent.joinpath(PICKLE_NAME)
         try:
             with open(my_pickle, "rb") as f:
-                self.Input, self.Output, self.disable_multi_threading = pickle.load(f)
+                (
+                    self.win_x,
+                    self.win_y,
+                    self.Input,
+                    self.Output,
+                    self.disable_multi_threading,
+                    self.log_level,
+                ) = pickle.load(f)
             return True
         except Exception as e:
             print("Error appeared while trying to pickle stuff: " + str(e))
@@ -107,6 +123,9 @@ class App(tk.Tk):
             self.disable_multi_threading: bool = False
             self.Input: str = ""
             self.Output: str = ""
+            self.log_level = LOG_LEVEL.Default
+            self.win_x: int = 750
+            self.win_y: int = 150
 
     def add_Menus(self) -> None:
         menus = tk.Menu(self)
@@ -162,14 +181,14 @@ class App(tk.Tk):
             self,
             width=20,
             text="Compress",
-            state="disabled",
+            state="enabled" if self.Input != "" else "disabled",
             command=lambda: self.process_files(),
         )
         btn_Uncompress = ttk.Button(
             self,
             width=20,
             text="Uncompress",
-            state="disabled",
+            state="enabled" if self.Input != "" else "disabled",
             command=lambda: self.process_files(OPERATION_TYPE.Decompression),
         )
 
@@ -182,7 +201,7 @@ class App(tk.Tk):
         om_log_level = ttk.OptionMenu(
             self,
             om_var,
-            LOG_LEVEL.Default,
+            self.log_level,
             *options,
             command=lambda _: self.set_log_level(om_var),
         )
@@ -255,20 +274,10 @@ class App(tk.Tk):
             case "Windows":
                 run(["explorer", path_output])
             case _:
-                run(["xdg-open", "--", path_output])
+                run(["xdg-open", path_output])
 
     def set_log_level(self, level: StringVar) -> None:
-        cmp: str = level.get()
-        match cmp:
-            case LOG_LEVEL.Default:
-                self.quiet = False
-                self.verbose = False
-            case LOG_LEVEL.Verbose:
-                self.quiet = False
-                self.verbose = True
-            case _:
-                self.quiet = True
-                self.verbose = False
+        self.log_level: str = level.get()
 
     def set_multi_threading(self, switch: BooleanVar) -> None:
         self.disable_multi_threading = switch.get()
@@ -306,10 +315,11 @@ class App(tk.Tk):
             if type == OPERATION_TYPE.Decompression:
                 iter.insert(0, "-d")
             # tmp.insert(0, "--nocheck")
-            if self.verbose:
+            if self.log_level == LOG_LEVEL.Verbose:
                 iter.insert(0, "-v")
-            if self.quiet:
+            elif self.log_level == LOG_LEVEL.Silent:
                 iter.insert(0, "-q")
+
             if self.Output != "":
                 iter.insert(0, self.Output)
                 iter.insert(0, "-o")
