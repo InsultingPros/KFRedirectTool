@@ -79,6 +79,8 @@ class App(tk.Tk):
                         self.Output,
                         self.disable_multi_threading,
                         self.log_level,
+                        self.no_check,
+                        self.tkvar_extensions.get(),
                     ],
                     file=f,
                 )
@@ -96,6 +98,8 @@ class App(tk.Tk):
                     self.Output,
                     self.disable_multi_threading,
                     self.log_level,
+                    self.no_check,
+                    self.extensions,
                 ) = pickle.load(f)
             return True
         except Exception as e:
@@ -115,17 +119,19 @@ class App(tk.Tk):
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
             self.on_close()
-        self.verbose: bool = False
-        self.quiet: bool = False
         self.File_List: list[str] = []
 
         if not self.load_state():
-            self.disable_multi_threading: bool = False
-            self.Input: str = ""
-            self.Output: str = ""
-            self.log_level = LOG_LEVEL.Default
             self.win_x: int = 750
             self.win_y: int = 150
+            self.Input: str = ""
+            self.Output: str = ""
+            self.disable_multi_threading: bool = False
+            self.log_level = LOG_LEVEL.Default
+            self.no_check: bool = False
+            self.extensions: str = ",".join(KF_EXTENSIONS)
+
+        self.tkvar_extensions = StringVar(self, value=self.extensions)
 
     def add_Menus(self) -> None:
         menus = tk.Menu(self)
@@ -133,6 +139,19 @@ class App(tk.Tk):
         menu_file = tk.Menu(menus, tearoff=0)
         menu_file.add_command(label="Exit", command=lambda: self.on_close())
         menus.add_cascade(label="File", menu=menu_file)
+
+        menu_adv = tk.Menu(menus, tearoff=0)
+        cbadv_var = BooleanVar(self)
+        cbadv_var.set(self.no_check)
+        menu_adv.add_checkbutton(
+            label="Disable KF Checks",
+            variable=cbadv_var,
+            command=lambda: self.disable_kf_checks(cbadv_var),
+        )
+        menu_adv.add_command(
+            label="Edit Extension List...", command=lambda: self.edit_extension_list()
+        )
+        menus.add_cascade(label="Advanced", menu=menu_adv)
 
         menu_help = tk.Menu(menus, tearoff=0)
         menu_help.add_command(
@@ -193,16 +212,15 @@ class App(tk.Tk):
         )
 
         om_var = StringVar(self)
-        options: list[LOG_LEVEL] = [
-            LOG_LEVEL.Default,
-            LOG_LEVEL.Verbose,
-            LOG_LEVEL.Silent,
-        ]
         om_log_level = ttk.OptionMenu(
             self,
             om_var,
             self.log_level,
-            *options,
+            *[
+                LOG_LEVEL.Default,
+                LOG_LEVEL.Verbose,
+                LOG_LEVEL.Silent,
+            ],
             command=lambda _: self.set_log_level(om_var),
         )
         om_log_level.config(width=20)
@@ -240,6 +258,51 @@ class App(tk.Tk):
         btn_Uncompress.grid(
             column=2, row=5, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
         )
+
+    def disable_kf_checks(self, switch: BooleanVar) -> None:
+        self.no_check = switch.get()
+
+    def edit_extension_list(self) -> None:
+        adv_win = tk.Toplevel(self)
+        adv_win.geometry("600x40")
+        adv_win.columnconfigure(0, weight=1)
+        adv_win.columnconfigure(1, weight=0)
+        adv_win.columnconfigure(2, weight=0)
+        adv_win.columnconfigure(3, weight=0)
+
+        self.temp_var = StringVar(adv_win, value=self.tkvar_extensions.get())
+        entry_extensions = ttk.Entry(adv_win, width=120, textvariable=self.temp_var)
+        btn_save = ttk.Button(
+            adv_win,
+            width=15,
+            text="Save",
+            state="enabled",
+            command=lambda: self.save_entry(self.temp_var),
+        )
+        btn_reset = ttk.Button(
+            adv_win,
+            width=15,
+            text="Reset",
+            state="enabled",
+            command=lambda: self.reset_extensions(self.temp_var),
+        )
+
+        entry_extensions.grid(
+            column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=5, pady=5
+        )
+        btn_save.grid(column=2, row=0, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
+        btn_reset.grid(column=3, row=0, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
+
+        adv_win.grab_set()
+
+    def save_entry(self, entry_var: StringVar) -> None:
+        self.extensions = entry_var.get()
+        self.tkvar_extensions.set(self.extensions)
+
+    def reset_extensions(self, entry_var: StringVar) -> None:
+        self.extensions: str = ",".join(KF_EXTENSIONS)
+        self.tkvar_extensions.set(self.extensions)
+        entry_var.set(self.extensions)
 
     def select_output(self, label: ttk.Label, button: ttk.Button) -> str:
         self.Output = filedialog.askdirectory(title="Select Output Folder")
@@ -314,7 +377,8 @@ class App(tk.Tk):
             iter.insert(0, file)
             if type == OPERATION_TYPE.Decompression:
                 iter.insert(0, "-d")
-            # tmp.insert(0, "--nocheck")
+            if self.no_check:
+                iter.insert(0, "--nocheck")
             if self.log_level == LOG_LEVEL.Verbose:
                 iter.insert(0, "-v")
             elif self.log_level == LOG_LEVEL.Silent:
@@ -334,9 +398,12 @@ class App(tk.Tk):
             print("This is not a valid path!")
             pass
         else:
+            ext_list: list[str] = self.tkvar_extensions.get().split(",", -1)
+            ext_tup = tuple(ext_list)
+
             for root, _, files in walk(self.Input):
                 for file in files:
-                    if file.endswith(KF_EXTENSIONS):
+                    if file.endswith(ext_tup):
                         self.File_List.append(str(Path(root) / file))
 
 
