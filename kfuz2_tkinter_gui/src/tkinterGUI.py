@@ -293,6 +293,7 @@ class App(tk.Tk):
         btn_save.grid(column=2, row=0, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
         btn_reset.grid(column=3, row=0, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
 
+        adv_win.bind("<Escape>", lambda _: adv_win.destroy())
         adv_win.grab_set()
 
     def save_entry(self, entry_var: StringVar) -> None:
