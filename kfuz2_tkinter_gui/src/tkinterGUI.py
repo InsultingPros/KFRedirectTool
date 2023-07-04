@@ -102,6 +102,11 @@ class App(tk.Tk):
 
     def load_state(self) -> bool:
         my_pickle: Path = Path(os.path.realpath(__file__)).parent.joinpath(PICKLE_NAME)
+        if not my_pickle.exists():
+            print(
+                f"Config '{PICKLE_NAME}' was not found! Restart the app to generate it."
+            )
+            return False
         try:
             with open(my_pickle, "rb") as f:
                 (
