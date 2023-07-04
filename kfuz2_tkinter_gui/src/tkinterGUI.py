@@ -9,7 +9,7 @@ import os
 import tkinter as tk
 import pickle
 from tkinter import BooleanVar, StringVar, ttk, filedialog
-from typing import Any
+from typing import Any, Final
 from webbrowser import open_new
 from subprocess import run
 from pathlib import Path
@@ -17,10 +17,24 @@ from os import walk
 from platform import uname
 from time import time
 
+PICKLE_NAME: Final[str] = "tkinterGUI"
 # This gui is mainly built for KF1, so you might want to manually
 # add file extensions of your UE2-based game
-PICKLE_NAME: str = "tkinterGUI"
-KF_EXTENSIONS: tuple[str, ...] = (".u", ".utx", ".usx", ".ukx", ".uax", ".rom", ".uz2")
+DEFAULT_KF_EXTENSIONS: Final[tuple[str, ...]] = (
+    ".u",
+    ".utx",
+    ".usx",
+    ".ukx",
+    ".uax",
+    ".rom",
+    ".uz2",
+)
+DEFAULT_WIN_X: Final[int] = 750
+DEFAULT_WIN_Y: Final[int] = 150
+# Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
+DEFAULT_LABEL_COLOR_EMPTY: Final[str] = "lightgrey"
+DEFAULT_LABEL_COLOR_SELECTED: Final[str] = "#e9c46a"
+DEFAULT_WINDOW_COLOR: Final[str] = "#264653"
 
 
 class OPERATION_TYPE(IntEnum):
@@ -43,8 +57,7 @@ class App(tk.Tk):
         self.geometry(f"{self.win_x}x{self.win_y}")
 
         self.title("Killing Floor 1 Redirect Tool")
-        # Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
-        self["background"] = "#264653"
+        self["background"] = DEFAULT_WINDOW_COLOR
         # Grid
         self.columnconfigure(0, weight=0)
         self.columnconfigure(1, weight=0)
@@ -122,14 +135,14 @@ class App(tk.Tk):
         self.File_List: list[str] = []
 
         if not self.load_state():
-            self.win_x: int = 750
-            self.win_y: int = 150
+            self.win_x: int = DEFAULT_WIN_X
+            self.win_y: int = DEFAULT_WIN_Y
             self.Input: str = ""
             self.Output: str = ""
             self.disable_multi_threading: bool = False
             self.log_level = LOG_LEVEL.Default
             self.no_check: bool = False
-            self.extensions: str = ",".join(KF_EXTENSIONS)
+            self.extensions: str = ",".join(DEFAULT_KF_EXTENSIONS)
 
         self.tkvar_extensions = StringVar(self, value=self.extensions)
 
@@ -167,14 +180,18 @@ class App(tk.Tk):
             self,
             text=self.Input if self.Input != "" else "Input: ...",
             width=80,
-            background="#e9c46a" if self.Input != "" else "lightgrey",
+            background=DEFAULT_LABEL_COLOR_SELECTED
+            if self.Input != ""
+            else DEFAULT_LABEL_COLOR_EMPTY,
         )
 
         lb_output = ttk.Label(
             self,
             text=self.Output if self.Output != "" else "Output: ...",
             width=80,
-            background="#e9c46a" if self.Output != "" else "lightgrey",
+            background=DEFAULT_LABEL_COLOR_SELECTED
+            if self.Output != ""
+            else DEFAULT_LABEL_COLOR_EMPTY,
         )
 
         btn_select_input = ttk.Button(
@@ -301,7 +318,7 @@ class App(tk.Tk):
         self.tkvar_extensions.set(self.extensions)
 
     def reset_extensions(self, entry_var: StringVar) -> None:
-        self.extensions: str = ",".join(KF_EXTENSIONS)
+        self.extensions: str = ",".join(DEFAULT_KF_EXTENSIONS)
         self.tkvar_extensions.set(self.extensions)
         entry_var.set(self.extensions)
 
@@ -309,7 +326,7 @@ class App(tk.Tk):
         self.Output = filedialog.askdirectory(title="Select Output Folder")
         if self.Output != "":
             label.config(text=self.Output)
-            label.config(background="#e9c46a")
+            label.config(background=DEFAULT_LABEL_COLOR_SELECTED)
             button.config(state="enabled")
         return self.Output
 
@@ -322,7 +339,7 @@ class App(tk.Tk):
         self.Input = filedialog.askdirectory(title="Select Input Folder")
         if self.Input != "":
             lb_input.config(text=self.Input)
-            lb_input.config(background="#e9c46a")
+            lb_input.config(background=DEFAULT_LABEL_COLOR_SELECTED)
             btn_compress.config(state="enabled")
             btn_uncompress.config(state="enabled")
         return self.Input
