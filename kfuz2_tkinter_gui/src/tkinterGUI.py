@@ -5,17 +5,15 @@
 
 from enum import IntEnum, StrEnum, auto
 from multiprocessing import Pool, cpu_count
-import os
-import tkinter as tk
-import pickle
-from tkinter import BooleanVar, StringVar, ttk, filedialog
+from pathlib import Path
+from pickle import dump, load
+from platform import uname
+from subprocess import run
+from time import time
+from tkinter import NSEW, BooleanVar, Menu, StringVar, Tk, Toplevel, filedialog
+from tkinter.ttk import Button, Checkbutton, Entry, Label, OptionMenu
 from typing import Any, Final
 from webbrowser import open_new
-from subprocess import run
-from pathlib import Path
-from os import walk
-from platform import uname
-from time import time
 
 PICKLE_NAME: Final[str] = "tkinterGUI"
 # This gui is mainly built for KF1, so you might want to manually
@@ -48,7 +46,7 @@ class LOG_LEVEL(StrEnum):
     Silent = "Log Level - Silent"
 
 
-class App(tk.Tk):
+class App(Tk):
     def __init__(self) -> None:
         super().__init__()
         self.wm_protocol("WM_DELETE_WINDOW", lambda: self.on_close())
@@ -81,10 +79,10 @@ class App(tk.Tk):
         self.destroy()
 
     def save_state(self) -> None:
-        my_pickle: Path = Path(os.path.realpath(__file__)).parent.joinpath(PICKLE_NAME)
+        my_pickle: Path = Path(__file__).parent.joinpath(PICKLE_NAME)
         try:
             with open(my_pickle, "wb") as f:
-                pickle.dump(
+                dump(
                     obj=[
                         self.winfo_width(),
                         self.winfo_height(),
@@ -101,7 +99,7 @@ class App(tk.Tk):
             print("Error appeared while trying to pickle stuff: " + str(e))
 
     def load_state(self) -> bool:
-        my_pickle: Path = Path(os.path.realpath(__file__)).parent.joinpath(PICKLE_NAME)
+        my_pickle: Path = Path(__file__).parent.joinpath(PICKLE_NAME)
         if not my_pickle.exists():
             print(
                 f"Config '{PICKLE_NAME}' was not found! Restart the app to generate it."
@@ -118,7 +116,7 @@ class App(tk.Tk):
                     self.log_level,
                     self.no_check,
                     self.extensions,
-                ) = pickle.load(f)
+                ) = load(f)
             return True
         except Exception as e:
             print("Error appeared while trying to pickle stuff: " + str(e))
@@ -132,8 +130,7 @@ class App(tk.Tk):
         else:
             self.kfuz2 = "kfuz2"
 
-        path_script: Path = Path(os.path.realpath(__file__))
-        self.cli: Path = path_script.parent.joinpath(self.kfuz2)
+        self.cli: Path = Path(__file__).parent.joinpath(self.kfuz2)
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
             self.on_close()
@@ -152,13 +149,13 @@ class App(tk.Tk):
         self.tkvar_extensions = StringVar(self, value=self.extensions)
 
     def add_Menus(self) -> None:
-        menus = tk.Menu(self)
+        menus = Menu(self)
 
-        menu_file = tk.Menu(menus, tearoff=0)
+        menu_file = Menu(menus, tearoff=0)
         menu_file.add_command(label="Exit", command=lambda: self.on_close())
         menus.add_cascade(label="File", menu=menu_file)
 
-        menu_adv = tk.Menu(menus, tearoff=0)
+        menu_adv = Menu(menus, tearoff=0)
         cbadv_var = BooleanVar(self)
         cbadv_var.set(self.no_check)
         menu_adv.add_checkbutton(
@@ -171,7 +168,7 @@ class App(tk.Tk):
         )
         menus.add_cascade(label="Advanced", menu=menu_adv)
 
-        menu_help = tk.Menu(menus, tearoff=0)
+        menu_help = Menu(menus, tearoff=0)
         menu_help.add_command(
             label="Github",
             command=lambda: open_new("https://github.com/InsultingPros/KFRedirectTool"),
@@ -181,7 +178,7 @@ class App(tk.Tk):
         self.config(menu=menus)
 
     def create_widgets(self) -> None:
-        lb_input = ttk.Label(
+        lb_input = Label(
             self,
             text=self.Input if self.Input != "" else "Input: ...",
             width=80,
@@ -190,7 +187,7 @@ class App(tk.Tk):
             else DEFAULT_LABEL_COLOR_EMPTY,
         )
 
-        lb_output = ttk.Label(
+        lb_output = Label(
             self,
             text=self.Output if self.Output != "" else "Output: ...",
             width=80,
@@ -199,33 +196,33 @@ class App(tk.Tk):
             else DEFAULT_LABEL_COLOR_EMPTY,
         )
 
-        btn_select_input = ttk.Button(
+        btn_select_input = Button(
             self,
             width=15,
             text="Select Input",
             command=lambda: self.select_input(lb_input, btn_Compress, btn_Uncompress),
         )
-        btn_select_output = ttk.Button(
+        btn_select_output = Button(
             self,
             width=15,
             text="Select Output",
             command=lambda: self.select_output(lb_output, btn_open_output),
         )
-        btn_open_output = ttk.Button(
+        btn_open_output = Button(
             self,
             width=15,
             text="Open Output",
             state="enabled" if self.Output != "" else "disabled",
             command=self.open_output,
         )
-        btn_Compress = ttk.Button(
+        btn_Compress = Button(
             self,
             width=20,
             text="Compress",
             state="enabled" if self.Input != "" else "disabled",
             command=lambda: self.process_files(),
         )
-        btn_Uncompress = ttk.Button(
+        btn_Uncompress = Button(
             self,
             width=20,
             text="Uncompress",
@@ -234,7 +231,7 @@ class App(tk.Tk):
         )
 
         om_var = StringVar(self)
-        om_log_level = ttk.OptionMenu(
+        om_log_level = OptionMenu(
             self,
             om_var,
             self.log_level,
@@ -249,7 +246,7 @@ class App(tk.Tk):
 
         cb_var = BooleanVar(self)
         cb_var.set(self.disable_multi_threading)
-        cb_multi_thread = ttk.Checkbutton(
+        cb_multi_thread = Checkbutton(
             self,
             width=20,
             text="Disable Multithreading",
@@ -258,34 +255,34 @@ class App(tk.Tk):
         )
 
         # Grid
-        lb_input.grid(column=1, row=0, columnspan=5, sticky=tk.EW, padx=5, pady=5)
+        lb_input.grid(column=1, row=0, columnspan=5, sticky=NSEW, padx=5, pady=5)
         btn_select_input.grid(
-            column=0, columnspan=1, row=0, sticky=tk.NSEW, padx=5, pady=5
+            column=0, columnspan=1, row=0, sticky=NSEW, padx=5, pady=5
         )
 
-        lb_output.grid(column=1, row=1, columnspan=5, sticky=tk.EW, padx=5, pady=5)
+        lb_output.grid(column=1, row=1, columnspan=5, sticky=NSEW, padx=5, pady=5)
         btn_select_output.grid(
-            column=0, columnspan=1, row=1, sticky=tk.NSEW, padx=5, pady=5
+            column=0, columnspan=1, row=1, sticky=NSEW, padx=5, pady=5
         )
 
         btn_open_output.grid(
-            column=0, row=2, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
+            column=0, row=2, columnspan=1, sticky=NSEW, padx=5, pady=5
         )
-        om_log_level.grid(column=1, row=2, columnspan=1, sticky=tk.EW, padx=5, pady=5)
+        om_log_level.grid(column=1, row=2, columnspan=1, sticky=NSEW, padx=5, pady=5)
         cb_multi_thread.grid(
-            column=2, row=2, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
+            column=2, row=2, columnspan=1, sticky=NSEW, padx=5, pady=5
         )
 
-        btn_Compress.grid(column=1, row=5, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
+        btn_Compress.grid(column=1, row=5, columnspan=1, sticky=NSEW, padx=5, pady=5)
         btn_Uncompress.grid(
-            column=2, row=5, columnspan=1, sticky=tk.NSEW, padx=5, pady=5
+            column=2, row=5, columnspan=1, sticky=NSEW, padx=5, pady=5
         )
 
     def disable_kf_checks(self, switch: BooleanVar) -> None:
         self.no_check = switch.get()
 
     def edit_extension_list(self) -> None:
-        adv_win = tk.Toplevel(self)
+        adv_win = Toplevel(self)
         adv_win.geometry("600x40")
         adv_win.columnconfigure(0, weight=1)
         adv_win.columnconfigure(1, weight=0)
@@ -293,15 +290,15 @@ class App(tk.Tk):
         adv_win.columnconfigure(3, weight=0)
 
         self.temp_var = StringVar(adv_win, value=self.tkvar_extensions.get())
-        entry_extensions = ttk.Entry(adv_win, width=120, textvariable=self.temp_var)
-        btn_save = ttk.Button(
+        entry_extensions = Entry(adv_win, width=120, textvariable=self.temp_var)
+        btn_save = Button(
             adv_win,
             width=15,
             text="Save",
             state="enabled",
             command=lambda: self.save_entry(self.temp_var),
         )
-        btn_reset = ttk.Button(
+        btn_reset = Button(
             adv_win,
             width=15,
             text="Reset",
@@ -310,10 +307,10 @@ class App(tk.Tk):
         )
 
         entry_extensions.grid(
-            column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=5, pady=5
+            column=0, row=0, columnspan=2, sticky=NSEW, padx=5, pady=5
         )
-        btn_save.grid(column=2, row=0, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
-        btn_reset.grid(column=3, row=0, columnspan=1, sticky=tk.NSEW, padx=5, pady=5)
+        btn_save.grid(column=2, row=0, columnspan=1, sticky=NSEW, padx=5, pady=5)
+        btn_reset.grid(column=3, row=0, columnspan=1, sticky=NSEW, padx=5, pady=5)
 
         adv_win.bind("<Escape>", lambda _: adv_win.destroy())
         adv_win.grab_set()
@@ -327,7 +324,7 @@ class App(tk.Tk):
         self.tkvar_extensions.set(self.extensions)
         entry_var.set(self.extensions)
 
-    def select_output(self, label: ttk.Label, button: ttk.Button) -> str:
+    def select_output(self, label: Label, button: Button) -> str:
         self.Output = filedialog.askdirectory(title="Select Output Folder")
         if self.Output != "":
             label.config(text=self.Output)
@@ -337,9 +334,9 @@ class App(tk.Tk):
 
     def select_input(
         self,
-        lb_input: ttk.Label,
-        btn_compress: ttk.Button,
-        btn_uncompress: ttk.Button,
+        lb_input: Label,
+        btn_compress: Button,
+        btn_uncompress: Button,
     ) -> str:
         self.Input = filedialog.askdirectory(title="Select Input Folder")
         if self.Input != "":
@@ -422,12 +419,13 @@ class App(tk.Tk):
             pass
         else:
             ext_list: list[str] = self.tkvar_extensions.get().split(",", -1)
-            ext_tup = tuple(ext_list)
+            path_input: Path = Path(self.Input)
 
-            for root, _, files in walk(self.Input):
-                for file in files:
-                    if file.endswith(ext_tup):
-                        self.File_List.append(str(Path(root) / file))
+            for content in path_input.rglob("*"):
+                if not content.is_file():
+                    continue
+                if content.suffix in ext_list:
+                    self.File_List.append(str(content))
 
 
 # thread pool throws exception on pickle, have to extract this from class
