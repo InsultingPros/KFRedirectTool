@@ -164,7 +164,7 @@ class App(Tk):
             command=lambda: self.disable_kf_checks(cbadv_var),
         )
         menu_adv.add_command(
-            label="Edit Extension List...", command=lambda: self.edit_extension_list()
+            label="Edit Extension List...", command=lambda: EditExtensionsTL(self)
         )
         menus.add_cascade(label="Advanced", menu=menu_adv)
 
@@ -281,49 +281,6 @@ class App(Tk):
     def disable_kf_checks(self, switch: BooleanVar) -> None:
         self.no_check = switch.get()
 
-    def edit_extension_list(self) -> None:
-        adv_win = Toplevel(self)
-        adv_win.geometry("600x40")
-        adv_win.columnconfigure(0, weight=1)
-        adv_win.columnconfigure(1, weight=0)
-        adv_win.columnconfigure(2, weight=0)
-        adv_win.columnconfigure(3, weight=0)
-
-        self.temp_var = StringVar(adv_win, value=self.tkvar_extensions.get())
-        entry_extensions = Entry(adv_win, width=120, textvariable=self.temp_var)
-        btn_save = Button(
-            adv_win,
-            width=15,
-            text="Save",
-            state="enabled",
-            command=lambda: self.save_entry(self.temp_var),
-        )
-        btn_reset = Button(
-            adv_win,
-            width=15,
-            text="Reset",
-            state="enabled",
-            command=lambda: self.reset_extensions(self.temp_var),
-        )
-
-        entry_extensions.grid(
-            column=0, row=0, columnspan=2, sticky=NSEW, padx=5, pady=5
-        )
-        btn_save.grid(column=2, row=0, columnspan=1, sticky=NSEW, padx=5, pady=5)
-        btn_reset.grid(column=3, row=0, columnspan=1, sticky=NSEW, padx=5, pady=5)
-
-        adv_win.bind("<Escape>", lambda _: adv_win.destroy())
-        adv_win.grab_set()
-
-    def save_entry(self, entry_var: StringVar) -> None:
-        self.extensions = entry_var.get()
-        self.tkvar_extensions.set(self.extensions)
-
-    def reset_extensions(self, entry_var: StringVar) -> None:
-        self.extensions: str = ",".join(DEFAULT_KF_EXTENSIONS)
-        self.tkvar_extensions.set(self.extensions)
-        entry_var.set(self.extensions)
-
     def select_output(self, label: Label, button: Button) -> str:
         self.Output = filedialog.askdirectory(title="Select Output Folder")
         if self.Output != "":
@@ -426,6 +383,56 @@ class App(Tk):
                     continue
                 if content.suffix in ext_list:
                     self.File_List.append(str(content))
+
+
+class EditExtensionsTL(Toplevel):
+    def __init__(self, parent: App) -> None:
+        Toplevel.__init__(self, parent)
+        self.geometry("600x40")
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=0)
+        self.columnconfigure(2, weight=0)
+        self.columnconfigure(3, weight=0)
+
+        self.parent: App = parent
+        self.create_widgets()
+
+        self.bind("<Escape>", lambda _: self.destroy())
+        self.grab_set()
+        self.focus_set()
+
+    def create_widgets(self) -> None:
+        self.temp_var = StringVar(self, value=self.parent.tkvar_extensions.get())
+        entry_extensions = Entry(self, width=120, textvariable=self.temp_var)
+        btn_save = Button(
+            self,
+            width=15,
+            text="Save",
+            state="enabled",
+            command=lambda: self.save_entry(self.temp_var),
+        )
+        btn_reset = Button(
+            self,
+            width=15,
+            text="Reset",
+            state="enabled",
+            command=lambda: self.reset_extensions(self.temp_var),
+        )
+
+        entry_extensions.grid(
+            column=0, row=0, columnspan=2, sticky=NSEW, padx=5, pady=5
+        )
+        btn_save.grid(column=2, row=0, columnspan=1, sticky=NSEW, padx=5, pady=5)
+        btn_reset.grid(column=3, row=0, columnspan=1, sticky=NSEW, padx=5, pady=5)
+
+    def save_entry(self, entry_var: StringVar) -> None:
+        self.parent.extensions = entry_var.get()
+        self.parent.tkvar_extensions.set(self.parent.extensions)
+
+    def reset_extensions(self, entry_var: StringVar) -> None:
+        self.parent.extensions = ",".join(DEFAULT_KF_EXTENSIONS)
+        self.parent.tkvar_extensions.set(self.parent.extensions)
+        entry_var.set(self.parent.extensions)
 
 
 # thread pool throws exception on pickle, have to extract this from class
