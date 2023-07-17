@@ -12,7 +12,7 @@ from pathlib import Path
 from pickle import dump, load
 from platform import uname
 from subprocess import run
-from threading import Thread
+from threading import Event, Thread
 from time import time
 from tkinter import (
     CENTER,
@@ -26,6 +26,7 @@ from tkinter import (
     Tk,
     Toplevel,
     filedialog,
+    messagebox,
 )
 from tkinter.ttk import Button, Checkbutton, Entry, Label, OptionMenu, Progressbar
 from typing import Any, Final
@@ -63,7 +64,7 @@ class Log(StrEnum):
 
 
 class App(Tk):
-    __slots__ = (
+    __slots__: tuple[str, ...] = (
         "Manager",
         "stop_event",
         "win_x",
@@ -83,8 +84,8 @@ class App(Tk):
     def __init__(self) -> None:
         super().__init__()
         # variables
-        self.Manager: SyncManager = Manager()
-        self.stop_event = self.Manager.Event()
+        self.manager: SyncManager = Manager()
+        self.stop_event: Event = self.manager.Event()
         self.win_x: int = DEFAULT_WIN_X
         self.win_y: int = DEFAULT_WIN_Y
         self.kfuz2: str = ""
@@ -96,13 +97,13 @@ class App(Tk):
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
             self.on_close()
-        self.Input: str = ""
-        self.Output: str = ""
+        self.input: str = ""
+        self.output: str = ""
         self.disable_multi_threading: bool = False
         self.log_level = Log.Default
         self.no_check: bool = False
         self.extensions: str = ",".join(DEFAULT_EXTENSIONS)
-        self.File_List: list[str] = []
+        self.file_list: list[str] = []
         # init everything
         self.load_state()
         self.tkvar_extensions = StringVar(self, value=self.extensions)
@@ -142,8 +143,8 @@ class App(Tk):
                     obj=[
                         self.winfo_width(),
                         self.winfo_height(),
-                        self.Input,
-                        self.Output,
+                        self.input,
+                        self.output,
                         self.disable_multi_threading,
                         self.log_level,
                         self.no_check,
@@ -166,8 +167,8 @@ class App(Tk):
                 (
                     self.win_x,
                     self.win_y,
-                    self.Input,
-                    self.Output,
+                    self.input,
+                    self.output,
                     self.disable_multi_threading,
                     self.log_level,
                     self.no_check,
@@ -212,26 +213,26 @@ class App(Tk):
     def create_widgets(self) -> None:
         lb_input = Label(
             self,
-            text=self.Input if self.Input != "" else "Input: ...",
+            text=self.input if self.input != "" else "Input: ...",
             width=80,
             background=DEFAULT_LABEL_COLOR_SELECTED
-            if self.Input != ""
+            if self.input != ""
             else DEFAULT_LABEL_COLOR_EMPTY,
         )
 
         lb_output = Label(
             self,
-            text=self.Output if self.Output != "" else "Output: ...",
+            text=self.output if self.output != "" else "Output: ...",
             width=80,
             background=DEFAULT_LABEL_COLOR_SELECTED
-            if self.Output != ""
+            if self.output != ""
             else DEFAULT_LABEL_COLOR_EMPTY,
         )
         btn_open_output = Button(
             self,
             width=15,
             text="Open Output",
-            state=NORMAL if self.Output != "" else DISABLED,
+            state=NORMAL if self.output != "" else DISABLED,
             command=self.open_output,
         )
         btn_select_output = Button(
@@ -244,14 +245,14 @@ class App(Tk):
             self,
             width=20,
             text="Compress",
-            state=NORMAL if self.Input != "" else DISABLED,
+            state=NORMAL if self.input != "" else DISABLED,
             command=self.start_processing_thread,
         )
         btn_uncompress = Button(
             self,
             width=20,
             text="Uncompress",
-            state=NORMAL if self.Input != "" else DISABLED,
+            state=NORMAL if self.input != "" else DISABLED,
             command=partial(self.start_processing_thread, OperationType.Decompression),
         )
         btn_select_input = Button(
@@ -306,12 +307,12 @@ class App(Tk):
         self.no_check = switch.get()
 
     def select_output(self, label: Label, button: Button) -> str:
-        self.Output = filedialog.askdirectory(title="Select Output Folder")
-        if self.Output != "":
-            label.config(text=self.Output)
+        self.output = filedialog.askdirectory(title="Select Output Folder")
+        if self.output != "":
+            label.config(text=self.output)
             label.config(background=DEFAULT_LABEL_COLOR_SELECTED)
             button.config(state=NORMAL)
-        return self.Output
+        return self.output
 
     def select_input(
         self,
@@ -319,16 +320,16 @@ class App(Tk):
         btn_compress: Button,
         btn_uncompress: Button,
     ) -> str:
-        self.Input = filedialog.askdirectory(title="Select Input Folder")
-        if self.Input != "":
-            lb_input.config(text=self.Input)
+        self.input = filedialog.askdirectory(title="Select Input Folder")
+        if self.input != "":
+            lb_input.config(text=self.input)
             lb_input.config(background=DEFAULT_LABEL_COLOR_SELECTED)
             btn_compress.config(state=NORMAL)
             btn_uncompress.config(state=NORMAL)
-        return self.Input
+        return self.input
 
     def open_output(self) -> None:
-        path_output = Path(self.Output)
+        path_output = Path(self.output)
         if not path_output.exists():
             print(f"Can not find {path_output=}!")
 
@@ -377,7 +378,7 @@ class App(Tk):
         end: float = time()
         print(f"Execution time {end - start}")
         print(f"=============== {prefix}COMPRESSION END ===============")
-        self.File_List.clear()
+        self.file_list.clear()
 
     def get_args(
         self, op_type: OperationType = OperationType.Compression
@@ -385,7 +386,7 @@ class App(Tk):
         result: list[list[str]] = []
         self.refresh_file_list()
 
-        for file in self.File_List:
+        for file in self.file_list:
             entry: list[Any] = []
 
             entry.insert(0, file)
@@ -398,8 +399,8 @@ class App(Tk):
             elif self.log_level == Log.Silent:
                 entry.insert(0, "-q")
 
-            if self.Output != "":
-                entry.insert(0, self.Output)
+            if self.output != "":
+                entry.insert(0, self.output)
                 entry.insert(0, "-o")
 
             entry.insert(0, self.cli)
@@ -407,27 +408,27 @@ class App(Tk):
         return result
 
     def refresh_file_list(self) -> None:
-        self.File_List.clear()
-        if not Path(self.Input).exists():
+        self.file_list.clear()
+        if not Path(self.input).exists():
             print("This is not a valid path!")
             pass
         else:
             ext_list: list[str] = self.tkvar_extensions.get().split(",", -1)
-            path_input: Path = Path(self.Input)
+            path_input: Path = Path(self.input)
 
             for content in path_input.rglob("*"):
                 if not content.is_file():
                     continue
                 if content.suffix in ext_list:
-                    self.File_List.append(str(content))
+                    self.file_list.append(str(content))
 
 
 class EditExtensionsTL(Toplevel):
-    __slots__ = ("parent", "temp_var")
+    __slots__: tuple[str, ...] = ("parent", "temp_var")
 
     def __init__(self, parent: App) -> None:
-        super().__init__()
-        self.geometry("600x40")
+        super().__init__(parent)
+        self.geometry("750x40")
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=0)
         self.columnconfigure(2, weight=0)
@@ -475,10 +476,10 @@ class EditExtensionsTL(Toplevel):
 
 
 class ProgressBarTL(Toplevel):
-    __slots__ = ("parent",)
+    __slots__: tuple[str, ...] = ("parent",)
 
     def __init__(self, parent: App) -> None:
-        super().__init__()
+        super().__init__(parent)
         self.geometry("400x100")
         self.columnconfigure(0, weight=0)
         self.columnconfigure(1, weight=0)
@@ -486,16 +487,17 @@ class ProgressBarTL(Toplevel):
 
         self.parent: App = parent
         self.create_widgets()
-        self.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.grab_set()
         self.focus_set()
+        self.wm_protocol("WM_DELETE_WINDOW", self.on_close)
+        self.display_pbar()
 
     def on_close(self) -> None:
         self.parent.stop_event.set()
         self.destroy()
 
     def monitor(self, to_check: Thread) -> None:
-        if self.parent.File_List:
+        if self.parent.file_list:
             self.after(100, partial(self.monitor, to_check))
         else:
             to_check.join()
@@ -513,7 +515,7 @@ class ProgressBarTL(Toplevel):
         lb_status = Label(
             self,
             anchor=CENTER,
-            text=f"{len(self.parent.File_List)} files to process.",
+            text=f"{len(self.parent.file_list)} files to process.",
             width=15,
             background=DEFAULT_LABEL_COLOR_SELECTED,
         )
@@ -528,13 +530,21 @@ class ProgressBarTL(Toplevel):
         pb.grid(column=2, row=0, columnspan=3, sticky=NSEW, padx=5, pady=5)
         lb_status.grid(column=2, row=1, columnspan=3, sticky=NSEW, padx=5, pady=5)
         btn_cancel.grid(column=2, row=2, padx=5, pady=5)
-        # check progress in separate thread
-        t = Thread(daemon=True)
-        t.start()
-        self.monitor(t)
+
+    def display_pbar(self) -> None:
+        if self.parent.file_list:
+            t = Thread(daemon=True)
+            t.start()
+            self.after(50, partial(self.monitor, t))
+        else:
+            self.on_close()
+            messagebox.showwarning(
+                title="showwarning",
+                message=f'There are no matching files in "{self.parent.input}". Check your extension list / select proper directory.',
+            )
 
 
-def ext_run(args: list[Any], event: Any) -> None:
+def ext_run(args: list[Any], event: Event) -> None:
     if event.is_set():
         return
     run(args)
