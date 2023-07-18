@@ -65,19 +65,19 @@ class Log(StrEnum):
 
 class App(Tk):
     __slots__: tuple[str, ...] = (
-        "Manager",
+        "manager",
         "stop_event",
         "win_x",
         "win_y",
         "kfuz2",
         "cli",
-        "Input",
-        "Output",
+        "input",
+        "output",
         "disable_multi_threading",
         "log_level",
         "no_check",
         "extensions",
-        "File_List",
+        "file_list",
         "tkvar_extensions",
     )
 
@@ -103,7 +103,7 @@ class App(Tk):
         self.log_level = Log.Default
         self.no_check: bool = False
         self.extensions: str = ",".join(DEFAULT_EXTENSIONS)
-        self.file_list: list[str] = []
+        self.file_list: list[list[Any]] = []
         # init everything
         self.load_state()
         self.tkvar_extensions = StringVar(self, value=self.extensions)
@@ -351,42 +351,42 @@ class App(Tk):
     def start_processing_thread(
         self, op_type: OperationType = OperationType.Compression
     ) -> None:
+        self.get_file_list(op_type)
+        ProgressBarTL(self)
         Thread(target=self.process_files, args=[op_type], daemon=True).start()
-        self.after(150, partial(ProgressBarTL, self))
 
     def process_files(self, op_type: OperationType = OperationType.Compression) -> None:
         prefix: str = ""
         if op_type == OperationType.Decompression:
             prefix = "DE"
-        input_args: list[list[str]] = self.get_args(op_type)
-        print(f"=============== {prefix}COMPRESSION START ===============")
-        # reset event
-        self.stop_event.clear()
-        partial_run = partial(ext_run, event=self.stop_event)
-        # now open the progress bar
-        # pbar.update_idletasks()
-        start: float = time()
+        if self.file_list:
+            print(f"=============== {prefix}COMPRESSION START ===============")
+            # reset event
+            self.stop_event.clear()
+            partial_run = partial(ext_run, event=self.stop_event)
+            # now open the progress bar
+            # pbar.update_idletasks()
+            start: float = time()
 
-        if self.disable_multi_threading:
-            for arg in input_args:
-                partial_run(arg)
+            if self.disable_multi_threading:
+                for arg in self.file_list:
+                    partial_run(arg)
+            else:
+                with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+                    executor.map(partial_run, self.file_list)
+                # with Pool(processes=cpu_count()) as pool:
+                #     pool.map(partial(ext_run, event=self.stop_event), input_args)
+            end: float = time()
+            print(f"Execution time {end - start}")
+            print(f"=============== {prefix}COMPRESSION END ===============")
+            self.file_list.clear()
         else:
-            with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
-                executor.map(partial_run, input_args)
-            # with Pool(processes=cpu_count()) as pool:
-            #     pool.map(partial(ext_run, event=self.stop_event), input_args)
-        end: float = time()
-        print(f"Execution time {end - start}")
-        print(f"=============== {prefix}COMPRESSION END ===============")
-        self.file_list.clear()
+            print("No files to process!")
 
-    def get_args(
-        self, op_type: OperationType = OperationType.Compression
-    ) -> list[list[str]]:
-        result: list[list[str]] = []
-        self.refresh_file_list()
+    def get_file_list(self, op_type: OperationType = OperationType.Compression) -> None:
+        raw_files: list[str] = self.get_raw_files()
 
-        for file in self.file_list:
+        for file in raw_files:
             entry: list[Any] = []
 
             entry.insert(0, file)
@@ -404,14 +404,13 @@ class App(Tk):
                 entry.insert(0, "-o")
 
             entry.insert(0, self.cli)
-            result.insert(0, entry)
-        return result
+            self.file_list.insert(0, entry)
 
-    def refresh_file_list(self) -> None:
-        self.file_list.clear()
+    def get_raw_files(self) -> list[str]:
+        result: list[str] = []
+
         if not Path(self.input).exists():
             print("This is not a valid path!")
-            pass
         else:
             ext_list: list[str] = self.tkvar_extensions.get().split(",", -1)
             path_input: Path = Path(self.input)
@@ -420,7 +419,9 @@ class App(Tk):
                 if not content.is_file():
                     continue
                 if content.suffix in ext_list:
-                    self.file_list.append(str(content))
+                    result.append(str(content))
+
+        return result
 
 
 class EditExtensionsTL(Toplevel):
@@ -539,7 +540,7 @@ class ProgressBarTL(Toplevel):
         else:
             self.on_close()
             messagebox.showwarning(
-                title="showwarning",
+                title="No files to process!",
                 message=f'There are no matching files in "{self.parent.input}". Check your extension list / select proper directory.',
             )
 
