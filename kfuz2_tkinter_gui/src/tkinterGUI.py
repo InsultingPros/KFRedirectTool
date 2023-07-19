@@ -33,8 +33,7 @@ from typing import Any, Final
 from webbrowser import open_new
 
 PICKLE_NAME: Final[str] = "tkinterGUI"
-# This gui is mainly built for KF1, so you might want to manually
-# add file extensions of your UE2-based game
+"""Settings file name."""
 DEFAULT_EXTENSIONS: Final[tuple[str, ...]] = (
     ".u",
     ".utx",
@@ -44,6 +43,9 @@ DEFAULT_EXTENSIONS: Final[tuple[str, ...]] = (
     ".rom",
     ".uz2",
 )
+"""Default file extension list.
+
+This gui is mainly built for KF1, so you might want to manually add file extensions of your UE2-based game."""
 DEFAULT_WIN_X: Final[int] = 750
 DEFAULT_WIN_Y: Final[int] = 150
 # Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
@@ -64,6 +66,9 @@ class Log(StrEnum):
 
 
 class App(Tk):
+    """`tkinterGUI`'s Main window."""
+
+    # We can easily skip this optimization, but why not?
     __slots__: tuple[str, ...] = (
         "manager",
         "stop_event",
@@ -83,34 +88,47 @@ class App(Tk):
 
     def __init__(self) -> None:
         super().__init__()
-        # variables
         self.manager: SyncManager = Manager()
+        """Main app's `SyncManager`."""
         self.stop_event: Event = self.manager.Event()
+        """SyncManager `Event` to stop file processing at any given moment."""
         self.win_x: int = DEFAULT_WIN_X
+        """`X` dimension of main window."""
         self.win_y: int = DEFAULT_WIN_Y
+        """`Y` dimension of main window."""
         self.kfuz2: str = ""
+        """UZ2 compressor's executable name."""
         if uname().system == "Windows":
             self.kfuz2 = "kfuz2.exe"
         else:
             self.kfuz2 = "kfuz2"
         self.cli: Path = Path(__file__).parent.joinpath(self.kfuz2)
+        """Path to UZ2 compressor."""
         if not self.cli.exists():
             print(f"Can not find {self.cli=}")
             self.on_close()
         self.input: str = ""
+        """`Input` directory for processed files."""
         self.output: str = ""
+        """`Output` directory for processed files."""
         self.disable_multi_threading: bool = False
+        """Multi-threading switch, useful for hdd users."""
         self.log_level = Log.Default
+        """UZ2 compressor's log levels."""
         self.no_check: bool = False
+        """UZ2 compressor's `nocheck` argument. Switch for KF1's default file checks."""
         self.extensions: str = ",".join(DEFAULT_EXTENSIONS)
+        """Extension list to filter input files."""
         self.file_list: list[list[Any]] = []
+        """Input files with all UZ2 executable arguments."""
+
         # init everything
         self.load_state()
         self.tkvar_extensions = StringVar(self, value=self.extensions)
+        """Tkinter variable to control extension list."""
         self.wm_protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.geometry(f"{self.win_x}x{self.win_y}")
-
         self.title("Killing Floor 1 Redirect Tool")
         self["background"] = DEFAULT_WINDOW_COLOR
         # Grid
@@ -132,10 +150,12 @@ class App(Tk):
         self.mainloop()
 
     def on_close(self) -> None:
+        """On app close save variables to settings file."""
         self.save_state()
         self.destroy()
 
     def save_state(self) -> None:
+        """Save app variables to settings file."""
         my_pickle: Path = Path(__file__).parent.joinpath(PICKLE_NAME)
         try:
             with open(my_pickle, "wb") as f:
@@ -156,6 +176,7 @@ class App(Tk):
             print("Error appeared while trying to pickle stuff: " + str(err))
 
     def load_state(self) -> bool:
+        """Load app variables from settings file."""
         my_pickle: Path = Path(__file__).parent.joinpath(PICKLE_NAME)
         if not my_pickle.exists():
             print(
@@ -180,6 +201,7 @@ class App(Tk):
             return False
 
     def add_menus(self) -> None:
+        """Add Menu Bar items."""
         menus = Menu(self)
 
         menu_file = Menu(menus, tearoff=0)
@@ -211,6 +233,7 @@ class App(Tk):
         self.config(menu=menus)
 
     def create_widgets(self) -> None:
+        """Create all other tkinter widgets."""
         lb_input = Label(
             self,
             text=self.input if self.input != "" else "Input: ...",
@@ -219,7 +242,6 @@ class App(Tk):
             if self.input != ""
             else DEFAULT_LABEL_COLOR_EMPTY,
         )
-
         lb_output = Label(
             self,
             text=self.output if self.output != "" else "Output: ...",
@@ -304,9 +326,11 @@ class App(Tk):
         btn_uncompress.grid(column=2, row=5, columnspan=1, sticky=NSEW, padx=5, pady=5)
 
     def disable_kf_checks(self, switch: BooleanVar) -> None:
+        """Switch KF file check variable."""
         self.no_check = switch.get()
 
     def select_output(self, label: Label, button: Button) -> str:
+        """Select `Output` directory from file dialog."""
         self.output = filedialog.askdirectory(title="Select Output Folder")
         if self.output != "":
             label.config(text=self.output)
@@ -320,6 +344,7 @@ class App(Tk):
         btn_compress: Button,
         btn_uncompress: Button,
     ) -> str:
+        """Select `Input` directory from file dialog."""
         self.input = filedialog.askdirectory(title="Select Input Folder")
         if self.input != "":
             lb_input.config(text=self.input)
@@ -329,6 +354,7 @@ class App(Tk):
         return self.input
 
     def open_output(self) -> None:
+        """Open `Output` directory in file explorer."""
         path_output = Path(self.output)
         if not path_output.exists():
             print(f"Can not find {path_output=}!")
@@ -342,20 +368,23 @@ class App(Tk):
                 run(["xdg-open", path_output])
 
     def set_log_level(self, level: StringVar) -> None:
+        """Set UZ2 compressor's log level."""
         self.log_level = Log(level.get())
-        # print(f"{self.log_level=}")
 
     def set_multi_threading(self, switch: BooleanVar) -> None:
+        """Switch multi-threading variable."""
         self.disable_multi_threading = switch.get()
 
     def start_processing_thread(
         self, op_type: OperationType = OperationType.Compression
     ) -> None:
+        """Run file processing in a separate thread and draw a basic progress bar."""
         self.get_file_list(op_type)
         ProgressBarTL(self)
         Thread(target=self.process_files, args=[op_type], daemon=True).start()
 
     def process_files(self, op_type: OperationType = OperationType.Compression) -> None:
+        """(De) compressing of input files."""
         prefix: str = ""
         if op_type == OperationType.Decompression:
             prefix = "DE"
@@ -365,7 +394,6 @@ class App(Tk):
             self.stop_event.clear()
             partial_run = partial(ext_run, event=self.stop_event)
             # now open the progress bar
-            # pbar.update_idletasks()
             start: float = time()
 
             if self.disable_multi_threading:
@@ -384,6 +412,7 @@ class App(Tk):
             print("No files to process!")
 
     def get_file_list(self, op_type: OperationType = OperationType.Compression) -> None:
+        """Add UZ2 arguments to input files and generate the final list."""
         raw_files: list[str] = self.get_raw_files()
 
         for file in raw_files:
@@ -407,6 +436,7 @@ class App(Tk):
             self.file_list.insert(0, entry)
 
     def get_raw_files(self) -> list[str]:
+        """Collect file list from `Input` directory."""
         result: list[str] = []
 
         if not Path(self.input).exists():
@@ -425,6 +455,8 @@ class App(Tk):
 
 
 class EditExtensionsTL(Toplevel):
+    """Toplevel window for file extension editing."""
+
     __slots__: tuple[str, ...] = ("parent", "temp_var")
 
     def __init__(self, parent: App) -> None:
@@ -436,7 +468,9 @@ class EditExtensionsTL(Toplevel):
         self.columnconfigure(3, weight=0)
         # variables
         self.parent: App = parent
+        """Main app's ref."""
         self.temp_var = StringVar(self, value=self.parent.tkvar_extensions.get())
+        """Temporary variable to set main app's extension list."""
         self.create_widgets()
 
         self.bind("<Escape>", lambda _: self.destroy())
@@ -467,16 +501,20 @@ class EditExtensionsTL(Toplevel):
         btn_reset.grid(column=3, row=0, columnspan=1, sticky=NSEW, padx=5, pady=5)
 
     def save_entry(self, entry_var: StringVar) -> None:
+        """Save and apply file extension list."""
         self.parent.extensions = entry_var.get()
         self.parent.tkvar_extensions.set(self.parent.extensions)
 
     def reset_extensions(self, entry_var: StringVar) -> None:
+        """Reset file extension list."""
         self.parent.extensions = ",".join(DEFAULT_EXTENSIONS)
         self.parent.tkvar_extensions.set(self.parent.extensions)
         entry_var.set(self.parent.extensions)
 
 
 class ProgressBarTL(Toplevel):
+    """Toplevel window for file processing progress bar."""
+
     __slots__: tuple[str, ...] = ("parent",)
 
     def __init__(self, parent: App) -> None:
@@ -487,6 +525,7 @@ class ProgressBarTL(Toplevel):
         self.columnconfigure(2, weight=1)
 
         self.parent: App = parent
+        """Main app's ref."""
         self.create_widgets()
         self.grab_set()
         self.focus_set()
@@ -494,10 +533,12 @@ class ProgressBarTL(Toplevel):
         self.display_pbar()
 
     def on_close(self) -> None:
+        """On Toplevel close stop file processing."""
         self.parent.stop_event.set()
         self.destroy()
 
     def monitor(self, to_check: Thread) -> None:
+        """Monitor file processing and close self at the end."""
         if self.parent.file_list:
             self.after(100, partial(self.monitor, to_check))
         else:
@@ -546,6 +587,7 @@ class ProgressBarTL(Toplevel):
 
 
 def ext_run(args: list[Any], event: Event) -> None:
+    """Execute UZ2 with passed arguments."""
     if event.is_set():
         return
     run(args)
