@@ -6,6 +6,7 @@
 from concurrent.futures import ProcessPoolExecutor
 from enum import IntEnum, StrEnum, auto
 from functools import partial
+from logging import DEBUG, Logger, basicConfig, getLogger
 from multiprocessing import Manager, cpu_count
 from multiprocessing.managers import SyncManager
 from pathlib import Path
@@ -59,10 +60,17 @@ class OperationType(IntEnum):
     Decompression = auto()
 
 
-class Log(StrEnum):
+class UZ2Log(StrEnum):
     Default = "Log Level - Default"
     Verbose = "Log Level - Verbose"
     Silent = "Log Level - Silent"
+
+
+__appname__: str = Path(__file__).stem
+LOG: Logger = getLogger(__appname__)
+BASIC_FORMAT = "[%(levelname)s]:[%(filename)s:%(lineno)s - %(funcName)s()] %(message)s"
+basicConfig(format=BASIC_FORMAT)
+LOG.setLevel(DEBUG)
 
 
 class App(Tk):
@@ -105,15 +113,16 @@ class App(Tk):
         self.cli: Path = Path(__file__).parent.joinpath(self.kfuz2)
         """Path to UZ2 compressor."""
         if not self.cli.exists():
-            print(f"Can not find {self.cli=}")
-            self.on_close()
+            LOG.critical(f"Can not find {self.cli=}")
+            self.destroy()
+            return
         self.input: str = ""
         """`Input` directory for processed files."""
         self.output: str = ""
         """`Output` directory for processed files."""
         self.disable_multi_threading: bool = False
         """Multi-threading switch, useful for hdd users."""
-        self.log_level = Log.Default
+        self.log_level = UZ2Log.Default
         """UZ2 compressor's log levels."""
         self.no_check: bool = False
         """UZ2 compressor's `nocheck` argument. Switch for KF1's default file checks."""
@@ -173,13 +182,13 @@ class App(Tk):
                     file=f,
                 )
         except Exception as err:
-            print("Error appeared while trying to pickle stuff: " + str(err))
+            LOG.error("Error appeared while trying to pickle stuff: " + str(err))
 
     def load_state(self) -> bool:
         """Load app variables from settings file."""
         my_pickle: Path = Path(__file__).parent.joinpath(PICKLE_NAME)
         if not my_pickle.exists():
-            print(
+            LOG.warning(
                 f"Config '{PICKLE_NAME}' was not found! Restart the app to generate it."
             )
             return False
@@ -197,7 +206,7 @@ class App(Tk):
                 ) = load(f)
             return True
         except Exception as err:
-            print("Error appeared while trying to pickle stuff: " + str(err))
+            LOG.error("Error appeared while trying to pickle stuff: " + str(err))
             return False
 
     def add_menus(self) -> None:
@@ -290,9 +299,9 @@ class App(Tk):
             om_var,
             self.log_level,
             *[
-                Log.Default,
-                Log.Verbose,
-                Log.Silent,
+                UZ2Log.Default,
+                UZ2Log.Verbose,
+                UZ2Log.Silent,
             ],
             command=lambda _: self.set_log_level(om_var),
         )
@@ -357,7 +366,7 @@ class App(Tk):
         """Open `Output` directory in file explorer."""
         path_output = Path(self.output)
         if not path_output.exists():
-            print(f"Can not find {path_output=}!")
+            LOG.warning(f"Can not find {path_output=}!")
 
         match uname().system:
             case "Darwin":
@@ -369,7 +378,7 @@ class App(Tk):
 
     def set_log_level(self, level: StringVar) -> None:
         """Set UZ2 compressor's log level."""
-        self.log_level = Log(level.get())
+        self.log_level = UZ2Log(level.get())
 
     def set_multi_threading(self, switch: BooleanVar) -> None:
         """Switch multi-threading variable."""
@@ -389,7 +398,7 @@ class App(Tk):
         if op_type == OperationType.Decompression:
             prefix = "DE"
         if self.file_list:
-            print(f"=============== {prefix}COMPRESSION START ===============")
+            LOG.info(f"=============== {prefix}COMPRESSION START ===============")
             # reset event
             self.stop_event.clear()
             partial_run = partial(ext_run, event=self.stop_event)
@@ -405,11 +414,11 @@ class App(Tk):
                 # with Pool(processes=cpu_count()) as pool:
                 #     pool.map(partial(ext_run, event=self.stop_event), input_args)
             end: float = time()
-            print(f"Execution time {end - start}")
-            print(f"=============== {prefix}COMPRESSION END ===============")
+            LOG.info(f"Execution time {end - start}")
+            LOG.info(f"=============== {prefix}COMPRESSION END ===============")
             self.file_list.clear()
         else:
-            print("No files to process!")
+            LOG.info("No files to process!")
 
     def get_file_list(self, op_type: OperationType = OperationType.Compression) -> None:
         """Add UZ2 arguments to input files and generate the final list."""
@@ -423,9 +432,9 @@ class App(Tk):
                 entry.insert(0, "-d")
             if self.no_check:
                 entry.insert(0, "--nocheck")
-            if self.log_level == Log.Verbose:
+            if self.log_level == UZ2Log.Verbose:
                 entry.insert(0, "-v")
-            elif self.log_level == Log.Silent:
+            elif self.log_level == UZ2Log.Silent:
                 entry.insert(0, "-q")
 
             if self.output != "":
@@ -440,7 +449,7 @@ class App(Tk):
         result: list[str] = []
 
         if not Path(self.input).exists():
-            print("This is not a valid path!")
+            LOG.warning("This is not a valid path!")
         else:
             ext_list: list[str] = self.tkvar_extensions.get().split(",", -1)
             path_input: Path = Path(self.input)
@@ -597,6 +606,6 @@ if __name__ == "__main__":
     try:
         my_app = App()
     except KeyboardInterrupt:
-        print("Terminated by Ctrl - C")
+        LOG.info("Terminated by Ctrl - C")
     except Exception as e:
-        print("Error appeared: " + str(e))
+        LOG.critical("Error appeared: " + str(e))
