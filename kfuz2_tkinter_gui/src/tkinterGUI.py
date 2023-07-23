@@ -586,7 +586,7 @@ class ProgressBarTL(Toplevel):
         if self.parent.file_list:
             t = Thread(daemon=True)
             t.start()
-            self.after(50, partial(self.monitor, t))
+            self.monitor(t)
         else:
             self.on_close()
             messagebox.showwarning(
