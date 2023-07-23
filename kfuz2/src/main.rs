@@ -24,7 +24,7 @@ fn main() -> ExitCode {
     // on failure returns 2
     let arguments: kfuz2_lib::cli::Options = gumdrop::Options::parse_args_default_or_exit();
 
-    let mut input_arguments: &mut kfuz2_lib::InputArguments<'_> = &mut kfuz2_lib::InputArguments {
+    let input_arguments: &mut kfuz2_lib::InputArguments<'_> = &mut kfuz2_lib::InputArguments {
         input_path: PathBuf::new(),
         output_path: PathBuf::new(),
         operation_type: &State::Compression,
