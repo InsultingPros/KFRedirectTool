@@ -46,7 +46,8 @@ DEFAULT_EXTENSIONS: Final[tuple[str, ...]] = (
 )
 """Default file extension list.
 
-This gui is mainly built for KF1, so you might want to manually add file extensions of your UE2-based game."""
+This gui is mainly built for KF1, so you might want to manually
+add file extensions of your UE2-based game."""
 DEFAULT_WIN_X: Final[int] = 750
 DEFAULT_WIN_Y: Final[int] = 150
 # Reference: https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51
@@ -338,29 +339,29 @@ class App(Tk):
         """Switch KF file check variable."""
         self.no_check = switch.get()
 
-    def select_output(self, label: Label, button: Button) -> str:
+    def select_output(self, label: Label, button: Button) -> None:
         """Select `Output` directory from file dialog."""
-        self.output = filedialog.askdirectory(title="Select Output Folder")
-        if self.output != "":
+        asked_directory: str = filedialog.askdirectory(title="Select Output Folder")
+        if not asked_directory == "":
+            self.output = asked_directory
             label.config(text=self.output)
             label.config(background=DEFAULT_LABEL_COLOR_SELECTED)
             button.config(state=NORMAL)
-        return self.output
 
     def select_input(
         self,
         lb_input: Label,
         btn_compress: Button,
         btn_uncompress: Button,
-    ) -> str:
+    ) -> None:
         """Select `Input` directory from file dialog."""
-        self.input = filedialog.askdirectory(title="Select Input Folder")
-        if self.input != "":
+        asked_directory: str = filedialog.askdirectory(title="Select Input Folder")
+        if not asked_directory == "":
+            self.input = asked_directory
             lb_input.config(text=self.input)
             lb_input.config(background=DEFAULT_LABEL_COLOR_SELECTED)
             btn_compress.config(state=NORMAL)
             btn_uncompress.config(state=NORMAL)
-        return self.input
 
     def open_output(self) -> None:
         """Open `Output` directory in file explorer."""
@@ -591,7 +592,10 @@ class ProgressBarTL(Toplevel):
             self.on_close()
             messagebox.showwarning(
                 title="No files to process!",
-                message=f'There are no matching files in "{self.parent.input}". Check your extension list / select proper directory.',
+                message=(
+                    f'There are no matching files in "{self.parent.input}". '
+                    "Check your extension list / select proper directory."
+                ),
             )
 
 
