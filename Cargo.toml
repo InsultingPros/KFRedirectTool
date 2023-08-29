@@ -1,5 +1,6 @@
 [workspace]
 members = ["kfuz2", "tests"]
+resolver = "2"
 
 [profile.release]
 lto = true
