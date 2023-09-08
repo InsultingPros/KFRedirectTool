@@ -1,7 +1,9 @@
 [workspace]
-members = ["kfuz2", "tests"]
+members = ["kfuz2_cli", "kfuz2_egui", "kfuz2_lib", "tests"]
 resolver = "2"
 
 [profile.release]
-lto = true
 codegen-units = 1
+lto = "fat"
+panic = "abort"
+strip = true

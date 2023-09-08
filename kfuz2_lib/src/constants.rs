@@ -5,35 +5,13 @@
 /// KF1 packages signature byte
 pub const KF_SIGNATURE: [u8; 4] = [0xC2, 0x83, 0x2A, 0x9E];
 /// Size of compressed chunks - 4 bytes, 0-33096
-pub const CHUNK_SIZE_COMPRESSED: usize = 33096;
+pub const COMPRESSED_CHUNK_SIZE: usize = 33096;
 /// Size of uncompressed chunks - 4 bytes, 0-32768
-pub const CHUNK_SIZE_UNCOMPRESSED: usize = 32768;
+pub const UNCOMPRESSED_CHUNK_SIZE: usize = 32768;
 /// KF1 packages default exensions.
 pub const DEFAULT_EXTENSIONS: [&str; 6] = ["u", "utx", "usx", "ukx", "uax", "rom"];
 /// KF1 compressed file extension.
 pub const COMPRESSED_EXTENSION: &str = "uz2";
-
-/// Define application exit codes, specific to each platforms
-///
-/// Reference: <https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499->
-#[cfg(target_family = "windows")]
-pub mod exit_codes {
-    pub const ERROR_SUCCESS: u8 = 0;
-    pub const ERROR_CANNOT_MAKE: u8 = 82;
-    pub const ARGUMENT_PARSING_ERROR: u8 = 2;
-    pub const ERROR_BAD_ARGUMENTS: u8 = 160;
-}
-
-/// Define application exit codes, specific to each platform
-///
-/// Reference: <https://unix.stackexchange.com/a/254747>
-#[cfg(target_family = "unix")]
-pub mod exit_codes {
-    pub const ERROR_SUCCESS: u8 = 0;
-    pub const ERROR_CANNOT_MAKE: u8 = 1;
-    pub const ARGUMENT_PARSING_ERROR: u8 = 2;
-    pub const ERROR_BAD_ARGUMENTS: u8 = 128;
-}
 
 /// List of vanilla packages, will be omitted from compression
 pub const KF_DEFAULT_PACKAGES: [&str; 548] = [

@@ -5,18 +5,11 @@ version = "1.0.0"
 edition = "2021"
 authors = ["Shtoyan", "dkanus"]
 
-[dependencies]
-kfuz2 = { version = "1.0.0", path = "./../kfuz2" }
-# flate2 = "1.0.25"
-flate2 = { version = "1.0.26", features = [
-    "zlib-ng-compat",
-], default-features = false }
-sha1_smol = "1.0.0"
-gumdrop = "0.8.1"
-
 [dev-dependencies]
-kfuz2 = { version = "1.0.0", path = "./../kfuz2" }
-serial_test = "2.0.0"
+kfuz2_cli = { path = "./../kfuz2_cli" }
+kfuz2_lib = { path = "./../kfuz2_lib" }
+serial_test = "2"
+sha1_smol = "1"
 
 [[test]]
 name = "cli_tests"

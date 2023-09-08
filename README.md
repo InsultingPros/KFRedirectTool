@@ -4,5 +4,6 @@
 
 This project consists of:
 
-- [kfuz2](kfuz2/README.md) - blazing fast, cross-platform CLI application for compressing-decompressing UE2 based game files.
-- [tkinter gui](kfuz2_tkinter_gui/README.md) - handy, cross-platform python gui for `kfuz2`.
+- [kfuz2_lib](kfuz2_lib/README.md) - core library for all other crates.
+- [kfuz2_cli](kfuz2_cli/README.md) - blazing fast, cross-platform CLI application for compressing-decompressing UE2 based game files.
+- [kfuz2_egui](kfuz2_egui/README.md) - egui based gui application.

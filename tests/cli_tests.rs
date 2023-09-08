@@ -1,3 +1,4 @@
+use kfuz2_cli::types;
 use serial_test::serial;
 use sha1_smol::Sha1;
 use std::{
@@ -44,103 +45,124 @@ fn execution_result(input_args: Option<&[&str]>) -> i32 {
 
             status.code().unwrap()
         }
-        None => kfuz2_lib::constants::exit_codes::ERROR_BAD_ARGUMENTS as i32,
+        None => types::exit_codes::ERROR_BAD_ARGUMENTS as i32,
     }
 }
 
+// N.B. check these 2 again at the end!
 #[test]
 #[serial]
-fn validate_file() {
-    assert_or_panic_hash(common::VALIDATION_FILE, common::SHA1_UNCOMPRESSED);
+fn initial_check_validation_file_u() {
+    assert_or_panic_hash(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
 }
 
 #[test]
 #[serial]
-fn args_help() {
+fn initial_check_validation_file_uz2() {
+    assert_or_panic_hash(
+        common::VALIDATION_FILE_UZ2,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
+}
+
+// arguments
+#[test]
+#[serial]
+fn show_help_arguments() {
     assert_eq!(
         execution_result(Some(&["-h"])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
 }
 
 #[test]
 #[serial]
-fn args_empty() {
+fn empty_arguments() {
     assert_eq!(
         execution_result(None),
-        kfuz2_lib::constants::exit_codes::ERROR_BAD_ARGUMENTS as i32
+        types::exit_codes::ERROR_BAD_ARGUMENTS as i32
     );
 }
 
 #[test]
 #[serial]
-fn args_incomplete() {
+fn non_complete_argument_o() {
     assert_eq!(
         execution_result(Some(&["-o"])),
-        kfuz2_lib::constants::exit_codes::ARGUMENT_PARSING_ERROR as i32
+        types::exit_codes::ARGUMENT_PARSING_ERROR as i32
     );
 }
 
 #[test]
 #[serial]
-fn incorrect_extension() {
+fn non_complete_argument_d() {
+    assert_eq!(
+        execution_result(Some(&["-d"])),
+        types::exit_codes::ARGUMENT_PARSING_ERROR as i32
+    );
+}
+
+// file test
+#[test]
+#[serial]
+fn compress_incorrect_extension_exe() {
     assert_eq!(
         execution_result(Some(&[common::INCORRECT_FILE_EXT])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
 #[test]
 #[serial]
-fn incorrect_file() {
+fn compress_incorrect_file_from_exe() {
     assert_eq!(
         execution_result(Some(&[common::INCORRECT_FILE])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
 #[test]
 #[serial]
-fn incorrect_file_nocheck() {
+fn compress_nocheck_incorrect_file() {
     assert_eq!(
         execution_result(Some(&[common::INCORRECT_FILE, "--nocheck"])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
 }
 
 #[test]
 #[serial]
-fn incorrect_file_uz2() {
+fn decompress_incorrect_file_uz2() {
     assert_eq!(
         execution_result(Some(&["-d", common::INCORRECT_FILE_UZ2])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
 #[test]
 #[serial]
-fn incorrect_file_uz2_nocheck() {
+fn decompress_nocheck_incorrect_file_uz2() {
     assert_eq!(
         execution_result(Some(&["-d", common::INCORRECT_FILE_UZ2, "--nocheck"])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
 #[test]
 #[serial]
-fn vanilla_file() {
+fn compress_vanilla_file() {
     assert_eq!(
         execution_result(Some(&[common::VANILLA_FILE])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
 #[test]
 #[serial]
-fn vanilla_file_nocheck() {
+fn compress_nocheck_vanilla_file() {
     assert_eq!(
         execution_result(Some(&[common::VANILLA_FILE, "--nocheck"])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
 }
 
@@ -148,8 +170,8 @@ fn vanilla_file_nocheck() {
 #[serial]
 fn compress_compressed_ext_file() {
     assert_eq!(
-        execution_result(Some(&[common::FILE_COMPRESSED])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        execution_result(Some(&[common::VALIDATION_FILE_UZ2])),
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
@@ -157,8 +179,8 @@ fn compress_compressed_ext_file() {
 #[serial]
 fn decompress_decompressed_ext_file() {
     assert_eq!(
-        execution_result(Some(&["-d", common::VALIDATION_FILE])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        execution_result(Some(&["-d", common::VALIDATION_FILE_U])),
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
@@ -170,11 +192,14 @@ fn compression_correct_output_verbose() {
             "-v",
             "-o",
             common::OUTPUT_COMPRESSED,
-            common::VALIDATION_FILE
+            common::VALIDATION_FILE_U
         ])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::FILE_COMPRESSED_OUTPUT, common::SHA1_COMPRESSED);
+    assert_or_panic_hash(
+        common::FILE_COMPRESSED_OUTPUT,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
 }
 
 #[test]
@@ -186,11 +211,14 @@ fn compression_correct_output_verbose_quiet() {
             "-v",
             "-o",
             common::OUTPUT_COMPRESSED,
-            common::VALIDATION_FILE
+            common::VALIDATION_FILE_U
         ])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::FILE_COMPRESSED_OUTPUT, common::SHA1_COMPRESSED);
+    assert_or_panic_hash(
+        common::FILE_COMPRESSED_OUTPUT,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
 }
 
 #[test]
@@ -200,21 +228,27 @@ fn compression_correct_output() {
         execution_result(Some(&[
             "-o",
             common::OUTPUT_COMPRESSED,
-            common::VALIDATION_FILE
+            common::VALIDATION_FILE_U
         ])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::FILE_COMPRESSED_OUTPUT, common::SHA1_COMPRESSED);
+    assert_or_panic_hash(
+        common::FILE_COMPRESSED_OUTPUT,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
 }
 
 #[test]
 #[serial]
 fn compression_correct() {
     assert_eq!(
-        execution_result(Some(&[common::VALIDATION_FILE])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        execution_result(Some(&[common::VALIDATION_FILE_U])),
+        types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::FILE_COMPRESSED, common::SHA1_COMPRESSED);
+    assert_or_panic_hash(
+        common::VALIDATION_FILE_UZ2,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
 }
 
 #[test]
@@ -222,7 +256,7 @@ fn compression_correct() {
 fn compression_incorrect_input() {
     assert_eq!(
         execution_result(Some(&[common::OUTPUT_DECOMPRESSED])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
@@ -237,10 +271,13 @@ fn decompression_correct_output_verbose() {
             "-d",
             common::FILE_COMPRESSED_OUTPUT,
         ])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
 
-    assert_or_panic_hash(common::FILE_DECOMPRESSED_OUTPUT, common::SHA1_UNCOMPRESSED);
+    assert_or_panic_hash(
+        common::FILE_DECOMPRESSED_OUTPUT,
+        common::SHA1_VALIDATION_FILE_U,
+    );
 }
 
 #[test]
@@ -253,19 +290,22 @@ fn decompression_correct_output() {
             "-d",
             common::FILE_COMPRESSED_OUTPUT
         ])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::FILE_DECOMPRESSED_OUTPUT, common::SHA1_UNCOMPRESSED);
+    assert_or_panic_hash(
+        common::FILE_DECOMPRESSED_OUTPUT,
+        common::SHA1_VALIDATION_FILE_U,
+    );
 }
 
 #[test]
 #[serial]
 fn decompression_correct() {
     assert_eq!(
-        execution_result(Some(&["-d", common::FILE_COMPRESSED])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        execution_result(Some(&["-d", common::VALIDATION_FILE_UZ2])),
+        types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::VALIDATION_FILE, common::SHA1_UNCOMPRESSED);
+    assert_or_panic_hash(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
 }
 
 #[test]
@@ -273,7 +313,7 @@ fn decompression_correct() {
 fn decompression_incorrect_input() {
     assert_eq!(
         execution_result(Some(&[common::OUTPUT_COMPRESSED])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
 }
 
@@ -284,12 +324,15 @@ fn mixed_args_test() {
         execution_result(Some(&[
             "-o",
             common::OUTPUT_COMPRESSED,
-            common::VALIDATION_FILE,
+            common::VALIDATION_FILE_U,
             "-v"
         ])),
-        kfuz2_lib::constants::exit_codes::ERROR_SUCCESS as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::FILE_COMPRESSED_OUTPUT, common::SHA1_COMPRESSED);
+    assert_or_panic_hash(
+        common::FILE_COMPRESSED_OUTPUT,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
 }
 
 #[test]
@@ -299,10 +342,28 @@ fn file_output_instead_of_directory() {
         execution_result(Some(&[
             "-o",
             common::VANILLA_FILE,
-            common::VALIDATION_FILE,
+            common::VALIDATION_FILE_U,
             "-v"
         ])),
-        kfuz2_lib::constants::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
-    assert_or_panic_hash(common::FILE_COMPRESSED_OUTPUT, common::SHA1_COMPRESSED);
+    assert_or_panic_hash(
+        common::FILE_COMPRESSED_OUTPUT,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
+}
+
+#[test]
+#[serial]
+fn final_check_validation_file_u() {
+    assert_or_panic_hash(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
+}
+
+#[test]
+#[serial]
+fn final_check_validation_file_uz2() {
+    assert_or_panic_hash(
+        common::VALIDATION_FILE_UZ2,
+        common::SHA1_VALIDATION_FILE_UZ2,
+    );
 }

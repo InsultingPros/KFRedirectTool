@@ -2,8 +2,9 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
+#[allow(clippy::struct_excessive_bools)]
 // Reference: https://docs.rs/gumdrop/latest/gumdrop/
-/// kfuz2 supported arguments. For online help check: <https://github.com/InsultingPros/KFRedirectTool>
+/// kfuz2_cli supported arguments. For online help check: <https://github.com/InsultingPros/KFRedirectTool>
 #[derive(Debug, gumdrop::Options)]
 pub struct Options {
     /// `-h` : print help information.

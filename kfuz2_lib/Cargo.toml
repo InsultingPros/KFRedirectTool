@@ -1,0 +1,12 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package]
+name = "kfuz2_lib"
+version = "2.0.0"
+edition = "2021"
+
+[dependencies]
+flate2 = { version = "1.0", features = [
+    "zlib-ng-compat",
+], default-features = false }
+sha1_smol = "1"
+thiserror = "1"

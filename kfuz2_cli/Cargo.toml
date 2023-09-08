@@ -1,0 +1,10 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package]
+name = "kfuz2_cli"
+version = "2.0.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+gumdrop = "0.8"
+kfuz2_lib = { path = "..//kfuz2_lib" }
