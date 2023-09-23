@@ -54,12 +54,16 @@ pub fn compress(
         chunk_count += 1;
     }
 
+    // this also must throw error
+    let input_size: u64 = input_stream.get_mut().metadata()?.len();
+    let output_size: u64 = output_stream.get_mut().metadata()?.len();
+
     Ok(ProcessingResult {
         time: start.elapsed(),
         chunk_count,
         hasher,
-        // input_stream_ref: input_stream,
-        // output_stream_ref: output_stream,
+        input_file_size: input_size,
+        output_file_size: output_size,
     })
 }
 

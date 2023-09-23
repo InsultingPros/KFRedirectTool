@@ -1,9 +1,10 @@
 use crate::{cli, types::exit_codes};
-use anyhow::bail;
+use anyhow::{bail, Context};
 use kfuz2_lib::compressor::compress;
 use kfuz2_lib::decompressor::decompress;
 use kfuz2_lib::helper::{
-    print_verbose_information, validate_compressible_path, validate_decompressible_path, PathChecks,
+    additional_processing_information, validate_compressible_path, validate_decompressible_path,
+    PathChecks,
 };
 use kfuz2_lib::types::{InputArguments, LogLevel};
 use std::{path::PathBuf, process::ExitCode};
@@ -66,9 +67,16 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
     match compress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
             if input_arguments.log_level != LogLevel::Silent {
-                println!("File compressed in {:?}", result.time);
+                println!(
+                    "{} compressed in {:?}",
+                    input_arguments
+                        .input_path
+                        .get_file_name()
+                        .context("Should not fail!")?,
+                    result.time
+                );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    print_verbose_information(&result)?;
+                    additional_processing_information(&result)?;
                 }
             }
         }
@@ -91,9 +99,16 @@ pub fn try_to_decompress(input_arguments: &mut InputArguments) -> anyhow::Result
     match decompress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
             if input_arguments.log_level != LogLevel::Silent {
-                println!("File decompressed in {:?}", result.time);
+                println!(
+                    "{} decompressed in {:?}",
+                    input_arguments
+                        .input_path
+                        .get_file_name()
+                        .context("Should not fail!")?,
+                    result.time
+                );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    print_verbose_information(&result)?;
+                    additional_processing_information(&result)?;
                 }
             }
         }

@@ -216,21 +216,28 @@ pub fn get_sha1_hasher(log_level: &LogLevel) -> Option<Sha1> {
     }
 }
 
-/// Print processing details
-pub fn print_verbose_information(info: &ProcessingResult) -> io::Result<()> {
+/// Print processed file's SHA1, chunks, file sizes and ratio.
+///
+/// ## Example
+///
+/// ``` ignore
+/// BitCore.u compressed in 334.3411ms
+/// |-- SHA1: ee5015514aa3f641017606521cce4a2994fbf065
+/// `-- Size 7491kb -> 5531kb (ratio 0.74), chunk count: 235
+/// ```
+pub fn additional_processing_information(info: &ProcessingResult) -> io::Result<()> {
     if let Some(sha1) = &info.hasher {
-        println!("|_ SHA1: {:?}", sha1.digest());
+        println!("|-- SHA1: {}", sha1.digest());
     }
 
-    // let size_info: String = format!(
-    //     "Size {:.5}kb -> {:.5}kb (ratio {:.2})",
-    //     info.input_stream_ref.get_ref().metadata()?.len() / 1024,
-    //     info.output_stream_ref.get_ref().metadata()?.len() / 1024,
-    //     info.output_stream_ref.get_ref().metadata()?.len() as f64
-    //         / info.input_stream_ref.get_ref().metadata()?.len() as f64
-    // );
+    let size_info: String = format!(
+        "Size {:.5}kb -> {:.5}kb (ratio {:.2})",
+        info.input_file_size / 1024,
+        info.output_file_size / 1024,
+        info.output_file_size as f64 / info.input_file_size as f64
+    );
 
-    // println!("> {}, chunk count: {}", &size_info, info.chunk_count);
+    println!("`-- {}, chunk count: {}", &size_info, info.chunk_count);
 
     Ok(())
 }

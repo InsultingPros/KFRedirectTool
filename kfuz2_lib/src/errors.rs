@@ -2,13 +2,15 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-use std::path::PathBuf;
+use std::{io::IntoInnerError, path::PathBuf};
 
 #[derive(thiserror::Error, Debug)]
 pub enum CompressStreamError {
     #[error(transparent)]
     // #[error("failed to read the file")]
     IOError(#[from] std::io::Error),
+    #[error(transparent)]
+    InnerError(#[from] IntoInnerError<std::io::BufWriter<std::fs::File>>),
     #[error("{:#?}: file IS NOT a kf package!", .0)]
     InvalidPackage(PathBuf),
     #[error("Input `{:?}` doens't exist!", .0)]
@@ -32,6 +34,8 @@ pub enum DecompressStreamError {
     #[error(transparent)]
     // #[error("Failed to decompress the stream!")]
     IOError(#[from] std::io::Error),
+    #[error(transparent)]
+    InnerError(#[from] IntoInnerError<std::io::BufWriter<std::fs::File>>),
     #[error("Error while decompressing. Invalid data!")]
     InvalidData,
     // new!

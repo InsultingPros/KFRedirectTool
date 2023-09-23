@@ -4,8 +4,8 @@ use kfuz2_lib::{
     decompressor::decompress,
     errors::{CompressStreamError, DecompressStreamError},
     helper::{
-        print_verbose_information, validate_compressible_path, validate_decompressible_path,
-        PathChecks,
+        additional_processing_information, validate_compressible_path,
+        validate_decompressible_path, PathChecks,
     },
     types::{InputArguments, LogLevel},
 };
@@ -138,9 +138,13 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), Compr
     match compress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
             if input_arguments.log_level != LogLevel::Silent {
-                println!("File compressed in {:?}", result.time);
+                println!(
+                    "{} compressed in {:?}",
+                    input_arguments.input_path.get_file_name().unwrap_or("404"),
+                    result.time
+                );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    print_verbose_information(&result)?;
+                    additional_processing_information(&result)?;
                 }
             }
             Ok(())
@@ -168,9 +172,13 @@ pub fn try_to_decompress(
     match decompress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
             if input_arguments.log_level != LogLevel::Silent {
-                println!("File decompressed in {:?}", result.time);
+                println!(
+                    "{} decompressed in {:?}",
+                    input_arguments.input_path.get_file_name().unwrap_or("404"),
+                    result.time
+                );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    print_verbose_information(&result)?;
+                    additional_processing_information(&result)?;
                 }
             }
             Ok(())

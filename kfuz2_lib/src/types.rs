@@ -39,4 +39,6 @@ pub struct ProcessingResult {
     pub time: std::time::Duration,
     pub chunk_count: u32,
     pub hasher: Option<sha1_smol::Sha1>,
+    pub input_file_size: u64,
+    pub output_file_size: u64,
 }
