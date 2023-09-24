@@ -24,14 +24,14 @@ The following optional arguments can be used:
 
 Compress a file in the same directory:
 
-```cmd
-.\kfuz2.exe "D:\Documents\BitCore.u"
+```bash
+.\kfuz2_cli.exe "D:\Documents\BitCore.u"
 ```
 
 Compress a file in a different directory:
 
-```cmd
-.\kfuz2.exe "D:\Documents\BitCore.u" -o "D:\Documents\Redirect"
+```bash
+.\kfuz2_cli.exe "D:\Documents\BitCore.u" -o "D:\Documents\Redirect"
 ```
 
 For decompression use `-d` argument.
