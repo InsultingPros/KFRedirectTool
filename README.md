@@ -4,6 +4,6 @@
 
 This project consists of:
 
-- [kfuz2_lib](kfuz2_lib/README.md) - core library for all other crates.
-- [kfuz2_cli](kfuz2_cli/README.md) - blazing fast, cross-platform CLI application for compressing-decompressing UE2 based game files.
-- [kfuz2_egui](kfuz2_egui/README.md) - egui based gui application.
+- [kfuz2_lib](crates/kfuz2_lib/README.md) - core library for all other crates.
+- [kfuz2_cli](crates/kfuz2_cli/README.md) - blazing fast, cross-platform CLI application for compressing-decompressing UE2 based game files.
+- [kfuz2_egui](crates/kfuz2_egui/README.md) - egui based gui application.

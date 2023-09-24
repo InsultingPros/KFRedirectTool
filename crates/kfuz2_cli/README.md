@@ -2,12 +2,12 @@
 
 [![Build and Test](https://github.com/InsultingPros/KFRedirectTool/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/InsultingPros/KFRedirectTool/actions/workflows/build.yml) [![GitHub all releases](https://img.shields.io/github/downloads/InsultingPros/KFRedirectTool/total)](https://github.com/InsultingPros/KFRedirectTool/releases)
 
-KF UZ2 is yet another compressor-decompressor designed for UE2-based games, offering a few notable features:
+KF UZ2 is yet another compressor-decompressor designed for UE2-based games, offering few notable features:
 
 - Supports all UE2 games but provides additional checks for KF1 files.
 - Works on 64-bit Linux, MacOS, Windows.
 - Does not require game DLLs or `UCC.exe`.
-- Boasts the [fastest](../Docs/Benchmark.md) file processing speed compared to other available compressors, thanks to the use of [zlib-ng](https://github.com/zlib-ng/zlib-ng).
+- Boasts the [fastest](../../Docs/Benchmark.md) file processing speed compared to other available compressors, thanks to the use of [zlib-ng](https://github.com/zlib-ng/zlib-ng).
 
 ## Supported CLI arguments
 

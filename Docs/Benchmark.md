@@ -4,7 +4,7 @@
 
 # Speed Comparison
 
-> [Go back to README](../kfuz2/README.md)
+> [Go back to README](../crates/kfuz2_cli/README.md)
 
 > **Note** most of difference comes from [zlib-ng] usage. Underlying algorithms, error handling are almost identical.
 
@@ -16,6 +16,6 @@ Test Setup:
 
 Compression, time checked with python script.
 
-| kfuz2 | [uzLib] | [tinyuz2] |
-|---|---|---|
-| 122.3s | 224.4s | 222.8s |
+| kfuz2 (4 threads) | kfuz2 (single thread) | [uzLib] | [tinyuz2] |
+|---| --- |---|---|
+| 36s | 122.3s | 224.4s | 222.8s |

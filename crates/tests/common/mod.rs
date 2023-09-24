@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 /// debug executable
-pub const EXE_DEBUG: &str = "..//target//debug//kfuz2_cli";
+pub const EXE_DEBUG: &str = "..//..//target//debug//kfuz2_cli";
 /// release executable
-pub const EXE_RELEASE: &str = "..//target//release//kfuz2_cli";
+pub const EXE_RELEASE: &str = "..//..//target//release//kfuz2_cli";
 
 /// Directory for `compress` output
 pub const OUTPUT_COMPRESSED: &str = "test_files//compressed";

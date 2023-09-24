@@ -220,7 +220,7 @@ pub fn get_sha1_hasher(log_level: &LogLevel) -> Option<Sha1> {
 ///
 /// ## Example
 ///
-/// ``` ignore
+/// ``` text
 /// BitCore.u compressed in 334.3411ms
 /// |-- SHA1: ee5015514aa3f641017606521cce4a2994fbf065
 /// `-- Size 7491kb -> 5531kb (ratio 0.74), chunk count: 235

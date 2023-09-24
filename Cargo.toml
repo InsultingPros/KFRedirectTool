@@ -1,5 +1,10 @@
 [workspace]
-members = ["kfuz2_cli", "kfuz2_egui", "kfuz2_lib", "tests"]
+members = [
+    "crates//kfuz2_cli",
+    "crates//kfuz2_egui",
+    "crates//kfuz2_lib",
+    "crates//tests",
+]
 resolver = "2"
 
 [profile.release]
