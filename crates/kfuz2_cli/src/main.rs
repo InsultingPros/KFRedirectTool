@@ -12,7 +12,7 @@ use kfuz2_cli::{
     helper::{compose_input_arguments, try_to_compress, try_to_decompress},
     types::exit_codes,
 };
-use kfuz2_lib::types::{InputArguments, LogLevel::Silent};
+use kfuz2_lib::types::{InputArguments, LogLevel::Minimal};
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
@@ -30,7 +30,7 @@ fn main() -> ExitCode {
         match try_to_decompress(&mut input_arguments) {
             Ok(_) => ExitCode::from(exit_codes::ERROR_SUCCESS),
             Err(e) => {
-                if input_arguments.log_level != Silent {
+                if input_arguments.log_level != Minimal {
                     eprintln!("Terminated with error: {}", e);
                 }
                 std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE))
@@ -40,7 +40,7 @@ fn main() -> ExitCode {
         match try_to_compress(&mut input_arguments) {
             Ok(_) => ExitCode::from(exit_codes::ERROR_SUCCESS),
             Err(e) => {
-                if input_arguments.log_level != Silent {
+                if input_arguments.log_level != Minimal {
                     eprintln!("Terminated with error: {}", e);
                 }
                 std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE))

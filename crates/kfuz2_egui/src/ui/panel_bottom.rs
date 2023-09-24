@@ -25,7 +25,6 @@ pub fn render_panel(
                     enable_button,
                     egui::Button::new("Open Output").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
-                .on_hover_text("Open output directory")
                 .on_disabled_hover_text("Select any output directory to activate this button")
                 .clicked()
             {
@@ -45,7 +44,6 @@ pub fn render_panel(
                     egui::Button::new("Compress").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
                 .on_disabled_hover_text("Select any input folder to proceed")
-                .on_hover_text("Create redirect files")
                 .clicked()
             {
                 crate::logic::start_compression(ui_app);
@@ -59,7 +57,6 @@ pub fn render_panel(
                     egui::Button::new("Decompress").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
                 .on_disabled_hover_text("Select any input folder to proceed")
-                .on_hover_text("Decompress `uz2` files")
                 .clicked()
             {
                 crate::logic::start_decompression(ui_app);

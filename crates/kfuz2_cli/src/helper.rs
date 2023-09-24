@@ -38,7 +38,7 @@ pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArgu
 
     // silent has higher priority
     if env_arguments.quiet {
-        result.log_level = LogLevel::Silent;
+        result.log_level = LogLevel::Minimal;
         return Ok(result);
     }
 
@@ -66,7 +66,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
 
     match compress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
-            if input_arguments.log_level != LogLevel::Silent {
+            if input_arguments.log_level != LogLevel::Minimal {
                 println!(
                     "{} compressed in {:?}",
                     input_arguments
@@ -98,7 +98,7 @@ pub fn try_to_decompress(input_arguments: &mut InputArguments) -> anyhow::Result
 
     match decompress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
-            if input_arguments.log_level != LogLevel::Silent {
+            if input_arguments.log_level != LogLevel::Minimal {
                 println!(
                     "{} decompressed in {:?}",
                     input_arguments

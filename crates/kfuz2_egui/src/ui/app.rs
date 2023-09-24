@@ -15,7 +15,7 @@ use std::path::PathBuf;
 pub enum LogLevelDef {
     Verbose,
     Default,
-    Silent,
+    Minimal,
 }
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.

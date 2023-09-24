@@ -8,7 +8,7 @@ pub enum LogLevel {
     Verbose,
     #[default]
     Default,
-    Silent,
+    Minimal,
 }
 
 /// Arguments for internal use.

@@ -89,14 +89,14 @@ pub fn render_panel(
 
         ui.horizontal(|ui| {
             ui.label("Disable KF Checks").on_hover_text(
-                "Enable if you want to ignore KF1 core files / compress any UE2 based game files.",
+                "Enable if you want to ignore KF1 core files / compress any UE2 based game files",
             );
             ui.add(super::toggle_switch::toggle(&mut ui_app.disable_kf_check));
 
             ui.add_space(30f32);
 
             ui.label("Disable Multi Threading").on_hover_text(
-                "Enable this if you process files on a slow hard drive.\nLeave disabled if you use an ssd.",
+                "Enable this if you process files on a slow hdd.\nLeave disabled if you use an ssd",
             );
             ui.add(super::toggle_switch::toggle(
                 &mut ui_app.disable_multi_threading,
@@ -105,7 +105,7 @@ pub fn render_panel(
             ui.add_space(30f32);
 
             ui.label("Log level")
-                .on_hover_text("Select log level for KFUZ2 CLI");
+                .on_hover_text("Select how much info you want to see in logs");
             egui::ComboBox::from_id_source(0)
                 .selected_text(format!("{:?}", ui_app.log_level))
                 .show_ui(ui, |ui| {
@@ -125,8 +125,8 @@ pub fn render_panel(
                     .on_hover_text("Show only essential log messages");
                     ui.selectable_value(
                         &mut ui_app.log_level,
-                        kfuz2_lib::types::LogLevel::Silent,
-                        "Silent",
+                        kfuz2_lib::types::LogLevel::Minimal,
+                        "Minimal",
                     )
                     .on_hover_text("Show the bare minimum");
                 });

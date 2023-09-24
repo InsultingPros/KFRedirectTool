@@ -137,7 +137,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), Compr
 
     match compress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
-            if input_arguments.log_level != LogLevel::Silent {
+            if input_arguments.log_level != LogLevel::Minimal {
                 println!(
                     "{} compressed in {:?}",
                     input_arguments.input_path.get_file_name().unwrap_or("404"),
@@ -171,7 +171,7 @@ pub fn try_to_decompress(
 
     match decompress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
-            if input_arguments.log_level != LogLevel::Silent {
+            if input_arguments.log_level != LogLevel::Minimal {
                 println!(
                     "{} decompressed in {:?}",
                     input_arguments.input_path.get_file_name().unwrap_or("404"),
