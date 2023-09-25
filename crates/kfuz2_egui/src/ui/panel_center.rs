@@ -88,10 +88,9 @@ pub fn render_panel(
         ui.add_space(constants::PADDING_MEDIUM);
 
         ui.horizontal(|ui| {
-            ui.label("Disable KF Checks").on_hover_text(
-                "Enable if you want to ignore KF1 core files / compress any UE2 based game files",
-            );
-            ui.add(super::toggle_switch::toggle(&mut ui_app.disable_kf_check));
+            ui.label("Ignore KF1 files")
+                .on_hover_text("Enable if you want to ignore KF1 core files");
+            ui.add(super::toggle_switch::toggle(&mut ui_app.ignore_kf_files));
 
             ui.add_space(30f32);
 

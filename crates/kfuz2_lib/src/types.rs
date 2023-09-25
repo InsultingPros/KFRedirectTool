@@ -21,7 +21,7 @@ pub struct InputArguments {
     /// how much to print
     pub log_level: LogLevel,
     /// ignore KF1 vanilla files
-    pub disable_checks: bool,
+    pub ignore_kf_files: bool,
 }
 
 impl Default for InputArguments {
@@ -29,7 +29,7 @@ impl Default for InputArguments {
         Self {
             input_path: std::path::PathBuf::new(),
             output_path: std::path::PathBuf::new(),
-            disable_checks: false,
+            ignore_kf_files: false,
             log_level: LogLevel::Default,
         }
     }

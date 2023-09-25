@@ -42,7 +42,7 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
             try_to_compress(&mut InputArguments {
                 input_path: file_list_path.into(),
                 output_path: gui_app.output_dir.clone().unwrap(),
-                disable_checks: gui_app.disable_kf_check,
+                ignore_kf_files: gui_app.ignore_kf_files,
                 log_level: gui_app.log_level,
             })
             .unwrap_or_else(|e| println!("{}", e));
@@ -60,7 +60,7 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                         try_to_compress(&mut InputArguments {
                             input_path: chunk_path.into(),
                             output_path: gui_app.output_dir.clone().unwrap(),
-                            disable_checks: gui_app.disable_kf_check,
+                            ignore_kf_files: gui_app.ignore_kf_files,
                             log_level: gui_app.log_level,
                         })
                         .unwrap_or_else(|e| println!("{}", e));
@@ -87,7 +87,7 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
             try_to_decompress(&mut InputArguments {
                 input_path: file_list_path.into(),
                 output_path: gui_app.output_dir.clone().unwrap(),
-                disable_checks: gui_app.disable_kf_check,
+                ignore_kf_files: gui_app.ignore_kf_files,
                 log_level: gui_app.log_level,
             })
             .unwrap_or_else(|e| println!("{}", e));
@@ -105,7 +105,7 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                         try_to_decompress(&mut InputArguments {
                             input_path: chunk_path.into(),
                             output_path: gui_app.output_dir.clone().unwrap(),
-                            disable_checks: gui_app.disable_kf_check,
+                            ignore_kf_files: gui_app.ignore_kf_files,
                             log_level: gui_app.log_level,
                         })
                         .unwrap_or_else(|e| println!("{}", e));
@@ -127,13 +127,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), Compr
 
     // create streams
     let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
-    let mut input_stream = if !input_arguments.disable_checks {
-        input_arguments
-            .input_path
-            .open_input_ue_stream_with_checks()?
-    } else {
-        input_arguments.input_path.open_input_ue_stream()?
-    };
+    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
 
     match compress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {

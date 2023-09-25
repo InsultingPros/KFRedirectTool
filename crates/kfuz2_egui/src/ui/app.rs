@@ -24,7 +24,7 @@ pub enum LogLevelDef {
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct MyApp {
-    pub disable_kf_check: bool,
+    pub ignore_kf_files: bool,
     pub disable_multi_threading: bool,
     pub extension_list: String,
     pub input_dir: Option<PathBuf>,
@@ -37,7 +37,7 @@ pub struct MyApp {
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            disable_kf_check: false,
+            ignore_kf_files: false,
             disable_multi_threading: false,
             extension_list: constants::DEFAULT_EXTENSIONS.join(", "),
             input_dir: Some(PathBuf::new()),

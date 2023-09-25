@@ -113,19 +113,20 @@ impl FileCheck for BufReader<File> {
 pub fn validate_compressible_path(
     input_arguments: &mut InputArguments,
 ) -> Result<(), CompressStreamError> {
+    // input is a directory
     if !input_arguments.input_path.is_file() {
         return Err(CompressStreamError::FileDoesntExist(
             input_arguments.input_path.to_owned(),
         ));
     }
-
+    // input has `uz2` extension
     if input_arguments.input_path.has_uz2_extension() {
         return Err(CompressStreamError::FileAlreadyCompressed(
             input_arguments.input_path.to_owned(),
         ));
     }
-
-    if !input_arguments.disable_checks {
+    // ignore core kf1 files or not
+    if input_arguments.ignore_kf_files {
         if !input_arguments.input_path.is_default_kf_extension() {
             return Err(CompressStreamError::NotKFExtension(
                 input_arguments.input_path.to_owned(),
@@ -137,7 +138,6 @@ pub fn validate_compressible_path(
             ));
         }
     }
-
     // no output specified
     if input_arguments.input_path == input_arguments.output_path {
         input_arguments.output_path.append_compressed_ext();
@@ -171,18 +171,18 @@ pub fn validate_compressible_path(
 pub fn validate_decompressible_path(
     input_arguments: &mut InputArguments,
 ) -> Result<(), DecompressStreamError> {
+    // input is a directory
     if !input_arguments.input_path.is_file() {
         return Err(DecompressStreamError::FileDoesntExist(
             input_arguments.input_path.to_owned(),
         ));
     }
-
+    // input has `uz2` extension
     if !input_arguments.input_path.has_uz2_extension() {
         return Err(DecompressStreamError::FileAlreadyDecompressed(
             input_arguments.input_path.to_owned(),
         ));
     }
-
     // no output specified
     if input_arguments.input_path == input_arguments.output_path {
         input_arguments.output_path.set_extension("");

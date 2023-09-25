@@ -117,7 +117,7 @@ fn compress_incorrect_extension_exe() {
 fn compress_incorrect_file_from_exe() {
     assert_eq!(
         execution_result(Some(&[common::INCORRECT_FILE])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        types::exit_codes::ERROR_SUCCESS as i32
     );
 }
 

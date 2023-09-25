@@ -13,7 +13,7 @@ use std::{path::PathBuf, process::ExitCode};
 pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArguments, ExitCode> {
     // 1. vanilla file check
     let mut result: InputArguments = InputArguments {
-        disable_checks: env_arguments.nocheck,
+        ignore_kf_files: env_arguments.nocheck,
         ..Default::default()
     };
     // 2. input path
@@ -56,13 +56,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
 
     // create streams
     let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
-    let mut input_stream = if !input_arguments.disable_checks {
-        input_arguments
-            .input_path
-            .open_input_ue_stream_with_checks()?
-    } else {
-        input_arguments.input_path.open_input_ue_stream()?
-    };
+    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
 
     match compress(&mut input_stream, &mut output_stream, input_arguments) {
         Ok(result) => {
