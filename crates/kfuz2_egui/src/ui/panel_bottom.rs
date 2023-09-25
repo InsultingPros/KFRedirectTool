@@ -1,6 +1,6 @@
-use std::path::PathBuf;
-
 use crate::constants;
+use poll_promise::Promise;
+use std::path::PathBuf;
 
 /// Render `bottom` panel of UI.
 pub fn render_panel(
@@ -46,7 +46,18 @@ pub fn render_panel(
                 .on_disabled_hover_text("Select any input folder to proceed")
                 .clicked()
             {
-                crate::logic::start_compression(ui_app);
+                let cp_ui_app = ui_app.clone();
+                let promise = Promise::spawn_thread("slow_compression", move || {
+                    crate::logic::start_compression(&cp_ui_app)
+                });
+
+                if let Some(result) = promise.ready() {
+                    println!("done!: {:?}", result);
+                    // Use/show result
+                } else {
+                    // Show a loading screen
+                    println!("placeholder!");
+                }
             }
 
             ui.add_space(15f32);
@@ -59,7 +70,18 @@ pub fn render_panel(
                 .on_disabled_hover_text("Select any input folder to proceed")
                 .clicked()
             {
-                crate::logic::start_decompression(ui_app);
+                let cp_ui_app = ui_app.clone();
+                let promise = Promise::spawn_thread("slow_decompression", move || {
+                    crate::logic::start_decompression(&cp_ui_app)
+                });
+
+                if let Some(result) = promise.ready() {
+                    println!("done!: {:?}", result);
+                    // Use/show result
+                } else {
+                    // Show a loading screen
+                    println!("placeholder!");
+                }
             }
         });
 

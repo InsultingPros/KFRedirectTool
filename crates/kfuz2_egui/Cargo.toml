@@ -5,7 +5,8 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1"
+poll-promise = { version = "0", default-features = false, features = ["web"] }
+# log = "0.4"anyhow = "1"
 eframe = { version = "0", default-features = false, features = [
     "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
@@ -16,7 +17,6 @@ egui = "0"
 env_logger = "0"
 image = "0"
 kfuz2_lib = { path = "..//kfuz2_lib" }
-# log = "0.4"
 rayon = "1"
 rfd = "0"
 serde = { version = "1", features = ["derive"] }

@@ -21,7 +21,7 @@ pub enum LogLevelDef {
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 ///
 /// Reference: https://github.com/emilk/eframe_template/blob/master/src/app.rs
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct MyApp {
     pub ignore_kf_files: bool,
