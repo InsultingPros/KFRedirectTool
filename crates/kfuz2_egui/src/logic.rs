@@ -9,7 +9,7 @@ use kfuz2_lib::{
     },
     types::{InputArguments, LogLevel},
 };
-use std::{path::PathBuf, thread::available_parallelism, time::Instant};
+use std::{path::PathBuf, sync::atomic::Ordering, time::Instant};
 use walkdir::WalkDir;
 
 /// Get file list from input directory.
@@ -34,6 +34,12 @@ fn collect_input_files(gui_app: &ui::app::MyApp) -> Vec<PathBuf> {
 
 pub fn start_compression(gui_app: &ui::app::MyApp) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
+
+    gui_app
+        .file_total_num
+        .swap(file_list.len() as u16, Ordering::AcqRel);
+    gui_app.file_current_num.swap(0u16, Ordering::AcqRel);
+
     println!("Starting compression!");
     let start: Instant = Instant::now();
 
@@ -47,11 +53,9 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
             })
             .unwrap_or_else(|e| println!("{}", e));
         });
+        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
     } else {
-        // if this fails - I don't know
-        let num_cpu: usize = available_parallelism()
-            .expect("Somehow unable to get cpu count. Something is very wrong!")
-            .get();
+        let num_cpu: usize = num_cpus::get();
 
         rayon::scope(|s| {
             for chunk in file_list.chunks(num_cpu) {
@@ -64,6 +68,7 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                             log_level: gui_app.log_level,
                         })
                         .unwrap_or_else(|e| println!("{}", e));
+                        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
                     });
                 });
             }
@@ -79,6 +84,12 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
 
 pub fn start_decompression(gui_app: &ui::app::MyApp) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
+
+    gui_app
+        .file_total_num
+        .swap(file_list.len() as u16, Ordering::AcqRel);
+    gui_app.file_current_num.swap(0u16, Ordering::AcqRel);
+
     println!("Starting decompression!");
     let start: Instant = Instant::now();
 
@@ -92,11 +103,9 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
             })
             .unwrap_or_else(|e| println!("{}", e));
         });
+        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
     } else {
-        // if this fails - I don't know
-        let num_cpu: usize = available_parallelism()
-            .expect("Somehow unable to get cpu count. Something is very wrong!")
-            .get();
+        let num_cpu: usize = num_cpus::get();
 
         rayon::scope(|s| {
             for chunk in file_list.chunks(num_cpu) {
@@ -109,6 +118,7 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                             log_level: gui_app.log_level,
                         })
                         .unwrap_or_else(|e| println!("{}", e));
+                        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
                     });
                 });
             }

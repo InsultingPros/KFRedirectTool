@@ -1,7 +1,10 @@
 use crate::constants;
 use eframe::egui;
 use kfuz2_lib::types::LogLevel;
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::{atomic::AtomicU16, Arc},
+};
 
 // #[derive(serde::Deserialize, serde::Serialize, Default, Debug, PartialEq)]
 // pub enum CLILogLevel {
@@ -32,6 +35,12 @@ pub struct MyApp {
     pub log_level: LogLevel,
     pub output_dir: Option<PathBuf>,
     pub text_edit_extensions: String,
+    #[serde(skip)]
+    pub file_current_num: Arc<AtomicU16>,
+    #[serde(skip)]
+    pub file_total_num: Arc<AtomicU16>,
+    #[serde(skip)]
+    pub animate_pgbar: bool,
 }
 
 impl Default for MyApp {
@@ -44,6 +53,9 @@ impl Default for MyApp {
             log_level: LogLevel::default(),
             output_dir: Some(PathBuf::new()),
             text_edit_extensions: constants::DEFAULT_EXTENSIONS.join(", "),
+            file_current_num: Arc::new(AtomicU16::new(0)),
+            file_total_num: Arc::new(AtomicU16::new(0)),
+            animate_pgbar: false,
         }
     }
 }

@@ -47,17 +47,10 @@ pub fn render_panel(
                 .clicked()
             {
                 let cp_ui_app = ui_app.clone();
-                let promise = Promise::spawn_thread("slow_compression", move || {
+                // we only use promise for non blocking behavior
+                let _ = Promise::spawn_thread("slow_compression", move || {
                     crate::logic::start_compression(&cp_ui_app)
                 });
-
-                if let Some(result) = promise.ready() {
-                    println!("done!: {:?}", result);
-                    // Use/show result
-                } else {
-                    // Show a loading screen
-                    println!("placeholder!");
-                }
             }
 
             ui.add_space(15f32);
@@ -71,17 +64,10 @@ pub fn render_panel(
                 .clicked()
             {
                 let cp_ui_app = ui_app.clone();
-                let promise = Promise::spawn_thread("slow_decompression", move || {
+                // we only use promise for non blocking behavior
+                let _ = Promise::spawn_thread("slow_decompression", move || {
                     crate::logic::start_decompression(&cp_ui_app)
                 });
-
-                if let Some(result) = promise.ready() {
-                    println!("done!: {:?}", result);
-                    // Use/show result
-                } else {
-                    // Show a loading screen
-                    println!("placeholder!");
-                }
             }
         });
 

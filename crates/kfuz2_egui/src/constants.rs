@@ -1,7 +1,7 @@
 pub const APP_NAME: &str = "KFUZ2 EGUI";
 
 /// Initial size of windows: [`initial_window_size`](https://docs.rs/eframe/latest/eframe/struct.NativeOptions.html#structfield.initial_window_size)
-pub const WINDOW_SIZE: Option<eframe::emath::Vec2> = Some(eframe::epaint::vec2(650.0, 250.0));
+pub const WINDOW_SIZE: Option<eframe::emath::Vec2> = Some(eframe::epaint::vec2(650.0, 290.0));
 
 /// Default KF1 file extensions.
 pub const DEFAULT_EXTENSIONS: [&str; 7] = ["u", "utx", "usx", "ukx", "uax", "rom", "uz2"];

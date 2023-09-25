@@ -8,9 +8,8 @@ fn main() -> Result<(), eframe::Error> {
 
     let options: eframe::NativeOptions = eframe::NativeOptions {
         icon_data: kfuz2_egui::ui::icon::load_icon(),
-        // drag_and_drop_support: true,
         initial_window_size: kfuz2_egui::constants::WINDOW_SIZE,
-        max_window_size: kfuz2_egui::constants::WINDOW_SIZE,
+        // max_window_size: kfuz2_egui::constants::WINDOW_SIZE,
         min_window_size: kfuz2_egui::constants::WINDOW_SIZE,
         follow_system_theme: true,
         resizable: false,

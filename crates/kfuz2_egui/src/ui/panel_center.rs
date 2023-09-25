@@ -1,3 +1,5 @@
+use std::sync::atomic::Ordering;
+
 use crate::constants;
 
 /// Render `center` panel of UI.
@@ -22,11 +24,7 @@ pub fn render_panel(
                     )
                     .clicked()
                 {
-                    if let Some(path) = rfd::FileDialog::new().pick_folder() {
-                        if path.exists() {
-                            ui_app.input_dir = Some(path);
-                        }
-                    }
+                    ui_app.input_dir = rfd::FileDialog::new().pick_folder();
                 }
                 // label
                 if let Some(input) = &ui_app.input_dir {
@@ -133,7 +131,7 @@ pub fn render_panel(
 
         ui.add_space(constants::PADDING_MEDIUM);
 
-        ui.horizontal_wrapped(|ui| {
+        ui.horizontal(|ui| {
             ui.label("Extension List")
                 .on_hover_text("Extension list to filter input files");
 
@@ -162,6 +160,25 @@ pub fn render_panel(
             if extension_response.lost_focus() {
                 ui_app.text_edit_extensions = ui_app.extension_list.to_owned();
             }
+        });
+
+        ui.add_space(constants::PADDING_MEDIUM);
+        ui.separator();
+        ui.add_space(constants::PADDING_MEDIUM);
+
+        ui.horizontal(|ui| {
+            ui.label("Progress: ");
+            // not suuure about all these conversions
+            ui_app.animate_pgbar = ui_app.file_current_num.load(Ordering::Acquire)
+                != ui_app.file_total_num.load(Ordering::Acquire);
+
+            let progress = ui_app.file_current_num.load(Ordering::Acquire) as f32
+                / ui_app.file_total_num.load(Ordering::Acquire) as f32;
+            let progress_bar = egui::ProgressBar::new(progress)
+                .show_percentage()
+                .animate(ui_app.animate_pgbar);
+
+            ui.add(progress_bar);
         });
     });
 }
