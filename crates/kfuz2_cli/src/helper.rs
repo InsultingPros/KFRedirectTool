@@ -13,7 +13,7 @@ use std::{path::PathBuf, process::ExitCode};
 pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArguments, ExitCode> {
     // 1. vanilla file check
     let mut result: InputArguments = InputArguments {
-        ignore_kf_files: env_arguments.nocheck,
+        ignore_kf_files: !env_arguments.nocheck,
         ..Default::default()
     };
     // 2. input path
