@@ -168,12 +168,15 @@ pub fn render_panel(
 
         ui.horizontal(|ui| {
             ui.label("Progress: ");
-            // not suuure about all these conversions
-            ui_app.animate_pgbar = ui_app.file_current_num.load(Ordering::Acquire)
-                != ui_app.file_total_num.load(Ordering::Acquire);
 
-            let progress = ui_app.file_current_num.load(Ordering::Acquire) as f32
-                / ui_app.file_total_num.load(Ordering::Acquire) as f32;
+            // `cache` atomics
+            let (success, fail, total) = (
+                ui_app.file_num_success.load(Ordering::Acquire),
+                ui_app.file_num_failed.load(Ordering::Acquire),
+                ui_app.file_num_total.load(Ordering::Acquire),
+            );
+            ui_app.animate_pgbar = success + fail != total;
+            let progress = success as f32 / total as f32;
             let progress_bar = egui::ProgressBar::new(progress)
                 .show_percentage()
                 .animate(ui_app.animate_pgbar);

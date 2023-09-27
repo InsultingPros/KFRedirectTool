@@ -6,13 +6,7 @@ use std::{
     sync::{atomic::AtomicU16, Arc},
 };
 
-// #[derive(serde::Deserialize, serde::Serialize, Default, Debug, PartialEq)]
-// pub enum CLILogLevel {
-//     Silent,
-//     Verbose,
-//     #[default]
-//     Essential,
-// }
+/// Link to lib's `LogLevel`
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(remote = "LogLevel")]
 pub enum LogLevelDef {
@@ -27,35 +21,47 @@ pub enum LogLevelDef {
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct MyApp {
-    pub ignore_kf_files: bool,
-    pub disable_multi_threading: bool,
-    pub extension_list: String,
     pub input_dir: Option<PathBuf>,
+    pub output_dir: Option<PathBuf>,
+    /// Skip vanilla kf1 files.
+    pub ignore_kf_files: bool,
+    /// Single / multi- thread switch.
+    pub disable_multi_threading: bool,
+    /// How much info to show in logs / console.
     #[serde(with = "LogLevelDef")]
     pub log_level: LogLevel,
-    pub output_dir: Option<PathBuf>,
+    /// Extension list used in file filtering.
+    pub extension_list: String,
+    /// Variable that accepts input from `TextEdit` field.
     pub text_edit_extensions: String,
-    #[serde(skip)]
-    pub file_current_num: Arc<AtomicU16>,
-    #[serde(skip)]
-    pub file_total_num: Arc<AtomicU16>,
+    // progress bar related
     #[serde(skip)]
     pub animate_pgbar: bool,
+    /// Total number of processed files.
+    #[serde(skip)]
+    pub file_num_total: Arc<AtomicU16>,
+    /// Successfuly processed files number.
+    #[serde(skip)]
+    pub file_num_success: Arc<AtomicU16>,
+    /// Failed files number.
+    #[serde(skip)]
+    pub file_num_failed: Arc<AtomicU16>,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            ignore_kf_files: false,
-            disable_multi_threading: false,
-            extension_list: constants::DEFAULT_EXTENSIONS.join(", "),
             input_dir: Some(PathBuf::new()),
-            log_level: LogLevel::default(),
             output_dir: Some(PathBuf::new()),
+            ignore_kf_files: true,
+            disable_multi_threading: false,
+            log_level: LogLevel::default(),
+            extension_list: constants::DEFAULT_EXTENSIONS.join(", "),
             text_edit_extensions: constants::DEFAULT_EXTENSIONS.join(", "),
-            file_current_num: Arc::new(AtomicU16::new(0)),
-            file_total_num: Arc::new(AtomicU16::new(0)),
             animate_pgbar: false,
+            file_num_total: Arc::new(AtomicU16::new(0u16)),
+            file_num_success: Arc::new(AtomicU16::new(0u16)),
+            file_num_failed: Arc::new(AtomicU16::new(0u16)),
         }
     }
 }

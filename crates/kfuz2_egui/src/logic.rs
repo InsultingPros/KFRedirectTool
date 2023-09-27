@@ -35,25 +35,31 @@ fn collect_input_files(gui_app: &ui::app::MyApp) -> Vec<PathBuf> {
 pub fn start_compression(gui_app: &ui::app::MyApp) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
 
+    // reset file counts
     gui_app
-        .file_total_num
+        .file_num_total
         .swap(file_list.len() as u16, Ordering::AcqRel);
-    gui_app.file_current_num.swap(0u16, Ordering::AcqRel);
+    gui_app.file_num_success.swap(0u16, Ordering::AcqRel);
+    gui_app.file_num_failed.swap(0u16, Ordering::AcqRel);
 
     println!("Starting compression!");
     let start: Instant = Instant::now();
 
     if gui_app.disable_multi_threading {
         file_list.iter().for_each(|file_list_path| {
-            try_to_compress(&mut InputArguments {
+            match try_to_compress(&mut InputArguments {
                 input_path: file_list_path.into(),
                 output_path: gui_app.output_dir.clone().unwrap(),
                 ignore_kf_files: gui_app.ignore_kf_files,
                 log_level: gui_app.log_level,
-            })
-            .unwrap_or_else(|e| println!("{}", e));
+            }) {
+                Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                Err(e) => {
+                    println!("{}", e);
+                    gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                }
+            };
         });
-        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
     } else {
         let num_cpu: usize = num_cpus::get();
 
@@ -61,14 +67,18 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
                     chunk.iter().for_each(|chunk_path| {
-                        try_to_compress(&mut InputArguments {
+                        match try_to_compress(&mut InputArguments {
                             input_path: chunk_path.into(),
                             output_path: gui_app.output_dir.clone().unwrap(),
                             ignore_kf_files: gui_app.ignore_kf_files,
                             log_level: gui_app.log_level,
-                        })
-                        .unwrap_or_else(|e| println!("{}", e));
-                        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
+                        }) {
+                            Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                            Err(e) => {
+                                println!("{}", e);
+                                gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                            }
+                        };
                     });
                 });
             }
@@ -85,25 +95,31 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
 pub fn start_decompression(gui_app: &ui::app::MyApp) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
 
+    // reset file counts
     gui_app
-        .file_total_num
+        .file_num_total
         .swap(file_list.len() as u16, Ordering::AcqRel);
-    gui_app.file_current_num.swap(0u16, Ordering::AcqRel);
+    gui_app.file_num_success.swap(0u16, Ordering::AcqRel);
+    gui_app.file_num_failed.swap(0u16, Ordering::AcqRel);
 
     println!("Starting decompression!");
     let start: Instant = Instant::now();
 
     if gui_app.disable_multi_threading {
         file_list.iter().for_each(|file_list_path| {
-            try_to_decompress(&mut InputArguments {
+            match try_to_decompress(&mut InputArguments {
                 input_path: file_list_path.into(),
                 output_path: gui_app.output_dir.clone().unwrap(),
                 ignore_kf_files: gui_app.ignore_kf_files,
                 log_level: gui_app.log_level,
-            })
-            .unwrap_or_else(|e| println!("{}", e));
+            }) {
+                Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                Err(e) => {
+                    println!("{}", e);
+                    gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                }
+            };
         });
-        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
     } else {
         let num_cpu: usize = num_cpus::get();
 
@@ -111,14 +127,18 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
                     chunk.iter().for_each(|chunk_path| {
-                        try_to_decompress(&mut InputArguments {
+                        match try_to_decompress(&mut InputArguments {
                             input_path: chunk_path.into(),
                             output_path: gui_app.output_dir.clone().unwrap(),
                             ignore_kf_files: gui_app.ignore_kf_files,
                             log_level: gui_app.log_level,
-                        })
-                        .unwrap_or_else(|e| println!("{}", e));
-                        gui_app.file_current_num.fetch_add(1, Ordering::AcqRel);
+                        }) {
+                            Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                            Err(e) => {
+                                println!("{}", e);
+                                gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                            }
+                        };
                     });
                 });
             }
