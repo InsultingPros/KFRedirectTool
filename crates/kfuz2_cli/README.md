@@ -1,6 +1,11 @@
+[build_badge]: https://img.shields.io/github/actions/workflow/status/InsultingPros/KFRedirectTool/build.yml?style=for-the-badge
+[release_badge]: https://img.shields.io/github/downloads/InsultingPros/KFRedirectTool/total?style=for-the-badge
+
 # KF UZ2
 
-[![Build and Test](https://github.com/InsultingPros/KFRedirectTool/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/InsultingPros/KFRedirectTool/actions/workflows/build.yml) [![GitHub all releases](https://img.shields.io/github/downloads/InsultingPros/KFRedirectTool/total)](https://github.com/InsultingPros/KFRedirectTool/releases)
+[![build_badge]](https://github.com/InsultingPros/KFRedirectTool/actions/workflows/build.yml) [![release_badge]](https://github.com/InsultingPros/KFRedirectTool/releases)
+
+> [Go back to README](../../README.md)
 
 KF UZ2 is yet another compressor-decompressor designed for UE2-based games, offering few notable features:
 
@@ -35,8 +40,3 @@ Compress a file in a different directory:
 ```
 
 For decompression use `-d` argument.
-
-## Credits
-
-- UZ2 package documentation - [UZ2 File Format](https://wiki.beyondunreal.com/UZ2_file#File_format) / [UT Package File Format v 1.6](https://archive.org/details/ut-package-file-format).
-- Inspirations - [elmuerte](https://github.com/elmuerte)'s [tinyuz2](https://unrealadmin.org/forums/showthread.php?t=10192) and [Mc.Gugi](https://unrealadmin.org/forums/member.php?u=17138)'s [uzLib](https://unrealadmin.org/forums/showthread.php?p=172927). Not used directly, but were very helpful.
