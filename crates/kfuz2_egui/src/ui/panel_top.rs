@@ -18,12 +18,15 @@ pub fn render_panel(
 
             ui.menu_button("Advanced", |ui| {
                 // reset app state on request
+                // reference: https://github.com/emilk/egui/discussions/1698#discussioncomment-2851042
                 if ui
                     .button("Reset preferences")
                     .on_hover_text("Reset all widgets, input-output fields to default")
                     .clicked()
                 {
                     *ui_app = super::app::MyApp::default();
+                    ctx.memory_mut(|mem| *mem = Default::default());
+                    super::theme::edit_fonts(ctx);
                     ui.close_menu();
                 }
             });
