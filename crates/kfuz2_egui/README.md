@@ -9,4 +9,4 @@
 
 Allows to compress whole directories and do it **fast**.
 
-![img](../../Docs/media/egui.PNG)
+![img](../../docs/media/egui.PNG)
