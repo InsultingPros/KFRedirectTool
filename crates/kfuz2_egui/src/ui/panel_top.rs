@@ -20,7 +20,10 @@ pub fn render_panel(
                 // reset app state on request
                 // reference: https://github.com/emilk/egui/discussions/1698#discussioncomment-2851042
                 if ui
-                    .button("Reset preferences")
+                    .button(
+                        egui::RichText::new("Reset preferences")
+                            .color(crate::constants::LABEL_COLOR_EMPTY),
+                    )
                     .on_hover_text("Reset all widgets, input-output fields to default")
                     .clicked()
                 {
