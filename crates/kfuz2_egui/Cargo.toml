@@ -6,13 +6,13 @@ edition = "2021"
 
 [dependencies]
 # log = "0.4"anyhow = "1"
-eframe = { version = "0", default-features = false, features = [
+eframe = { version = "0.23", default-features = false, features = [
     "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
 ] }
-egui = "0"
+egui = "0.23"
 env_logger = "0"
 image = "0"
 kfuz2_lib = { path = "..//kfuz2_lib" }

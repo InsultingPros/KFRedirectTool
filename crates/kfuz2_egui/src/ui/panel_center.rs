@@ -29,20 +29,33 @@ pub fn render_panel(
                 // label
                 if let Some(input) = &ui_app.input_dir {
                     if input.exists() {
-                        ui.monospace(
-                            egui::RichText::new(input.display().to_string())
-                                .color(crate::constants::LABEL_COLOR_TEXT),
+                        ui.add(
+                            egui::Label::new(
+                                egui::RichText::new(input.display().to_string())
+                                    .monospace()
+                                    .color(crate::constants::LABEL_COLOR_TEXT),
+                            )
+                            .truncate(true),
                         );
                     } else {
-                        ui.monospace(
-                            egui::RichText::new("Select input folder!")
-                                .color(crate::constants::LABEL_COLOR_EMPTY),
+                        ui.add(
+                            egui::Label::new(
+                                egui::RichText::new("Select input folder!")
+                                    .monospace()
+                                    .color(crate::constants::LABEL_COLOR_EMPTY),
+                            )
+                            .truncate(true),
                         );
                     }
                 } else {
-                    ui.monospace(
-                        egui::RichText::new("Select input folder!")
-                            .color(crate::constants::LABEL_COLOR_EMPTY),
+                    // yay copy-paste
+                    ui.add(
+                        egui::Label::new(
+                            egui::RichText::new("Select input folder!")
+                                .monospace()
+                                .color(crate::constants::LABEL_COLOR_EMPTY),
+                        )
+                        .truncate(true),
                     );
                 }
                 ui.end_row();
@@ -63,20 +76,32 @@ pub fn render_panel(
                 // label
                 if let Some(input) = &ui_app.output_dir {
                     if input.exists() {
-                        ui.monospace(
-                            egui::RichText::new(input.display().to_string())
-                                .color(crate::constants::LABEL_COLOR_TEXT),
+                        ui.add(
+                            egui::Label::new(
+                                egui::RichText::new(input.display().to_string())
+                                    .monospace()
+                                    .color(crate::constants::LABEL_COLOR_TEXT),
+                            )
+                            .truncate(true),
                         );
                     } else {
-                        ui.monospace(
-                            egui::RichText::new("Select output folder!")
-                                .color(crate::constants::LABEL_COLOR_EMPTY),
+                        ui.add(
+                            egui::Label::new(
+                                egui::RichText::new("Select output folder!")
+                                    .monospace()
+                                    .color(crate::constants::LABEL_COLOR_EMPTY),
+                            )
+                            .truncate(true),
                         );
                     }
                 } else {
-                    ui.monospace(
-                        egui::RichText::new("Select output folder!")
-                            .color(crate::constants::LABEL_COLOR_EMPTY),
+                    ui.add(
+                        egui::Label::new(
+                            egui::RichText::new("Select output folder!")
+                                .monospace()
+                                .color(crate::constants::LABEL_COLOR_EMPTY),
+                        )
+                        .truncate(true),
                     );
                 }
             });
