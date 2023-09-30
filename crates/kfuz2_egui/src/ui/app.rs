@@ -34,18 +34,33 @@ pub struct MyApp {
     pub extension_list: String,
     /// Variable that accepts input from `TextEdit` field.
     pub text_edit_extensions: String,
-    // progress bar related
     #[serde(skip)]
-    pub animate_pgbar: bool,
+    pub pbar: ProgressBarStuff,
+}
+
+// progress bar related
+#[derive(Debug, Clone)]
+pub struct ProgressBarStuff {
+    pub animate: bool,
+    pub animated_once: Option<bool>,
     /// Total number of processed files.
-    #[serde(skip)]
     pub file_num_total: Arc<AtomicU16>,
     /// Successfuly processed files number.
-    #[serde(skip)]
     pub file_num_success: Arc<AtomicU16>,
     /// Failed files number.
-    #[serde(skip)]
     pub file_num_failed: Arc<AtomicU16>,
+}
+
+impl Default for ProgressBarStuff {
+    fn default() -> Self {
+        Self {
+            animate: false,
+            animated_once: Some(false),
+            file_num_total: Arc::new(AtomicU16::new(0u16)),
+            file_num_success: Arc::new(AtomicU16::new(0u16)),
+            file_num_failed: Arc::new(AtomicU16::new(0u16)),
+        }
+    }
 }
 
 impl Default for MyApp {
@@ -58,10 +73,7 @@ impl Default for MyApp {
             log_level: LogLevel::default(),
             extension_list: constants::DEFAULT_EXTENSIONS.join(", "),
             text_edit_extensions: constants::DEFAULT_EXTENSIONS.join(", "),
-            animate_pgbar: false,
-            file_num_total: Arc::new(AtomicU16::new(0u16)),
-            file_num_success: Arc::new(AtomicU16::new(0u16)),
-            file_num_failed: Arc::new(AtomicU16::new(0u16)),
+            pbar: ProgressBarStuff::default(),
         }
     }
 }

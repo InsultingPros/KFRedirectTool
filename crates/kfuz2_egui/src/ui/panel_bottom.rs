@@ -46,6 +46,7 @@ pub fn render_panel(
                 .on_disabled_hover_text("Select any input folder to proceed")
                 .clicked()
             {
+                ui_app.pbar.animated_once = Some(true);
                 let cp_ui_app = ui_app.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_compression", move || {
@@ -63,6 +64,7 @@ pub fn render_panel(
                 .on_disabled_hover_text("Select any input folder to proceed")
                 .clicked()
             {
+                ui_app.pbar.animated_once = Some(true);
                 let cp_ui_app = ui_app.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_decompression", move || {

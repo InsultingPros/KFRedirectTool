@@ -164,24 +164,28 @@ pub fn render_panel(
 
         ui.add_space(constants::PADDING_MEDIUM);
         ui.separator();
-        ui.add_space(constants::PADDING_MEDIUM);
+        // ui.add_space(constants::PADDING_MEDIUM);
 
-        ui.horizontal(|ui| {
-            ui.label("Progress: ");
+        let x = egui::CollapsingHeader::new("Progress")
+            .open(ui_app.pbar.animated_once)
+            .show(ui, |ui| {
+                // `cache` atomics
+                let (success, fail, total) = (
+                    ui_app.pbar.file_num_success.load(Ordering::Acquire),
+                    ui_app.pbar.file_num_failed.load(Ordering::Acquire),
+                    ui_app.pbar.file_num_total.load(Ordering::Acquire),
+                );
+                ui_app.pbar.animate = success + fail != total;
+                let progress = success as f32 / total as f32;
+                let progress_bar = egui::ProgressBar::new(progress)
+                    .show_percentage()
+                    .animate(ui_app.pbar.animate);
 
-            // `cache` atomics
-            let (success, fail, total) = (
-                ui_app.file_num_success.load(Ordering::Acquire),
-                ui_app.file_num_failed.load(Ordering::Acquire),
-                ui_app.file_num_total.load(Ordering::Acquire),
-            );
-            ui_app.animate_pgbar = success + fail != total;
-            let progress = success as f32 / total as f32;
-            let progress_bar = egui::ProgressBar::new(progress)
-                .show_percentage()
-                .animate(ui_app.animate_pgbar);
+                ui.add(progress_bar);
+            });
 
-            ui.add(progress_bar);
-        });
+        if x.header_response.clicked() {
+            ui_app.pbar.animated_once = ui_app.pbar.animated_once.map(|inner_bool| !inner_bool);
+        }
     });
 }

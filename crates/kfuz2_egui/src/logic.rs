@@ -37,10 +37,11 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
 
     // reset file counts
     gui_app
+        .pbar
         .file_num_total
         .swap(file_list.len() as u16, Ordering::AcqRel);
-    gui_app.file_num_success.swap(0u16, Ordering::AcqRel);
-    gui_app.file_num_failed.swap(0u16, Ordering::AcqRel);
+    gui_app.pbar.file_num_success.swap(0u16, Ordering::AcqRel);
+    gui_app.pbar.file_num_failed.swap(0u16, Ordering::AcqRel);
 
     println!("Starting compression!");
     let start: Instant = Instant::now();
@@ -53,10 +54,10 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                 ignore_kf_files: gui_app.ignore_kf_files,
                 log_level: gui_app.log_level,
             }) {
-                Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                 Err(e) => {
                     println!("{}", e);
-                    gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
                 }
             };
         });
@@ -73,10 +74,10 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                             ignore_kf_files: gui_app.ignore_kf_files,
                             log_level: gui_app.log_level,
                         }) {
-                            Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                            Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                             Err(e) => {
                                 println!("{}", e);
-                                gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                                gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
                             }
                         };
                     });
@@ -97,10 +98,11 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
 
     // reset file counts
     gui_app
+        .pbar
         .file_num_total
         .swap(file_list.len() as u16, Ordering::AcqRel);
-    gui_app.file_num_success.swap(0u16, Ordering::AcqRel);
-    gui_app.file_num_failed.swap(0u16, Ordering::AcqRel);
+    gui_app.pbar.file_num_success.swap(0u16, Ordering::AcqRel);
+    gui_app.pbar.file_num_failed.swap(0u16, Ordering::AcqRel);
 
     println!("Starting decompression!");
     let start: Instant = Instant::now();
@@ -113,10 +115,10 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                 ignore_kf_files: gui_app.ignore_kf_files,
                 log_level: gui_app.log_level,
             }) {
-                Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                 Err(e) => {
                     println!("{}", e);
-                    gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
                 }
             };
         });
@@ -133,10 +135,10 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                             ignore_kf_files: gui_app.ignore_kf_files,
                             log_level: gui_app.log_level,
                         }) {
-                            Ok(_) => gui_app.file_num_success.fetch_add(1, Ordering::AcqRel),
+                            Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                             Err(e) => {
                                 println!("{}", e);
-                                gui_app.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                                gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
                             }
                         };
                     });
