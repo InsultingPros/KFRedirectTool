@@ -22,18 +22,18 @@ pub fn render_panel(
                 None => empty_path,
             };
 
-            let enable_button: bool = ui_app
+            let output_selected: bool = ui_app
                 .output_dir
                 .as_ref()
-                .is_some_and(|value| value.is_dir())
-                && ui_app
-                    .input_dir
-                    .as_ref()
-                    .is_some_and(|value| value.is_dir());
+                .is_some_and(|value| value.is_dir());
+            let input_selected: bool = ui_app
+                .input_dir
+                .as_ref()
+                .is_some_and(|value| value.is_dir());
 
             if ui
                 .add_enabled(
-                    enable_button,
+                    output_selected,
                     egui::Button::new("Open Output").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
                 .on_disabled_hover_text(DISABLED_MSG)
@@ -43,11 +43,8 @@ pub fn render_panel(
             }
 
             if ui
-                .add_enabled(
-                    enable_button,
-                    egui::Button::new("Cancel").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
-                )
-                .on_disabled_hover_text("You can only cancel active file processing.")
+                .add(egui::Button::new("Cancel").min_size(crate::constants::BUTTON_SIZE_MEDIUM))
+                .on_hover_text("You can only cancel active file processing.")
                 .clicked()
             {
                 ui_app.cancel_processing.swap(true, Ordering::Relaxed);
@@ -55,14 +52,9 @@ pub fn render_panel(
 
             ui.add_space(100f32);
 
-            let enable_button = match &ui_app.input_dir {
-                Some(value) => value.is_dir(),
-                None => false,
-            };
-
             if ui
                 .add_enabled(
-                    enable_button,
+                    input_selected && output_selected,
                     egui::Button::new("Compress").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
                 .on_disabled_hover_text(DISABLED_MSG)
@@ -82,7 +74,7 @@ pub fn render_panel(
 
             if ui
                 .add_enabled(
-                    enable_button,
+                    input_selected && output_selected,
                     egui::Button::new("Decompress").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
                 .on_disabled_hover_text(DISABLED_MSG)
