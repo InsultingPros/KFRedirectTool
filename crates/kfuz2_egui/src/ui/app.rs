@@ -3,7 +3,10 @@ use eframe::egui;
 use kfuz2_lib::types::LogLevel;
 use std::{
     path::PathBuf,
-    sync::{atomic::AtomicU16, Arc},
+    sync::{
+        atomic::{AtomicBool, AtomicU16},
+        Arc,
+    },
 };
 
 /// Link to lib's `LogLevel`
@@ -36,6 +39,8 @@ pub struct MyApp {
     pub text_edit_extensions: String,
     #[serde(skip)]
     pub pbar: ProgressBarStuff,
+    #[serde(skip)]
+    pub cancel_processing: Arc<AtomicBool>,
 }
 
 // progress bar related
@@ -74,6 +79,7 @@ impl Default for MyApp {
             extension_list: constants::DEFAULT_EXTENSIONS.join(", "),
             text_edit_extensions: constants::DEFAULT_EXTENSIONS.join(", "),
             pbar: ProgressBarStuff::default(),
+            cancel_processing: Arc::new(AtomicBool::new(false)),
         }
     }
 }

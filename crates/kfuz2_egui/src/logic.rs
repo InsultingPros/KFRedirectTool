@@ -48,12 +48,15 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
 
     if gui_app.disable_multi_threading {
         file_list.iter().for_each(|file_list_path| {
-            match try_to_compress(&mut InputArguments {
-                input_path: file_list_path.into(),
-                output_path: gui_app.output_dir.clone().unwrap(),
-                ignore_kf_files: gui_app.ignore_kf_files,
-                log_level: gui_app.log_level,
-            }) {
+            match try_to_compress(
+                &mut InputArguments {
+                    input_path: file_list_path.into(),
+                    output_path: gui_app.output_dir.clone().unwrap(),
+                    ignore_kf_files: gui_app.ignore_kf_files,
+                    log_level: gui_app.log_level,
+                },
+                gui_app.cancel_processing.load(Ordering::Relaxed),
+            ) {
                 Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                 Err(e) => {
                     println!("{}", e);
@@ -68,12 +71,15 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
                     chunk.iter().for_each(|chunk_path| {
-                        match try_to_compress(&mut InputArguments {
-                            input_path: chunk_path.into(),
-                            output_path: gui_app.output_dir.clone().unwrap(),
-                            ignore_kf_files: gui_app.ignore_kf_files,
-                            log_level: gui_app.log_level,
-                        }) {
+                        match try_to_compress(
+                            &mut InputArguments {
+                                input_path: chunk_path.into(),
+                                output_path: gui_app.output_dir.clone().unwrap(),
+                                ignore_kf_files: gui_app.ignore_kf_files,
+                                log_level: gui_app.log_level,
+                            },
+                            gui_app.cancel_processing.load(Ordering::Relaxed),
+                        ) {
                             Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                             Err(e) => {
                                 println!("{}", e);
@@ -87,9 +93,11 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
     }
 
     println!(
-        "Compression done in {:?}, files: {}",
+        "Compression done in {:?}, successful: {}, failed: {}, total: {}",
         start.elapsed(),
-        file_list.len()
+        gui_app.pbar.file_num_success.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_total.load(Ordering::Relaxed),
     );
 }
 
@@ -109,12 +117,15 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
 
     if gui_app.disable_multi_threading {
         file_list.iter().for_each(|file_list_path| {
-            match try_to_decompress(&mut InputArguments {
-                input_path: file_list_path.into(),
-                output_path: gui_app.output_dir.clone().unwrap(),
-                ignore_kf_files: gui_app.ignore_kf_files,
-                log_level: gui_app.log_level,
-            }) {
+            match try_to_decompress(
+                &mut InputArguments {
+                    input_path: file_list_path.into(),
+                    output_path: gui_app.output_dir.clone().unwrap(),
+                    ignore_kf_files: gui_app.ignore_kf_files,
+                    log_level: gui_app.log_level,
+                },
+                gui_app.cancel_processing.load(Ordering::Relaxed),
+            ) {
                 Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                 Err(e) => {
                     println!("{}", e);
@@ -129,12 +140,15 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
                     chunk.iter().for_each(|chunk_path| {
-                        match try_to_decompress(&mut InputArguments {
-                            input_path: chunk_path.into(),
-                            output_path: gui_app.output_dir.clone().unwrap(),
-                            ignore_kf_files: gui_app.ignore_kf_files,
-                            log_level: gui_app.log_level,
-                        }) {
+                        match try_to_decompress(
+                            &mut InputArguments {
+                                input_path: chunk_path.into(),
+                                output_path: gui_app.output_dir.clone().unwrap(),
+                                ignore_kf_files: gui_app.ignore_kf_files,
+                                log_level: gui_app.log_level,
+                            },
+                            gui_app.cancel_processing.load(Ordering::Relaxed),
+                        ) {
                             Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
                             Err(e) => {
                                 println!("{}", e);
@@ -148,13 +162,22 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
     }
 
     println!(
-        "Decompression done in {:?}, files: {}",
+        "Decompression done in {:?}, successful: {}, failed: {}, total: {}",
         start.elapsed(),
-        file_list.len()
+        gui_app.pbar.file_num_success.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_total.load(Ordering::Relaxed),
     );
 }
 
-pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), CompressStreamError> {
+pub fn try_to_compress(
+    input_arguments: &mut InputArguments,
+    cancel: bool,
+) -> Result<(), CompressStreamError> {
+    if cancel {
+        return Err(CompressStreamError::Canceled);
+    }
+
     validate_compressible_path(input_arguments)?;
 
     // create streams
@@ -189,7 +212,12 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), Compr
 /// try to decompress given file
 pub fn try_to_decompress(
     input_arguments: &mut InputArguments,
+    cancel: bool,
 ) -> Result<(), DecompressStreamError> {
+    if cancel {
+        return Err(DecompressStreamError::Canceled);
+    }
+
     validate_decompressible_path(input_arguments)?;
 
     let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;

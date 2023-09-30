@@ -27,6 +27,8 @@ pub enum CompressStreamError {
     FileNameError(PathBuf),
     #[error("Failed to compress file {:?}", .0)]
     FailedToCompress(PathBuf),
+    #[error("Processing canceled")]
+    Canceled,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -38,7 +40,6 @@ pub enum DecompressStreamError {
     InnerError(#[from] IntoInnerError<std::io::BufWriter<std::fs::File>>),
     #[error("Error while decompressing. Invalid data!")]
     InvalidData,
-    // new!
     #[error("Input `{:?}` doens't exist!", .0)]
     FileDoesntExist(PathBuf),
     #[error("Input `{:?}` is already decompressed!", .0)]
@@ -49,6 +50,8 @@ pub enum DecompressStreamError {
     FileNameError(PathBuf),
     #[error("Failed to compress file {:?}", .0)]
     FailedToCompress(PathBuf),
+    #[error("Processing canceled")]
+    Canceled,
 }
 
 #[derive(thiserror::Error, Debug)]

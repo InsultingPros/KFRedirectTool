@@ -1,6 +1,6 @@
 use crate::constants;
 use poll_promise::Promise;
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::atomic::Ordering};
 
 const DISABLED_MSG: &str = "Select any output directory to activate this button";
 
@@ -42,6 +42,17 @@ pub fn render_panel(
                 open_file_explorer(output_destination);
             }
 
+            if ui
+                .add_enabled(
+                    enable_button,
+                    egui::Button::new("Cancel").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
+                )
+                .on_disabled_hover_text("You can only cancel active file processing.")
+                .clicked()
+            {
+                ui_app.cancel_processing.swap(true, Ordering::Relaxed);
+            }
+
             ui.add_space(100f32);
 
             let enable_button = match &ui_app.input_dir {
@@ -58,6 +69,8 @@ pub fn render_panel(
                 .clicked()
             {
                 ui_app.pbar.animated_once = Some(true);
+                ui_app.cancel_processing.swap(false, Ordering::Relaxed);
+
                 let cp_ui_app = ui_app.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_compression", move || {
@@ -76,6 +89,8 @@ pub fn render_panel(
                 .clicked()
             {
                 ui_app.pbar.animated_once = Some(true);
+                ui_app.cancel_processing.swap(false, Ordering::Relaxed);
+
                 let cp_ui_app = ui_app.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_decompression", move || {
