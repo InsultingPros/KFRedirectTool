@@ -166,7 +166,7 @@ pub fn render_panel(
         ui.separator();
         // ui.add_space(constants::PADDING_MEDIUM);
 
-        let x = egui::CollapsingHeader::new("Progress")
+        let collapsible_response = egui::CollapsingHeader::new("Progress")
             .open(ui_app.pbar.animated_once)
             .show(ui, |ui| {
                 // `cache` atomics
@@ -184,7 +184,7 @@ pub fn render_panel(
                 ui.add(progress_bar);
             });
 
-        if x.header_response.clicked() {
+        if collapsible_response.header_response.clicked() {
             ui_app.pbar.animated_once = ui_app.pbar.animated_once.map(|inner_bool| !inner_bool);
         }
     });

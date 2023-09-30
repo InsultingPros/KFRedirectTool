@@ -2,6 +2,8 @@ use crate::constants;
 use poll_promise::Promise;
 use std::path::PathBuf;
 
+const DISABLED_MSG: &str = "Select any output directory to activate this button";
+
 /// Render `bottom` panel of UI.
 pub fn render_panel(
     ui_app: &mut super::app::MyApp,
@@ -15,20 +17,29 @@ pub fn render_panel(
             ui.add_space(15f32);
 
             let empty_path = &PathBuf::new();
-            let (enable_button, destination) = match &ui_app.output_dir {
-                Some(value) => (value.is_dir(), value),
-                None => (false, empty_path),
+            let output_destination = match &ui_app.output_dir {
+                Some(value) => value,
+                None => empty_path,
             };
+
+            let enable_button: bool = ui_app
+                .output_dir
+                .as_ref()
+                .is_some_and(|value| value.is_dir())
+                && ui_app
+                    .input_dir
+                    .as_ref()
+                    .is_some_and(|value| value.is_dir());
 
             if ui
                 .add_enabled(
                     enable_button,
                     egui::Button::new("Open Output").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
-                .on_disabled_hover_text("Select any output directory to activate this button")
+                .on_disabled_hover_text(DISABLED_MSG)
                 .clicked()
             {
-                open_file_explorer(destination);
+                open_file_explorer(output_destination);
             }
 
             ui.add_space(100f32);
@@ -43,7 +54,7 @@ pub fn render_panel(
                     enable_button,
                     egui::Button::new("Compress").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
-                .on_disabled_hover_text("Select any input folder to proceed")
+                .on_disabled_hover_text(DISABLED_MSG)
                 .clicked()
             {
                 ui_app.pbar.animated_once = Some(true);
@@ -61,7 +72,7 @@ pub fn render_panel(
                     enable_button,
                     egui::Button::new("Decompress").min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
-                .on_disabled_hover_text("Select any input folder to proceed")
+                .on_disabled_hover_text(DISABLED_MSG)
                 .clicked()
             {
                 ui_app.pbar.animated_once = Some(true);
