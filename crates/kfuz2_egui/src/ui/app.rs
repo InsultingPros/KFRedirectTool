@@ -4,7 +4,7 @@ use kfuz2_lib::types::LogLevel;
 use std::{
     path::PathBuf,
     sync::{
-        atomic::{AtomicBool, AtomicU16},
+        atomic::{AtomicBool, AtomicU16, AtomicU64, Ordering},
         Arc,
     },
 };
@@ -56,6 +56,16 @@ pub struct ProgressBarStuff {
     pub file_num_failed: Arc<AtomicU16>,
     /// Ignored files number.
     pub file_num_ignored: Arc<AtomicU16>,
+    pub time_elapsed: Arc<AtomicU64>,
+}
+
+impl ProgressBarStuff {
+    pub fn reset(&self) {
+        self.file_num_success.swap(0u16, Ordering::Relaxed);
+        self.file_num_failed.swap(0u16, Ordering::Relaxed);
+        self.file_num_ignored.swap(0u16, Ordering::Relaxed);
+        self.time_elapsed.swap(0u64, Ordering::Relaxed);
+    }
 }
 
 impl Default for ProgressBarStuff {
@@ -67,6 +77,7 @@ impl Default for ProgressBarStuff {
             file_num_success: Arc::new(AtomicU16::new(0u16)),
             file_num_failed: Arc::new(AtomicU16::new(0u16)),
             file_num_ignored: Arc::new(AtomicU16::new(0u16)),
+            time_elapsed: Arc::new(AtomicU64::new(0u64)),
         }
     }
 }

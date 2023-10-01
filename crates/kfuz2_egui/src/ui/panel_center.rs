@@ -200,9 +200,16 @@ pub fn render_panel(
                 ui_app.pbar.file_num_total.load(Ordering::Acquire),
             );
             ui_app.pbar.animate = success + fail + ignore != total;
-            let progress: f32 = (success + ignore) as f32 / total as f32;
+            let mut progress: f32 = (success + ignore) as f32 / total as f32;
+            if progress.is_nan() {
+                progress = 0f32;
+            }
             let progress_bar = egui::ProgressBar::new(progress)
-                .show_percentage()
+                .text(format!(
+                    "{:.1}% Time elapsed: {} seconds.",
+                    progress * 100f32,
+                    ui_app.pbar.time_elapsed.load(Ordering::Relaxed)
+                ))
                 .animate(ui_app.pbar.animate);
 
             let color = if ui_app.pbar.animated_once.is_some_and(|inner| inner) {

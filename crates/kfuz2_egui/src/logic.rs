@@ -36,13 +36,11 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
 
     // reset file counts
+    gui_app.pbar.reset();
     gui_app
         .pbar
         .file_num_total
         .swap(file_list.len() as u16, Ordering::Relaxed);
-    gui_app.pbar.file_num_success.swap(0u16, Ordering::Relaxed);
-    gui_app.pbar.file_num_failed.swap(0u16, Ordering::Relaxed);
-    gui_app.pbar.file_num_ignored.swap(0u16, Ordering::Relaxed);
 
     println!("Starting compression!");
     let start: Instant = Instant::now();
@@ -79,6 +77,10 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                     }
                 }
             };
+            gui_app
+                .pbar
+                .time_elapsed
+                .swap(start.elapsed().as_secs(), Ordering::Relaxed);
         });
     } else {
         let num_cpu: usize = num_cpus::get();
@@ -120,6 +122,10 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                                 }
                             }
                         };
+                        gui_app
+                            .pbar
+                            .time_elapsed
+                            .swap(start.elapsed().as_secs(), Ordering::Relaxed);
                     });
                 });
             }
@@ -140,12 +146,11 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
 
     // reset file counts
+    gui_app.pbar.reset();
     gui_app
         .pbar
         .file_num_total
         .swap(file_list.len() as u16, Ordering::AcqRel);
-    gui_app.pbar.file_num_success.swap(0u16, Ordering::AcqRel);
-    gui_app.pbar.file_num_failed.swap(0u16, Ordering::AcqRel);
 
     println!("Starting decompression!");
     let start: Instant = Instant::now();
@@ -172,6 +177,10 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                     gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
                 }
             };
+            gui_app
+                .pbar
+                .time_elapsed
+                .swap(start.elapsed().as_secs(), Ordering::Relaxed);
         });
     } else {
         let num_cpu: usize = num_cpus::get();
@@ -200,6 +209,10 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                                 gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
                             }
                         };
+                        gui_app
+                            .pbar
+                            .time_elapsed
+                            .swap(start.elapsed().as_secs(), Ordering::Relaxed);
                     });
                 });
             }
