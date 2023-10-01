@@ -13,9 +13,7 @@ pub fn render_panel(
     egui::TopBottomPanel::bottom("bottom").show(ctx, |ui| {
         ui.add_space(constants::PADDING_BIG);
 
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
-            ui.add_space(15f32);
-
+        ui.horizontal(|ui| {
             let empty_path = &PathBuf::new();
             let output_destination = match &ui_app.output_dir {
                 Some(value) => value,
@@ -42,6 +40,8 @@ pub fn render_panel(
                 open_file_explorer(output_destination);
             }
 
+            ui.separator();
+
             if ui
                 .add(egui::Button::new("Cancel").min_size(crate::constants::BUTTON_SIZE_MEDIUM))
                 .on_hover_text("You can only cancel active file processing.")
@@ -50,7 +50,9 @@ pub fn render_panel(
                 ui_app.cancel_processing.swap(true, Ordering::Relaxed);
             }
 
-            ui.add_space(100f32);
+            ui.separator();
+            ui.add_space(70f32);
+            ui.separator();
 
             if ui
                 .add_enabled(
