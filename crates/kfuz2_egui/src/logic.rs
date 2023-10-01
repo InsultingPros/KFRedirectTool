@@ -39,9 +39,10 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
     gui_app
         .pbar
         .file_num_total
-        .swap(file_list.len() as u16, Ordering::AcqRel);
-    gui_app.pbar.file_num_success.swap(0u16, Ordering::AcqRel);
-    gui_app.pbar.file_num_failed.swap(0u16, Ordering::AcqRel);
+        .swap(file_list.len() as u16, Ordering::Relaxed);
+    gui_app.pbar.file_num_success.swap(0u16, Ordering::Relaxed);
+    gui_app.pbar.file_num_failed.swap(0u16, Ordering::Relaxed);
+    gui_app.pbar.file_num_ignored.swap(0u16, Ordering::Relaxed);
 
     println!("Starting compression!");
     let start: Instant = Instant::now();
@@ -57,10 +58,25 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                 },
                 gui_app.cancel_processing.load(Ordering::Relaxed),
             ) {
-                Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
+                Ok(_) => {
+                    gui_app
+                        .pbar
+                        .file_num_success
+                        .fetch_add(1, Ordering::Relaxed);
+                }
                 Err(e) => {
                     println!("{}", e);
-                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                    match e {
+                        CompressStreamError::IsKFPackage(_) => {
+                            gui_app
+                                .pbar
+                                .file_num_ignored
+                                .fetch_add(1, Ordering::Relaxed);
+                        }
+                        _ => {
+                            gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
+                        }
+                    }
                 }
             };
         });
@@ -80,10 +96,28 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
                             },
                             gui_app.cancel_processing.load(Ordering::Relaxed),
                         ) {
-                            Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
+                            Ok(_) => {
+                                gui_app
+                                    .pbar
+                                    .file_num_success
+                                    .fetch_add(1, Ordering::Relaxed);
+                            }
                             Err(e) => {
                                 println!("{}", e);
-                                gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                                match e {
+                                    CompressStreamError::IsKFPackage(_) => {
+                                        gui_app
+                                            .pbar
+                                            .file_num_ignored
+                                            .fetch_add(1, Ordering::Relaxed);
+                                    }
+                                    _ => {
+                                        gui_app
+                                            .pbar
+                                            .file_num_failed
+                                            .fetch_add(1, Ordering::Relaxed);
+                                    }
+                                }
                             }
                         };
                     });
@@ -93,10 +127,11 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
     }
 
     println!(
-        "Compression done in {:?}, successful: {}, failed: {}, total: {}",
+        "Compression done in {:?}, successful: {}, failed: {}, ignored: {}, total: {}",
         start.elapsed(),
         gui_app.pbar.file_num_success.load(Ordering::Relaxed),
         gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_ignored.load(Ordering::Relaxed),
         gui_app.pbar.file_num_total.load(Ordering::Relaxed),
     );
 }
@@ -126,10 +161,15 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                 },
                 gui_app.cancel_processing.load(Ordering::Relaxed),
             ) {
-                Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
+                Ok(_) => {
+                    gui_app
+                        .pbar
+                        .file_num_success
+                        .fetch_add(1, Ordering::Relaxed);
+                }
                 Err(e) => {
                     println!("{}", e);
-                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
                 }
             };
         });
@@ -149,10 +189,15 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
                             },
                             gui_app.cancel_processing.load(Ordering::Relaxed),
                         ) {
-                            Ok(_) => gui_app.pbar.file_num_success.fetch_add(1, Ordering::AcqRel),
+                            Ok(_) => {
+                                gui_app
+                                    .pbar
+                                    .file_num_success
+                                    .fetch_add(1, Ordering::Relaxed);
+                            }
                             Err(e) => {
                                 println!("{}", e);
-                                gui_app.pbar.file_num_failed.fetch_add(1, Ordering::AcqRel)
+                                gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
                             }
                         };
                     });
@@ -162,10 +207,11 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
     }
 
     println!(
-        "Decompression done in {:?}, successful: {}, failed: {}, total: {}",
+        "Decompression done in {:?}, successful: {}, failed: {}, ignored: {}, total: {}",
         start.elapsed(),
         gui_app.pbar.file_num_success.load(Ordering::Relaxed),
         gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_ignored.load(Ordering::Relaxed),
         gui_app.pbar.file_num_total.load(Ordering::Relaxed),
     );
 }

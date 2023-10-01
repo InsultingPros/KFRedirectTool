@@ -54,6 +54,8 @@ pub struct ProgressBarStuff {
     pub file_num_success: Arc<AtomicU16>,
     /// Failed files number.
     pub file_num_failed: Arc<AtomicU16>,
+    /// Ignored files number.
+    pub file_num_ignored: Arc<AtomicU16>,
 }
 
 impl Default for ProgressBarStuff {
@@ -64,6 +66,7 @@ impl Default for ProgressBarStuff {
             file_num_total: Arc::new(AtomicU16::new(0u16)),
             file_num_success: Arc::new(AtomicU16::new(0u16)),
             file_num_failed: Arc::new(AtomicU16::new(0u16)),
+            file_num_ignored: Arc::new(AtomicU16::new(0u16)),
         }
     }
 }

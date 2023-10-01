@@ -193,13 +193,14 @@ pub fn render_panel(
         ui.horizontal(|ui| {
             ui.label("Progress: ");
             // `cache` atomics
-            let (success, fail, total) = (
+            let (success, fail, ignore, total) = (
                 ui_app.pbar.file_num_success.load(Ordering::Acquire),
                 ui_app.pbar.file_num_failed.load(Ordering::Acquire),
+                ui_app.pbar.file_num_ignored.load(Ordering::Acquire),
                 ui_app.pbar.file_num_total.load(Ordering::Acquire),
             );
-            ui_app.pbar.animate = success + fail != total;
-            let progress: f32 = success as f32 / total as f32;
+            ui_app.pbar.animate = success + fail + ignore != total;
+            let progress: f32 = (success + ignore) as f32 / total as f32;
             let progress_bar = egui::ProgressBar::new(progress)
                 .show_percentage()
                 .animate(ui_app.pbar.animate);
