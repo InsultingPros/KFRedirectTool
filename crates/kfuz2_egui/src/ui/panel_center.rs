@@ -1,6 +1,5 @@
-use std::sync::atomic::Ordering;
-
 use crate::constants;
+use std::sync::atomic::Ordering;
 
 /// Render `center` panel of UI.
 pub fn render_panel(
@@ -189,28 +188,29 @@ pub fn render_panel(
 
         ui.add_space(constants::PADDING_MEDIUM);
         ui.separator();
-        // ui.add_space(constants::PADDING_MEDIUM);
+        ui.add_space(constants::PADDING_MEDIUM);
 
-        let collapsible_response = egui::CollapsingHeader::new("Progress")
-            .open(ui_app.pbar.animated_once)
-            .show(ui, |ui| {
-                // `cache` atomics
-                let (success, fail, total) = (
-                    ui_app.pbar.file_num_success.load(Ordering::Acquire),
-                    ui_app.pbar.file_num_failed.load(Ordering::Acquire),
-                    ui_app.pbar.file_num_total.load(Ordering::Acquire),
-                );
-                ui_app.pbar.animate = success + fail != total;
-                let progress = success as f32 / total as f32;
-                let progress_bar = egui::ProgressBar::new(progress)
-                    .show_percentage()
-                    .animate(ui_app.pbar.animate);
+        ui.horizontal(|ui| {
+            ui.label("Progress: ");
+            // `cache` atomics
+            let (success, fail, total) = (
+                ui_app.pbar.file_num_success.load(Ordering::Acquire),
+                ui_app.pbar.file_num_failed.load(Ordering::Acquire),
+                ui_app.pbar.file_num_total.load(Ordering::Acquire),
+            );
+            ui_app.pbar.animate = success + fail != total;
+            let progress: f32 = success as f32 / total as f32;
+            let progress_bar = egui::ProgressBar::new(progress)
+                .show_percentage()
+                .animate(ui_app.pbar.animate);
 
-                ui.add(progress_bar);
-            });
+            let color = if ui_app.pbar.animated_once.is_some_and(|inner| inner) {
+                ui.style().visuals.selection.bg_fill
+            } else {
+                egui::Color32::from_rgb(60, 60, 60)
+            };
 
-        if collapsible_response.header_response.clicked() {
-            ui_app.pbar.animated_once = ui_app.pbar.animated_once.map(|inner_bool| !inner_bool);
-        }
+            ui.add(progress_bar.fill(color));
+        });
     });
 }
