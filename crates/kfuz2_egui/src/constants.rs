@@ -1,3 +1,7 @@
+// Author       : Shtoyan
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
 pub const APP_NAME: &str = "KFUZ2 EGUI";
 
 /// Initial size of windows: [`initial_window_size`](https://docs.rs/eframe/latest/eframe/struct.NativeOptions.html#structfield.initial_window_size)

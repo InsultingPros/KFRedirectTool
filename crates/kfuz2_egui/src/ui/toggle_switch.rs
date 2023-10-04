@@ -1,3 +1,7 @@
+// Author       : Shtoyan
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
 use eframe::egui;
 
 /// iOS-style toggle switch:
@@ -7,7 +11,7 @@ use eframe::egui;
 /// toggle_ui(ui, &mut my_bool);
 /// ```
 ///
-/// Reference: https://github.com/emilk/egui/blob/master/crates/egui_demo_lib/src/demo/toggle_switch.rs
+/// Reference: <https://github.com/emilk/egui/blob/master/crates/egui_demo_lib/src/demo/toggle_switch.rs>
 fn toggle_ui_compact(ui: &mut egui::Ui, on: &mut bool) -> egui::Response {
     let desired_size = ui.spacing().interact_size.y * egui::vec2(2.0, 1.0);
     let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());

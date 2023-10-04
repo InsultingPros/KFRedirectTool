@@ -17,6 +17,9 @@ use std::{
 };
 
 /// Decompress input file.
+/// # Errors
+///
+/// Will return `Err` if fail to read / decompress data or write to stream.
 pub fn decompress(
     input_stream: &mut BufReader<File>,
     output_stream: &mut BufWriter<File>,
@@ -37,12 +40,11 @@ pub fn decompress(
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     break;
-                } else {
-                    return Err(DecompressStreamError::IOError(Error::new(
-                        e.kind(),
-                        "Failed to read compressed chunk size from input",
-                    )));
                 }
+                return Err(DecompressStreamError::IOError(Error::new(
+                    e.kind(),
+                    "Failed to read compressed chunk size from input",
+                )));
             }
         };
         // 2. read 4 bytes to get uncompressed chunk size
@@ -54,12 +56,11 @@ pub fn decompress(
                         e.kind(),
                         "Tried to read beyond end of file!",
                     )));
-                } else {
-                    return Err(DecompressStreamError::IOError(Error::new(
-                        e.kind(),
-                        "Failed to read uncompressed chunk size from input",
-                    )));
                 }
+                return Err(DecompressStreamError::IOError(Error::new(
+                    e.kind(),
+                    "Failed to read uncompressed chunk size from input",
+                )));
             }
         };
         // 1.1. get and validate `compressed` chunk size
@@ -92,12 +93,11 @@ pub fn decompress(
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     break;
-                } else {
-                    return Err(DecompressStreamError::IOError(Error::new(
-                        e.kind(),
-                        "Failed to read chunk from input",
-                    )));
                 }
+                return Err(DecompressStreamError::IOError(Error::new(
+                    e.kind(),
+                    "Failed to read chunk from input",
+                )));
             }
         };
         // 4. decompress the chunk

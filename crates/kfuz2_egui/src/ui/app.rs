@@ -1,3 +1,7 @@
+// Author       : Shtoyan
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
 use crate::constants;
 use eframe::egui;
 use kfuz2_lib::types::LogLevel;
@@ -20,10 +24,10 @@ pub enum LogLevelDef {
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 ///
-/// Reference: https://github.com/emilk/eframe_template/blob/master/src/app.rs
+/// Reference: <https://github.com/emilk/eframe_template/blob/master/src/app.rs>
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
-pub struct MyApp {
+pub struct Kfuz2Egui {
     pub input_dir: Option<PathBuf>,
     pub output_dir: Option<PathBuf>,
     /// Skip vanilla kf1 files.
@@ -82,7 +86,7 @@ impl Default for ProgressBarStuff {
     }
 }
 
-impl Default for MyApp {
+impl Default for Kfuz2Egui {
     fn default() -> Self {
         Self {
             input_dir: Some(PathBuf::new()),
@@ -98,8 +102,9 @@ impl Default for MyApp {
     }
 }
 
-impl MyApp {
+impl Kfuz2Egui {
     /// Called once before the first frame.
+    #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
@@ -111,20 +116,20 @@ impl MyApp {
             return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         }
 
-        Default::default()
+        Kfuz2Egui::default()
     }
 }
 
-impl eframe::App for MyApp {
+impl eframe::App for Kfuz2Egui {
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        super::panel_top::render_panel(self, ctx, _frame);
-        super::panel_bottom::render_panel(self, ctx, _frame);
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        super::panel_top::render_panel(self, ctx, frame);
+        super::panel_bottom::render_panel(self, ctx);
         // N.B. `center` must always be at the end!
-        super::panel_center::render_panel(self, ctx, _frame);
+        super::panel_center::render_panel(self, ctx);
     }
 }

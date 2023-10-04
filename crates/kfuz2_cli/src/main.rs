@@ -2,11 +2,6 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-// Make rules more strict
-#![warn(clippy::all, clippy::pedantic)]
-// I will enable this lint only after `rust-analyzer` matures and supports variable renaming inside curly brackets
-#![allow(clippy::uninlined_format_args)]
-
 use kfuz2_cli::{
     cli,
     helper::{compose_input_arguments, try_to_compress, try_to_decompress},

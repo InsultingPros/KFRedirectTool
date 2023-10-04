@@ -1,3 +1,7 @@
+// Author       : Shtoyan, dkanus
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
 use crate::{cli, types::exit_codes};
 use anyhow::{bail, Context};
 use kfuz2_lib::compressor::compress;
@@ -10,6 +14,9 @@ use kfuz2_lib::types::{InputArguments, LogLevel};
 use std::{path::PathBuf, process::ExitCode};
 
 /// Compose arguments for internal use
+/// # Errors
+///
+/// Will return `Err` if input is none.
 pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArguments, ExitCode> {
     // 1. vanilla file check
     let mut result: InputArguments = InputArguments {
@@ -33,7 +40,7 @@ pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArgu
         result.output_path = PathBuf::from(extracted_output);
     } else {
         // if none, assign same path as input. Will use this in further checks
-        result.output_path = result.input_path.to_owned();
+        result.output_path = result.input_path.clone();
     }
 
     // silent has higher priority
@@ -50,7 +57,10 @@ pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArgu
     Ok(result)
 }
 
-/// try to compress given file
+/// Try to compress given file.
+/// # Errors
+///
+/// Will return `Err` if fail to create input-output streams, correctly compress the data or remove file on failure.
 pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<()> {
     validate_compressible_path(input_arguments)?;
 
@@ -70,7 +80,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
                     result.time
                 );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result)?;
+                    additional_processing_information(&result);
                 }
             }
         }
@@ -83,7 +93,10 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
     Ok(())
 }
 
-/// try to decompress given file
+/// Try to decompress given file.
+/// # Errors
+///
+/// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
 pub fn try_to_decompress(input_arguments: &mut InputArguments) -> anyhow::Result<()> {
     validate_decompressible_path(input_arguments)?;
 
@@ -102,7 +115,7 @@ pub fn try_to_decompress(input_arguments: &mut InputArguments) -> anyhow::Result
                     result.time
                 );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result)?;
+                    additional_processing_information(&result);
                 }
             }
         }

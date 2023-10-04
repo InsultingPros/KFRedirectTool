@@ -1,3 +1,7 @@
+// Author       : Shtoyan
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
 // #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 fn main() -> Result<(), eframe::Error> {
@@ -5,7 +9,7 @@ fn main() -> Result<(), eframe::Error> {
     env_logger::init();
 
     let options: eframe::NativeOptions = eframe::NativeOptions {
-        icon_data: kfuz2_egui::ui::icon::load_icon(),
+        icon_data: kfuz2_egui::ui::theme::load_icon(),
         initial_window_size: kfuz2_egui::constants::WINDOW_SIZE,
         max_window_size: kfuz2_egui::constants::WINDOW_SIZE,
         min_window_size: kfuz2_egui::constants::WINDOW_SIZE,
@@ -17,6 +21,6 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         kfuz2_egui::constants::APP_NAME,
         options,
-        Box::new(|cc| Box::new(kfuz2_egui::ui::app::MyApp::new(cc))),
+        Box::new(|cc| Box::new(kfuz2_egui::ui::app::Kfuz2Egui::new(cc))),
     )
 }

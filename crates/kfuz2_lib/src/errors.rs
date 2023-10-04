@@ -55,8 +55,7 @@ pub enum DecompressStreamError {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum OtherErrors {
-    // #[error("Some IO error?")]
+pub enum OtherError {
     #[error(transparent)]
     IOError(#[from] std::io::Error),
     #[error("Incorrect file header!")]

@@ -1,3 +1,7 @@
+// Author       : Shtoyan, dkanus
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
 /// Define application exit codes, specific to each platforms
 ///
 /// Reference: <https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499->

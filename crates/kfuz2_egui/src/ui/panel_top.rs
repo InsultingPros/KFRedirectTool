@@ -1,17 +1,21 @@
+// Author       : Shtoyan
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
 use crate::constants;
 
 /// Render `top` panel of UI.
 pub fn render_panel(
-    ui_app: &mut super::app::MyApp,
+    gui_app: &mut super::app::Kfuz2Egui,
     ctx: &egui::Context,
-    _frame: &mut eframe::Frame,
+    frame: &mut eframe::Frame,
 ) {
     egui::TopBottomPanel::top("top").show(ctx, |ui| {
         // menu bar
         egui::menu::bar(ui, |ui| {
             ui.menu_button("File", |ui| {
                 if ui.button("Quit").clicked() {
-                    _frame.close();
+                    frame.close();
                 }
             });
             ui.add_space(constants::PADDING_SMALL);
@@ -27,8 +31,8 @@ pub fn render_panel(
                     .on_hover_text("Reset all widgets, input-output fields to default")
                     .clicked()
                 {
-                    *ui_app = super::app::MyApp::default();
-                    ctx.memory_mut(|mem| *mem = Default::default());
+                    *gui_app = super::app::Kfuz2Egui::default();
+                    ctx.memory_mut(|mem| *mem = egui::Memory::default());
                     super::theme::edit_fonts(ctx);
                     ui.close_menu();
                 }

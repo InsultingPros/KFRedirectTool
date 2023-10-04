@@ -15,6 +15,9 @@ use std::{
 };
 
 /// Compress input stream.
+/// # Errors
+///
+/// Will return `Err` if fail to read / compress data or write to stream.
 pub fn compress(
     input_stream: &mut BufReader<File>,
     output_stream: &mut BufWriter<File>,

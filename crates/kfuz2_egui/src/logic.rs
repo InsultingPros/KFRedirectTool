@@ -1,3 +1,8 @@
+// Author       : Shtoyan
+// Home Repo    : https://github.com/InsultingPros/KFRedirectTool
+// License      : https://www.gnu.org/licenses/gpl-3.0.en.html
+
+#![allow(clippy::cast_possible_truncation)]
 use crate::ui;
 use kfuz2_lib::{
     compressor::compress,
@@ -13,12 +18,12 @@ use std::{path::PathBuf, sync::atomic::Ordering, time::Instant};
 use walkdir::WalkDir;
 
 /// Get file list from input directory.
-fn collect_input_files(gui_app: &ui::app::MyApp) -> Vec<PathBuf> {
+fn collect_input_files(gui_app: &ui::app::Kfuz2Egui) -> Vec<PathBuf> {
     let mut result = vec![];
     if let Some(x) = &gui_app.input_dir {
         for entry in WalkDir::new(x)
             .into_iter()
-            .filter_map(|e| e.ok())
+            .filter_map(std::result::Result::ok)
             .filter(|e| {
                 return match e.path().extension().and_then(std::ffi::OsStr::to_str) {
                     Some(ext) => gui_app.extension_list.contains(ext),
@@ -32,101 +37,29 @@ fn collect_input_files(gui_app: &ui::app::MyApp) -> Vec<PathBuf> {
     result
 }
 
-pub fn start_compression(gui_app: &ui::app::MyApp) {
+/// Start compression
+/// # Panics
+///
+/// Will panic if fail to unwrap output. FIX ME!
+pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
-
-    // reset file counts
-    gui_app.pbar.reset();
-    gui_app
-        .pbar
-        .file_num_total
-        .swap(file_list.len() as u16, Ordering::Relaxed);
-
+    reset_atomics(gui_app, file_list.len() as u16);
     println!("Starting compression!");
     let start: Instant = Instant::now();
 
     if gui_app.disable_multi_threading {
-        file_list.iter().for_each(|file_list_path| {
-            match try_to_compress(
-                &mut InputArguments {
-                    input_path: file_list_path.into(),
-                    output_path: gui_app.output_dir.clone().unwrap(),
-                    ignore_kf_files: gui_app.ignore_kf_files,
-                    log_level: gui_app.log_level,
-                },
-                gui_app.cancel_processing.load(Ordering::Relaxed),
-            ) {
-                Ok(_) => {
-                    gui_app
-                        .pbar
-                        .file_num_success
-                        .fetch_add(1, Ordering::Relaxed);
-                }
-                Err(e) => {
-                    println!("{}", e);
-                    match e {
-                        CompressStreamError::IsKFPackage(_) => {
-                            gui_app
-                                .pbar
-                                .file_num_ignored
-                                .fetch_add(1, Ordering::Relaxed);
-                        }
-                        _ => {
-                            gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
-                        }
-                    }
-                }
-            };
-            gui_app
-                .pbar
-                .time_elapsed
-                .swap(start.elapsed().as_secs(), Ordering::Relaxed);
-        });
+        for file_list_path in &file_list {
+            parse_compression_result(file_list_path, gui_app, start);
+        }
     } else {
         let num_cpu: usize = num_cpus::get();
 
         rayon::scope(|s| {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
-                    chunk.iter().for_each(|chunk_path| {
-                        match try_to_compress(
-                            &mut InputArguments {
-                                input_path: chunk_path.into(),
-                                output_path: gui_app.output_dir.clone().unwrap(),
-                                ignore_kf_files: gui_app.ignore_kf_files,
-                                log_level: gui_app.log_level,
-                            },
-                            gui_app.cancel_processing.load(Ordering::Relaxed),
-                        ) {
-                            Ok(_) => {
-                                gui_app
-                                    .pbar
-                                    .file_num_success
-                                    .fetch_add(1, Ordering::Relaxed);
-                            }
-                            Err(e) => {
-                                println!("{}", e);
-                                match e {
-                                    CompressStreamError::IsKFPackage(_) => {
-                                        gui_app
-                                            .pbar
-                                            .file_num_ignored
-                                            .fetch_add(1, Ordering::Relaxed);
-                                    }
-                                    _ => {
-                                        gui_app
-                                            .pbar
-                                            .file_num_failed
-                                            .fetch_add(1, Ordering::Relaxed);
-                                    }
-                                }
-                            }
-                        };
-                        gui_app
-                            .pbar
-                            .time_elapsed
-                            .swap(start.elapsed().as_secs(), Ordering::Relaxed);
-                    });
+                    for chunk_path in chunk {
+                        parse_compression_result(chunk_path, gui_app, start);
+                    }
                 });
             }
         });
@@ -142,78 +75,29 @@ pub fn start_compression(gui_app: &ui::app::MyApp) {
     );
 }
 
-pub fn start_decompression(gui_app: &ui::app::MyApp) {
+/// Start decompression
+/// # Panics
+///
+/// Will panic if fail to unwrap output. FIX ME!
+pub fn start_decompression(gui_app: &ui::app::Kfuz2Egui) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
-
-    // reset file counts
-    gui_app.pbar.reset();
-    gui_app
-        .pbar
-        .file_num_total
-        .swap(file_list.len() as u16, Ordering::AcqRel);
-
+    reset_atomics(gui_app, file_list.len() as u16);
     println!("Starting decompression!");
     let start: Instant = Instant::now();
 
     if gui_app.disable_multi_threading {
-        file_list.iter().for_each(|file_list_path| {
-            match try_to_decompress(
-                &mut InputArguments {
-                    input_path: file_list_path.into(),
-                    output_path: gui_app.output_dir.clone().unwrap(),
-                    ignore_kf_files: gui_app.ignore_kf_files,
-                    log_level: gui_app.log_level,
-                },
-                gui_app.cancel_processing.load(Ordering::Relaxed),
-            ) {
-                Ok(_) => {
-                    gui_app
-                        .pbar
-                        .file_num_success
-                        .fetch_add(1, Ordering::Relaxed);
-                }
-                Err(e) => {
-                    println!("{}", e);
-                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
-                }
-            };
-            gui_app
-                .pbar
-                .time_elapsed
-                .swap(start.elapsed().as_secs(), Ordering::Relaxed);
-        });
+        for file_list_path in &file_list {
+            parse_decompression_result(file_list_path, gui_app, start);
+        }
     } else {
         let num_cpu: usize = num_cpus::get();
 
         rayon::scope(|s| {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
-                    chunk.iter().for_each(|chunk_path| {
-                        match try_to_decompress(
-                            &mut InputArguments {
-                                input_path: chunk_path.into(),
-                                output_path: gui_app.output_dir.clone().unwrap(),
-                                ignore_kf_files: gui_app.ignore_kf_files,
-                                log_level: gui_app.log_level,
-                            },
-                            gui_app.cancel_processing.load(Ordering::Relaxed),
-                        ) {
-                            Ok(_) => {
-                                gui_app
-                                    .pbar
-                                    .file_num_success
-                                    .fetch_add(1, Ordering::Relaxed);
-                            }
-                            Err(e) => {
-                                println!("{}", e);
-                                gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
-                            }
-                        };
-                        gui_app
-                            .pbar
-                            .time_elapsed
-                            .swap(start.elapsed().as_secs(), Ordering::Relaxed);
-                    });
+                    for chunk_path in chunk {
+                        parse_decompression_result(chunk_path, gui_app, start);
+                    }
                 });
             }
         });
@@ -229,6 +113,82 @@ pub fn start_decompression(gui_app: &ui::app::MyApp) {
     );
 }
 
+fn parse_decompression_result(
+    file_list_path: &PathBuf,
+    gui_app: &ui::app::Kfuz2Egui,
+    start: Instant,
+) {
+    match try_to_decompress(
+        &mut InputArguments {
+            input_path: file_list_path.into(),
+            output_path: gui_app.output_dir.clone().unwrap(),
+            ignore_kf_files: gui_app.ignore_kf_files,
+            log_level: gui_app.log_level,
+        },
+        gui_app.cancel_processing.load(Ordering::Relaxed),
+    ) {
+        Ok(_) => {
+            gui_app
+                .pbar
+                .file_num_success
+                .fetch_add(1, Ordering::Relaxed);
+        }
+        Err(e) => {
+            println!("{e}");
+            gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
+        }
+    };
+    gui_app
+        .pbar
+        .time_elapsed
+        .swap(start.elapsed().as_secs(), Ordering::Relaxed);
+}
+
+fn parse_compression_result(
+    file_list_path: &PathBuf,
+    gui_app: &ui::app::Kfuz2Egui,
+    start: Instant,
+) {
+    match try_to_compress(
+        &mut InputArguments {
+            input_path: file_list_path.into(),
+            output_path: gui_app.output_dir.clone().unwrap(),
+            ignore_kf_files: gui_app.ignore_kf_files,
+            log_level: gui_app.log_level,
+        },
+        gui_app.cancel_processing.load(Ordering::Relaxed),
+    ) {
+        Ok(_) => {
+            gui_app
+                .pbar
+                .file_num_success
+                .fetch_add(1, Ordering::Relaxed);
+        }
+        Err(e) => {
+            println!("{e}");
+            match e {
+                CompressStreamError::IsKFPackage(_) => {
+                    gui_app
+                        .pbar
+                        .file_num_ignored
+                        .fetch_add(1, Ordering::Relaxed);
+                }
+                _ => {
+                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
+                }
+            }
+        }
+    };
+    gui_app
+        .pbar
+        .time_elapsed
+        .swap(start.elapsed().as_secs(), Ordering::Relaxed);
+}
+
+/// Try to compress given file.
+/// # Errors
+///
+/// Will return `Err` if fail to create input-output streams, correctly compress the data or remove file on failure.
 pub fn try_to_compress(
     input_arguments: &mut InputArguments,
     cancel: bool,
@@ -252,7 +212,7 @@ pub fn try_to_compress(
                     result.time
                 );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result)?;
+                    additional_processing_information(&result);
                 }
             }
             Ok(())
@@ -268,7 +228,10 @@ pub fn try_to_compress(
     }
 }
 
-/// try to decompress given file
+/// Try to decompress given file.
+/// # Errors
+///
+/// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
 pub fn try_to_decompress(
     input_arguments: &mut InputArguments,
     cancel: bool,
@@ -291,7 +254,7 @@ pub fn try_to_decompress(
                     result.time
                 );
                 if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result)?;
+                    additional_processing_information(&result);
                 }
             }
             Ok(())
@@ -305,4 +268,13 @@ pub fn try_to_decompress(
             // ))
         }
     }
+}
+
+/// Reset progress bar atomics
+fn reset_atomics(gui_app: &ui::app::Kfuz2Egui, file_length: u16) {
+    gui_app.pbar.reset();
+    gui_app
+        .pbar
+        .file_num_total
+        .swap(file_length, Ordering::Relaxed);
 }

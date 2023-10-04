@@ -2,17 +2,17 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-use crate::constants;
-use crate::errors::{CompressStreamError, DecompressStreamError, OtherErrors};
+#![allow(clippy::cast_precision_loss)]
 use crate::types::{InputArguments, LogLevel, ProcessingResult};
+use crate::{constants, errors};
 use sha1_smol::Sha1;
-use std::fs;
 use std::path::PathBuf;
 use std::{
     ffi::OsStr,
     fs::File,
-    io::{self, BufReader, BufWriter, Read, Seek},
+    io::{BufReader, BufWriter, Read, Seek},
 };
+use std::{fs, io};
 
 pub trait PathChecks {
     /// Add `uz2` extension to self.
@@ -26,11 +26,22 @@ pub trait PathChecks {
     /// Check if file extension is `uz2`.
     fn has_uz2_extension(&self) -> bool;
     /// Create `BufWriter` for output stream.
+    /// # Errors
+    ///
+    /// Will return `Err` if fail to create output stream.
     fn open_output_ue_stream(&self) -> Result<BufWriter<File>, io::Error>;
     /// Create `BufReader` for input stream.
+    /// # Errors
+    ///
+    /// Will return `Err` if fail to create input stream.
     fn open_input_ue_stream(&self) -> Result<BufReader<File>, io::Error>;
     /// Check the input's UE header and create `BufReader`.
-    fn open_input_ue_stream_with_checks(&self) -> Result<BufReader<File>, CompressStreamError>;
+    /// # Errors
+    ///
+    /// Will return `Err` if fail to create input stream.
+    fn open_input_ue_stream_with_checks(
+        &self,
+    ) -> Result<BufReader<File>, errors::CompressStreamError>;
 }
 
 impl PathChecks for PathBuf {
@@ -80,23 +91,28 @@ impl PathChecks for PathBuf {
         Ok(BufReader::new(File::open(self)?))
     }
 
-    fn open_input_ue_stream_with_checks(&self) -> Result<BufReader<File>, CompressStreamError> {
+    fn open_input_ue_stream_with_checks(
+        &self,
+    ) -> Result<BufReader<File>, errors::CompressStreamError> {
         let mut reader = BufReader::new(File::open(self)?);
 
         match reader.file_header_is_correct() {
             Ok(_) => Ok(reader),
-            Err(_) => Err(CompressStreamError::InvalidPackage(self.to_owned())),
+            Err(_) => Err(errors::CompressStreamError::InvalidPackage(self.clone())),
         }
     }
 }
 
 pub trait FileCheck {
     /// Check if this file is a valid UE package.
-    fn file_header_is_correct(&mut self) -> Result<(), OtherErrors>;
+    /// # Errors
+    ///
+    /// Will return `Err` if fail to read / rewind or signature doesn't match.
+    fn file_header_is_correct(&mut self) -> Result<(), errors::OtherError>;
 }
 
 impl FileCheck for BufReader<File> {
-    fn file_header_is_correct(&mut self) -> Result<(), OtherErrors> {
+    fn file_header_is_correct(&mut self) -> Result<(), errors::OtherError> {
         let mut buf_file_header: Vec<u8> = vec![0u8; 4];
         self.read_exact(&mut buf_file_header)?;
         self.rewind()?;
@@ -104,37 +120,40 @@ impl FileCheck for BufReader<File> {
         if buf_file_header == constants::KF_SIGNATURE {
             Ok(())
         } else {
-            Err(OtherErrors::InvalidFileHeader)
+            Err(errors::OtherError::InvalidFileHeader)
         }
     }
 }
 
 /// Validate path before compression attempt.
+/// # Errors
+///
+/// Will return `Err` if one of checks fail.
 pub fn validate_compressible_path(
     input_arguments: &mut InputArguments,
-) -> Result<(), CompressStreamError> {
+) -> Result<(), errors::CompressStreamError> {
     // input is a directory
     if !input_arguments.input_path.is_file() {
-        return Err(CompressStreamError::FileDoesntExist(
-            input_arguments.input_path.to_owned(),
+        return Err(errors::CompressStreamError::FileDoesntExist(
+            input_arguments.input_path.clone(),
         ));
     }
     // input has `uz2` extension
     if input_arguments.input_path.has_uz2_extension() {
-        return Err(CompressStreamError::FileAlreadyCompressed(
-            input_arguments.input_path.to_owned(),
+        return Err(errors::CompressStreamError::FileAlreadyCompressed(
+            input_arguments.input_path.clone(),
         ));
     }
     // ignore core kf1 files or not
     if input_arguments.ignore_kf_files {
         if !input_arguments.input_path.is_default_kf_extension() {
-            return Err(CompressStreamError::NotKFExtension(
-                input_arguments.input_path.to_owned(),
+            return Err(errors::CompressStreamError::NotKFExtension(
+                input_arguments.input_path.clone(),
             ));
         }
         if input_arguments.input_path.is_vanilla_package() {
-            return Err(CompressStreamError::IsKFPackage(
-                input_arguments.input_path.to_owned(),
+            return Err(errors::CompressStreamError::IsKFPackage(
+                input_arguments.input_path.clone(),
             ));
         }
     }
@@ -147,7 +166,7 @@ pub fn validate_compressible_path(
         // create directory if it doesn't exist
         if !input_arguments.output_path.exists() {
             fs::create_dir(&input_arguments.output_path).map_err(|e| {
-                CompressStreamError::CreateDirError(e, input_arguments.output_path.to_owned())
+                errors::CompressStreamError::CreateDirError(e, input_arguments.output_path.clone())
             })?;
         }
         // convert directory path to final file path
@@ -158,8 +177,8 @@ pub fn validate_compressible_path(
                 constants::COMPRESSED_EXTENSION
             ));
         } else {
-            return Err(CompressStreamError::FileNameError(
-                input_arguments.output_path.to_owned(),
+            return Err(errors::CompressStreamError::FileNameError(
+                input_arguments.output_path.clone(),
             ));
         }
     }
@@ -168,19 +187,22 @@ pub fn validate_compressible_path(
 }
 
 /// Validate path before decompression attempt.
+/// # Errors
+///
+/// Will return `Err` if one of checks fail.
 pub fn validate_decompressible_path(
     input_arguments: &mut InputArguments,
-) -> Result<(), DecompressStreamError> {
+) -> Result<(), errors::DecompressStreamError> {
     // input is a directory
     if !input_arguments.input_path.is_file() {
-        return Err(DecompressStreamError::FileDoesntExist(
-            input_arguments.input_path.to_owned(),
+        return Err(errors::DecompressStreamError::FileDoesntExist(
+            input_arguments.input_path.clone(),
         ));
     }
     // input has `uz2` extension
     if !input_arguments.input_path.has_uz2_extension() {
-        return Err(DecompressStreamError::FileAlreadyDecompressed(
-            input_arguments.input_path.to_owned(),
+        return Err(errors::DecompressStreamError::FileAlreadyDecompressed(
+            input_arguments.input_path.clone(),
         ));
     }
     // no output specified
@@ -191,7 +213,10 @@ pub fn validate_decompressible_path(
     else {
         if !input_arguments.output_path.exists() {
             fs::create_dir(&input_arguments.output_path).map_err(|e| {
-                DecompressStreamError::CreateDirError(e, input_arguments.output_path.to_owned())
+                errors::DecompressStreamError::CreateDirError(
+                    e,
+                    input_arguments.output_path.clone(),
+                )
             })?;
         }
 
@@ -199,8 +224,8 @@ pub fn validate_decompressible_path(
             input_arguments.output_path = input_arguments.output_path.join(input_file_name);
             input_arguments.output_path.set_extension("");
         } else {
-            return Err(DecompressStreamError::FileNameError(
-                input_arguments.output_path.to_owned(),
+            return Err(errors::DecompressStreamError::FileNameError(
+                input_arguments.output_path.clone(),
             ));
         }
     }
@@ -209,6 +234,7 @@ pub fn validate_decompressible_path(
 }
 
 /// Spawn and return`sha1` hasher.
+#[must_use]
 pub fn get_sha1_hasher(log_level: &LogLevel) -> Option<Sha1> {
     match log_level {
         LogLevel::Verbose => Some(Sha1::new()),
@@ -225,7 +251,7 @@ pub fn get_sha1_hasher(log_level: &LogLevel) -> Option<Sha1> {
 /// |-- SHA1: ee5015514aa3f641017606521cce4a2994fbf065
 /// `-- Size 7491kb -> 5531kb (ratio 0.74), chunk count: 235
 /// ```
-pub fn additional_processing_information(info: &ProcessingResult) -> io::Result<()> {
+pub fn additional_processing_information(info: &ProcessingResult) {
     if let Some(sha1) = &info.hasher {
         println!("|-- SHA1: {}", sha1.digest());
     }
@@ -238,6 +264,4 @@ pub fn additional_processing_information(info: &ProcessingResult) -> io::Result<
     );
 
     println!("`-- {}, chunk count: {}", &size_info, info.chunk_count);
-
-    Ok(())
 }
