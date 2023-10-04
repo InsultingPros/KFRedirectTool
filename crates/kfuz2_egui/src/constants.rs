@@ -12,7 +12,7 @@ pub const BUTTON_SIZE_MEDIUM: eframe::emath::Vec2 = eframe::epaint::vec2(120.0, 
 pub const BUTTON_SIZE_SMALL: eframe::emath::Vec2 = eframe::epaint::vec2(40.0, 15.0);
 
 pub const LABEL_COLOR_EMPTY: egui::Color32 = egui::Color32::from_rgb(245, 66, 96);
-pub const LABEL_COLOR_TEXT: egui::Color32 = egui::Color32::from_rgb(84, 245, 66);
+pub const LABEL_COLOR_TEXT: egui::Color32 = egui::Color32::from_rgb(55, 200, 70);
 
 pub const EXTENSION_COLOR: egui::Color32 = egui::Color32::from_rgb(42, 157, 143);
 
