@@ -97,7 +97,7 @@ impl PathChecks for PathBuf {
         let mut reader = BufReader::new(File::open(self)?);
 
         match reader.file_header_is_correct() {
-            Ok(_) => Ok(reader),
+            Ok(()) => Ok(reader),
             Err(_) => Err(errors::CompressStreamError::InvalidPackage(self.clone())),
         }
     }

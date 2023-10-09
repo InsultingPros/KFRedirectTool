@@ -127,7 +127,7 @@ fn parse_decompression_result(
         },
         gui_app.cancel_processing.load(Ordering::Relaxed),
     ) {
-        Ok(_) => {
+        Ok(()) => {
             gui_app
                 .pbar
                 .file_num_success
@@ -158,7 +158,7 @@ fn parse_compression_result(
         },
         gui_app.cancel_processing.load(Ordering::Relaxed),
     ) {
-        Ok(_) => {
+        Ok(()) => {
             gui_app
                 .pbar
                 .file_num_success

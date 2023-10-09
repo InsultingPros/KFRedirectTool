@@ -36,7 +36,7 @@ pub fn decompress(
     loop {
         // 1. read 4 bytes to get compressed chunk size
         match input_stream.read_exact(&mut compressed_chunk_size_b) {
-            Ok(_) => {}
+            Ok(()) => {}
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     break;
@@ -49,7 +49,7 @@ pub fn decompress(
         };
         // 2. read 4 bytes to get uncompressed chunk size
         match input_stream.read_exact(&mut uncompressed_chunk_size_b) {
-            Ok(_) => {}
+            Ok(()) => {}
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     return Err(DecompressStreamError::IOError(Error::new(
@@ -89,7 +89,7 @@ pub fn decompress(
         }
         // 3. read the chunk!
         match input_stream.read_exact(&mut buffer[..compressed_chunk_size]) {
-            Ok(_) => {}
+            Ok(()) => {}
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     break;
