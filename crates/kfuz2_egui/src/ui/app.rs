@@ -8,7 +8,7 @@ use kfuz2_lib::types::LogLevel;
 use std::{
     path::PathBuf,
     sync::{
-        atomic::{AtomicBool, AtomicU16, AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU16, AtomicU32, AtomicU64, Ordering},
         Arc,
     },
 };
@@ -60,7 +60,8 @@ pub struct ProgressBarStuff {
     pub file_num_failed: Arc<AtomicU16>,
     /// Ignored files number.
     pub file_num_ignored: Arc<AtomicU16>,
-    pub time_elapsed: Arc<AtomicU64>,
+    /// Time elapsed for current operation, as `seconds` + `milliseconds`
+    pub time_elapsed: Arc<(AtomicU64, AtomicU32)>,
 }
 
 impl ProgressBarStuff {
@@ -68,7 +69,8 @@ impl ProgressBarStuff {
         self.file_num_success.swap(0u16, Ordering::Relaxed);
         self.file_num_failed.swap(0u16, Ordering::Relaxed);
         self.file_num_ignored.swap(0u16, Ordering::Relaxed);
-        self.time_elapsed.swap(0u64, Ordering::Relaxed);
+        self.time_elapsed.0.swap(0u64, Ordering::Relaxed);
+        self.time_elapsed.1.swap(0u32, Ordering::Relaxed);
     }
 }
 
@@ -81,7 +83,7 @@ impl Default for ProgressBarStuff {
             file_num_success: Arc::new(AtomicU16::new(0u16)),
             file_num_failed: Arc::new(AtomicU16::new(0u16)),
             file_num_ignored: Arc::new(AtomicU16::new(0u16)),
-            time_elapsed: Arc::new(AtomicU64::new(0u64)),
+            time_elapsed: Arc::new((AtomicU64::new(0u64), AtomicU32::new(0u32))),
         }
     }
 }

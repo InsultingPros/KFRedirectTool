@@ -141,7 +141,13 @@ fn parse_decompression_result(
     gui_app
         .pbar
         .time_elapsed
+        .0
         .swap(start.elapsed().as_secs(), Ordering::Relaxed);
+    gui_app
+        .pbar
+        .time_elapsed
+        .1
+        .swap(start.elapsed().subsec_millis(), Ordering::Relaxed);
 }
 
 fn parse_compression_result(
@@ -182,7 +188,13 @@ fn parse_compression_result(
     gui_app
         .pbar
         .time_elapsed
+        .0
         .swap(start.elapsed().as_secs(), Ordering::Relaxed);
+    gui_app
+        .pbar
+        .time_elapsed
+        .1
+        .swap(start.elapsed().subsec_millis(), Ordering::Relaxed);
 }
 
 /// Try to compress given file.

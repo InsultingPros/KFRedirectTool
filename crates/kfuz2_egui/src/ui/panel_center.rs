@@ -219,9 +219,10 @@ fn render_progress(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
         }
         let progress_bar = egui::ProgressBar::new(progress)
             .text(format!(
-                "{:.1}% Time elapsed: {} seconds.",
+                "{:.1}% Time elapsed: {}.{} seconds.",
                 progress * 100f32,
-                gui_app.pbar.time_elapsed.load(Ordering::Relaxed)
+                gui_app.pbar.time_elapsed.0.load(Ordering::Relaxed),
+                gui_app.pbar.time_elapsed.1.load(Ordering::Relaxed)
             ))
             .animate(gui_app.pbar.animate);
 
