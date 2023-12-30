@@ -8,7 +8,7 @@ use eframe::egui::{self, FontFamily::Proportional, FontId, TextStyle};
 ///
 /// Reference: <https://github.com/emilk/egui/discussions/1478#discussioncomment-2549924>
 pub fn edit_fonts(ctx: &egui::Context) {
-    let mut style = (*ctx.style()).clone();
+    let mut style: egui::Style = (*ctx.style()).clone();
     style.text_styles = [
         (TextStyle::Body, FontId::new(13.0, Proportional)),
         (TextStyle::Button, FontId::new(13.0, Proportional)),
@@ -30,7 +30,7 @@ pub fn edit_fonts(ctx: &egui::Context) {
 ///
 /// Will panic if included icon is not found
 #[must_use]
-pub fn load_icon() -> Option<eframe::IconData> {
+pub fn load_icon() -> egui::IconData {
     let (icon_rgba, icon_width, icon_height) = {
         let icon = include_bytes!("..//static//icon.png");
         let image = image::load_from_memory(icon)
@@ -41,9 +41,9 @@ pub fn load_icon() -> Option<eframe::IconData> {
         (rgba, width, height)
     };
 
-    Some(eframe::IconData {
+    egui::IconData {
         rgba: icon_rgba,
         width: icon_width,
         height: icon_height,
-    })
+    }
 }

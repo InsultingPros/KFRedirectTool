@@ -9,13 +9,14 @@ fn main() -> Result<(), eframe::Error> {
     env_logger::init();
 
     let options: eframe::NativeOptions = eframe::NativeOptions {
-        icon_data: kfuz2_egui::ui::theme::load_icon(),
-        initial_window_size: kfuz2_egui::constants::WINDOW_SIZE,
-        max_window_size: kfuz2_egui::constants::WINDOW_SIZE,
-        min_window_size: kfuz2_egui::constants::WINDOW_SIZE,
+        viewport: eframe::egui::ViewportBuilder::default()
+            .with_inner_size(kfuz2_egui::constants::WINDOW_SIZE)
+            .with_max_inner_size(kfuz2_egui::constants::WINDOW_SIZE)
+            .with_min_inner_size(kfuz2_egui::constants::WINDOW_SIZE)
+            .with_resizable(false)
+            .with_icon(kfuz2_egui::ui::theme::load_icon()),
         follow_system_theme: true,
-        resizable: false,
-        ..Default::default()
+        ..eframe::NativeOptions::default()
     };
 
     eframe::run_native(

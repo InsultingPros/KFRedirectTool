@@ -3,20 +3,20 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::constants;
-use eframe::egui;
+use eframe::egui::{self, ViewportCommand};
 
 /// Render `top` panel of UI.
 pub fn render_panel(
     gui_app: &mut super::app::Kfuz2Egui,
     ctx: &egui::Context,
-    frame: &mut eframe::Frame,
+    _frame: &mut eframe::Frame,
 ) {
     egui::TopBottomPanel::top("top").show(ctx, |ui| {
         // menu bar
         egui::menu::bar(ui, |ui| {
             ui.menu_button("File", |ui| {
                 if ui.button("Quit").clicked() {
-                    frame.close();
+                    ctx.send_viewport_cmd(ViewportCommand::Close);
                 }
             });
             ui.add_space(constants::PADDING_SMALL);
