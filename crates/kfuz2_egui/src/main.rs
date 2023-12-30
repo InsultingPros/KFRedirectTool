@@ -13,6 +13,7 @@ fn main() -> Result<(), eframe::Error> {
             .with_inner_size(kfuz2_egui::constants::WINDOW_SIZE)
             .with_max_inner_size(kfuz2_egui::constants::WINDOW_SIZE)
             .with_min_inner_size(kfuz2_egui::constants::WINDOW_SIZE)
+            .with_maximize_button(false)
             .with_resizable(false)
             .with_icon(kfuz2_egui::ui::theme::load_icon()),
         follow_system_theme: true,
