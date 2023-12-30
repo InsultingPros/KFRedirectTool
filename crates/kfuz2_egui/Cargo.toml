@@ -12,7 +12,6 @@ eframe = { version = "0.23", default-features = false, features = [
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
 ] }
-egui = "0.23"
 env_logger = "0"
 image = "0"
 kfuz2_lib = { path = "..//kfuz2_lib" }

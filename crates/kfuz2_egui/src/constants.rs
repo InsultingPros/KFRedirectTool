@@ -15,10 +15,10 @@ pub const CHAR_LIMIT: usize = 50;
 pub const BUTTON_SIZE_MEDIUM: eframe::emath::Vec2 = eframe::epaint::vec2(120.0, 15.0);
 pub const BUTTON_SIZE_SMALL: eframe::emath::Vec2 = eframe::epaint::vec2(40.0, 15.0);
 
-pub const LABEL_COLOR_EMPTY: egui::Color32 = egui::Color32::from_rgb(245, 66, 96);
-pub const LABEL_COLOR_TEXT: egui::Color32 = egui::Color32::from_rgb(55, 200, 70);
+pub const LABEL_COLOR_EMPTY: eframe::egui::Color32 = eframe::egui::Color32::from_rgb(245, 66, 96);
+pub const LABEL_COLOR_TEXT: eframe::egui::Color32 = eframe::egui::Color32::from_rgb(55, 200, 70);
 
-pub const EXTENSION_COLOR: egui::Color32 = egui::Color32::from_rgb(42, 157, 143);
+pub const EXTENSION_COLOR: eframe::egui::Color32 = eframe::egui::Color32::from_rgb(42, 157, 143);
 
 pub const PADDING_BIG: f32 = 15f32;
 pub const PADDING_MEDIUM: f32 = 10f32;

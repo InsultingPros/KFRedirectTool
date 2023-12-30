@@ -3,6 +3,7 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::constants;
+use eframe::egui;
 use poll_promise::Promise;
 use std::{path::PathBuf, sync::atomic::Ordering};
 

@@ -3,10 +3,11 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::constants;
+use eframe::egui;
 use std::sync::atomic::Ordering;
 
 /// Render `center` panel of UI.
-pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
+pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &eframe::egui::Context) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.add_space(constants::PADDING_MEDIUM);
 

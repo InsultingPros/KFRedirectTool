@@ -3,6 +3,7 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::constants;
+use eframe::egui;
 
 /// Render `top` panel of UI.
 pub fn render_panel(
