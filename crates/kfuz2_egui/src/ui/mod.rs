@@ -3,6 +3,7 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 pub mod app;
+pub mod logs_viewport;
 pub mod panel_bottom;
 pub mod panel_center;
 pub mod panel_top;

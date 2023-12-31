@@ -10,22 +10,29 @@ use std::{path::PathBuf, sync::atomic::Ordering};
 const DISABLED_MSG: &str = "Select any output directory to activate this button";
 
 /// Render `bottom` panel of UI.
+#[inline]
 pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
     egui::TopBottomPanel::bottom("bottom").show(ctx, |ui| {
         ui.add_space(constants::PADDING_BIG);
 
         ui.horizontal(|ui| {
             let empty_path = &PathBuf::new();
-            let output_destination = match &gui_app.output_dir {
+            let output_destination = match &gui_app.vars.persisted_vars.paths.output_dir {
                 Some(value) => value,
                 None => empty_path,
             };
 
             let output_selected: bool = gui_app
+                .vars
+                .persisted_vars
+                .paths
                 .output_dir
                 .as_ref()
                 .is_some_and(|value| value.is_dir());
             let input_selected: bool = gui_app
+                .vars
+                .persisted_vars
+                .paths
                 .input_dir
                 .as_ref()
                 .is_some_and(|value| value.is_dir());
@@ -48,7 +55,11 @@ pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
                 .on_hover_text("You can only cancel active file processing.")
                 .clicked()
             {
-                gui_app.cancel_processing.swap(true, Ordering::Relaxed);
+                gui_app
+                    .vars
+                    .runtime_vars
+                    .cancel_processing
+                    .swap(true, Ordering::Relaxed);
             }
 
             ui.separator();
@@ -63,13 +74,17 @@ pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
                 .on_disabled_hover_text(DISABLED_MSG)
                 .clicked()
             {
-                gui_app.pbar.animated_once = Some(true);
-                gui_app.cancel_processing.swap(false, Ordering::Relaxed);
+                gui_app.vars.runtime_vars.pbar.animated_once = Some(true);
+                gui_app
+                    .vars
+                    .runtime_vars
+                    .cancel_processing
+                    .swap(false, Ordering::Relaxed);
 
-                let cp_ui_app = gui_app.clone();
+                let gui_vars = gui_app.vars.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_compression", move || {
-                    crate::logic::start_compression(&cp_ui_app);
+                    crate::logic::start_compression(&gui_vars);
                 });
             }
 
@@ -83,13 +98,17 @@ pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
                 .on_disabled_hover_text(DISABLED_MSG)
                 .clicked()
             {
-                gui_app.pbar.animated_once = Some(true);
-                gui_app.cancel_processing.swap(false, Ordering::Relaxed);
+                gui_app.vars.runtime_vars.pbar.animated_once = Some(true);
+                gui_app
+                    .vars
+                    .runtime_vars
+                    .cancel_processing
+                    .swap(false, Ordering::Relaxed);
 
-                let cp_ui_app = gui_app.clone();
+                let gui_vars = gui_app.vars.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_decompression", move || {
-                    crate::logic::start_decompression(&cp_ui_app);
+                    crate::logic::start_decompression(&gui_vars);
                 });
             }
         });
@@ -99,6 +118,7 @@ pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
 }
 
 #[cfg(target_os = "windows")]
+#[inline]
 fn open_file_explorer(destination: &PathBuf) {
     let _ = std::process::Command::new("explorer")
         .arg(destination)
@@ -107,6 +127,7 @@ fn open_file_explorer(destination: &PathBuf) {
 }
 
 #[cfg(target_os = "linux")]
+#[inline]
 pub fn open_file_explorer(destination: &PathBuf) {
     let _ = std::process::Command::new("xdg-open")
         .arg(destination)
@@ -115,6 +136,7 @@ pub fn open_file_explorer(destination: &PathBuf) {
 }
 
 #[cfg(target_os = "macos")]
+#[inline]
 pub fn open_file_explorer(destination: &PathBuf) {
     let _ = std::process::Command::new("open")
         .arg("--")

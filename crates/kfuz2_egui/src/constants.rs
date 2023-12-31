@@ -2,10 +2,11 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-pub const APP_NAME: &str = "KFUZ2 EGUI";
+pub const MAIN_VIEWPORT_NAME: &str = "KFUZ2";
+pub const LOGS_VIEWPORT_NAME: &str = "KFUZ2 Logs";
 
-/// Initial size of windows: [`initial_window_size`](https://docs.rs/eframe/latest/eframe/struct.NativeOptions.html#structfield.initial_window_size)
-pub const WINDOW_SIZE: [f32; 2] = [650.0, 290.0];
+pub const MAIN_VIEWPORT_SIZE: [f32; 2] = [650.0, 290.0];
+pub const LOGS_VIEWPORT_SIZE: [f32; 2] = [640.0, 480.0];
 
 /// Default KF1 file extensions.
 pub const DEFAULT_EXTENSIONS: [&str; 7] = ["u", "utx", "usx", "ukx", "uax", "rom", "uz2"];

@@ -3,7 +3,6 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 #![allow(clippy::cast_possible_truncation)]
-use crate::ui;
 use kfuz2_lib::{
     compressor::compress,
     decompressor::decompress,
@@ -17,39 +16,19 @@ use kfuz2_lib::{
 use std::{path::PathBuf, sync::atomic::Ordering, time::Instant};
 use walkdir::WalkDir;
 
-/// Get file list from input directory.
-fn collect_input_files(gui_app: &ui::app::Kfuz2Egui) -> Vec<PathBuf> {
-    let mut result = vec![];
-    if let Some(x) = &gui_app.input_dir {
-        for entry in WalkDir::new(x)
-            .into_iter()
-            .filter_map(std::result::Result::ok)
-            .filter(|e| {
-                return match e.path().extension().and_then(std::ffi::OsStr::to_str) {
-                    Some(ext) => gui_app.extension_list.contains(ext),
-                    None => false,
-                };
-            })
-        {
-            result.push(entry.into_path());
-        }
-    }
-    result
-}
-
 /// Start compression
 /// # Panics
 ///
 /// Will panic if fail to unwrap output. FIX ME!
-pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
-    let file_list: Vec<PathBuf> = collect_input_files(gui_app);
-    reset_atomics(gui_app, file_list.len() as u16);
+pub fn start_compression(gui_vars: &crate::ui::app::Variables) {
+    let file_list: Vec<PathBuf> = collect_input_files(gui_vars);
+    reset_pbar_atomics(gui_vars, file_list.len() as u16);
     println!("Starting compression!");
     let start: Instant = Instant::now();
 
-    if gui_app.disable_multi_threading {
+    if gui_vars.persisted_vars.disable_multi_threading {
         for file_list_path in &file_list {
-            parse_compression_result(file_list_path, gui_app, start);
+            parse_compression_result(file_list_path, gui_vars, start);
         }
     } else {
         let num_cpu: usize = num_cpus::get();
@@ -58,7 +37,7 @@ pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
                     for chunk_path in chunk {
-                        parse_compression_result(chunk_path, gui_app, start);
+                        parse_compression_result(chunk_path, gui_vars, start);
                     }
                 });
             }
@@ -68,10 +47,26 @@ pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
     println!(
         "Compression done in {:?}, successful: {}, failed: {}, ignored: {}, total: {}",
         start.elapsed(),
-        gui_app.pbar.file_num_success.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_ignored.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_total.load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_success
+            .load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_failed
+            .load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_ignored
+            .load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_total
+            .load(Ordering::Relaxed),
     );
 }
 
@@ -79,15 +74,15 @@ pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
 /// # Panics
 ///
 /// Will panic if fail to unwrap output. FIX ME!
-pub fn start_decompression(gui_app: &ui::app::Kfuz2Egui) {
-    let file_list: Vec<PathBuf> = collect_input_files(gui_app);
-    reset_atomics(gui_app, file_list.len() as u16);
+pub fn start_decompression(gui_vars: &crate::ui::app::Variables) {
+    let file_list: Vec<PathBuf> = collect_input_files(gui_vars);
+    reset_pbar_atomics(gui_vars, file_list.len() as u16);
     println!("Starting decompression!");
     let start: Instant = Instant::now();
 
-    if gui_app.disable_multi_threading {
+    if gui_vars.persisted_vars.disable_multi_threading {
         for file_list_path in &file_list {
-            parse_decompression_result(file_list_path, gui_app, start);
+            parse_decompression_result(file_list_path, gui_vars, start);
         }
     } else {
         let num_cpu: usize = num_cpus::get();
@@ -96,7 +91,7 @@ pub fn start_decompression(gui_app: &ui::app::Kfuz2Egui) {
             for chunk in file_list.chunks(num_cpu) {
                 s.spawn(move |_| {
                     for chunk_path in chunk {
-                        parse_decompression_result(chunk_path, gui_app, start);
+                        parse_decompression_result(chunk_path, gui_vars, start);
                     }
                 });
             }
@@ -106,66 +101,89 @@ pub fn start_decompression(gui_app: &ui::app::Kfuz2Egui) {
     println!(
         "Decompression done in {:?}, successful: {}, failed: {}, ignored: {}, total: {}",
         start.elapsed(),
-        gui_app.pbar.file_num_success.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_ignored.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_total.load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_success
+            .load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_failed
+            .load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_ignored
+            .load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .pbar
+            .file_num_total
+            .load(Ordering::Relaxed),
     );
 }
 
 fn parse_decompression_result(
     file_list_path: &PathBuf,
-    gui_app: &ui::app::Kfuz2Egui,
+    gui_vars: &crate::ui::app::Variables,
     start: Instant,
 ) {
     match try_to_decompress(
         &mut InputArguments {
             input_path: file_list_path.into(),
-            output_path: gui_app.output_dir.clone().unwrap(),
-            ignore_kf_files: gui_app.ignore_kf_files,
-            log_level: gui_app.log_level,
+            output_path: gui_vars.persisted_vars.paths.output_dir.clone().unwrap(),
+            ignore_kf_files: gui_vars.persisted_vars.ignore_kf_files,
+            log_level: gui_vars.persisted_vars.log_level,
         },
-        gui_app.cancel_processing.load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .cancel_processing
+            .load(Ordering::Relaxed),
     ) {
         Ok(()) => {
-            gui_app
+            gui_vars
+                .runtime_vars
                 .pbar
                 .file_num_success
                 .fetch_add(1, Ordering::Relaxed);
         }
         Err(e) => {
             println!("{e}");
-            gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
+            gui_vars
+                .runtime_vars
+                .pbar
+                .file_num_failed
+                .fetch_add(1, Ordering::Relaxed);
         }
     };
-    gui_app
-        .pbar
-        .time_elapsed
-        .0
-        .swap(start.elapsed().as_secs(), Ordering::Relaxed);
-    gui_app
-        .pbar
-        .time_elapsed
-        .1
-        .swap(start.elapsed().subsec_millis(), Ordering::Relaxed);
+    set_pbar_timings(
+        gui_vars,
+        start.elapsed().as_secs(),
+        start.elapsed().subsec_millis(),
+    );
 }
 
 fn parse_compression_result(
     file_list_path: &PathBuf,
-    gui_app: &ui::app::Kfuz2Egui,
+    gui_vars: &crate::ui::app::Variables,
     start: Instant,
 ) {
     match try_to_compress(
         &mut InputArguments {
             input_path: file_list_path.into(),
-            output_path: gui_app.output_dir.clone().unwrap(),
-            ignore_kf_files: gui_app.ignore_kf_files,
-            log_level: gui_app.log_level,
+            output_path: gui_vars.persisted_vars.paths.output_dir.clone().unwrap(),
+            ignore_kf_files: gui_vars.persisted_vars.ignore_kf_files,
+            log_level: gui_vars.persisted_vars.log_level,
         },
-        gui_app.cancel_processing.load(Ordering::Relaxed),
+        gui_vars
+            .runtime_vars
+            .cancel_processing
+            .load(Ordering::Relaxed),
     ) {
         Ok(()) => {
-            gui_app
+            gui_vars
+                .runtime_vars
                 .pbar
                 .file_num_success
                 .fetch_add(1, Ordering::Relaxed);
@@ -174,27 +192,27 @@ fn parse_compression_result(
             println!("{e}");
             match e {
                 CompressStreamError::IsKFPackage(_) => {
-                    gui_app
+                    gui_vars
+                        .runtime_vars
                         .pbar
                         .file_num_ignored
                         .fetch_add(1, Ordering::Relaxed);
                 }
                 _ => {
-                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
+                    gui_vars
+                        .runtime_vars
+                        .pbar
+                        .file_num_failed
+                        .fetch_add(1, Ordering::Relaxed);
                 }
             }
         }
     };
-    gui_app
-        .pbar
-        .time_elapsed
-        .0
-        .swap(start.elapsed().as_secs(), Ordering::Relaxed);
-    gui_app
-        .pbar
-        .time_elapsed
-        .1
-        .swap(start.elapsed().subsec_millis(), Ordering::Relaxed);
+    set_pbar_timings(
+        gui_vars,
+        start.elapsed().as_secs(),
+        start.elapsed().subsec_millis(),
+    );
 }
 
 /// Try to compress given file.
@@ -282,11 +300,54 @@ pub fn try_to_decompress(
     }
 }
 
+/// Get file list from input directory.
+#[inline]
+fn collect_input_files(gui_vars: &crate::ui::app::Variables) -> Vec<PathBuf> {
+    let mut result = vec![];
+    if let Some(x) = &gui_vars.persisted_vars.paths.input_dir {
+        for entry in WalkDir::new(x)
+            .into_iter()
+            .filter_map(std::result::Result::ok)
+            .filter(|e| {
+                return match e.path().extension().and_then(std::ffi::OsStr::to_str) {
+                    Some(ext) => gui_vars
+                        .persisted_vars
+                        .extensions
+                        .extension_list
+                        .contains(ext),
+                    None => false,
+                };
+            })
+        {
+            result.push(entry.into_path());
+        }
+    }
+    result
+}
+
 /// Reset progress bar atomics
-fn reset_atomics(gui_app: &ui::app::Kfuz2Egui, file_length: u16) {
-    gui_app.pbar.reset();
-    gui_app
+#[inline]
+fn reset_pbar_atomics(gui_vars: &crate::ui::app::Variables, file_length: u16) {
+    gui_vars.runtime_vars.pbar.reset();
+    gui_vars
+        .runtime_vars
         .pbar
         .file_num_total
         .swap(file_length, Ordering::Relaxed);
+}
+
+#[inline]
+fn set_pbar_timings(gui_vars: &crate::ui::app::Variables, secs: u64, m_secs: u32) {
+    gui_vars
+        .runtime_vars
+        .pbar
+        .time_elapsed
+        .0
+        .swap(secs, Ordering::Relaxed);
+    gui_vars
+        .runtime_vars
+        .pbar
+        .time_elapsed
+        .1
+        .swap(m_secs, Ordering::Relaxed);
 }

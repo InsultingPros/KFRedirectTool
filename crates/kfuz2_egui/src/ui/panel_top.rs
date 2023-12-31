@@ -6,11 +6,8 @@ use crate::constants;
 use eframe::egui::{self, ViewportCommand};
 
 /// Render `top` panel of UI.
-pub fn render_panel(
-    gui_app: &mut super::app::Kfuz2Egui,
-    ctx: &egui::Context,
-    _frame: &mut eframe::Frame,
-) {
+#[inline]
+pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
     egui::TopBottomPanel::top("top").show(ctx, |ui| {
         // menu bar
         egui::menu::bar(ui, |ui| {
