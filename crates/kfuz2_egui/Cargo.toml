@@ -3,6 +3,7 @@
 name = "kfuz2_egui"
 version = "1.0.0"
 edition = "2021"
+build = "build.rs"
 
 [dependencies]
 # log = "0.4"anyhow = "1"
@@ -21,3 +22,6 @@ rayon = "1"
 rfd = "0"
 serde = { version = "1", features = ["derive"] }
 walkdir = "2"
+
+[build-dependencies]
+winres = "0.1"
