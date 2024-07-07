@@ -52,7 +52,7 @@ fn render_input_fields(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                                 .monospace()
                                 .color(crate::constants::LABEL_COLOR_TEXT),
                         )
-                        .truncate(true),
+                        .truncate(),
                     );
                 } else {
                     ui.add(
@@ -61,7 +61,7 @@ fn render_input_fields(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                                 .monospace()
                                 .color(crate::constants::LABEL_COLOR_EMPTY),
                         )
-                        .truncate(true),
+                        .truncate(),
                     );
                 }
             } else {
@@ -72,7 +72,7 @@ fn render_input_fields(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                             .monospace()
                             .color(crate::constants::LABEL_COLOR_EMPTY),
                     )
-                    .truncate(true),
+                    .truncate(),
                 );
             }
             ui.end_row();
@@ -99,7 +99,7 @@ fn render_input_fields(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                                 .monospace()
                                 .color(crate::constants::LABEL_COLOR_TEXT),
                         )
-                        .truncate(true),
+                        .truncate(),
                     );
                 } else {
                     ui.add(
@@ -108,7 +108,7 @@ fn render_input_fields(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                                 .monospace()
                                 .color(crate::constants::LABEL_COLOR_EMPTY),
                         )
-                        .truncate(true),
+                        .truncate(),
                     );
                 }
             } else {
@@ -118,7 +118,7 @@ fn render_input_fields(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                             .monospace()
                             .color(crate::constants::LABEL_COLOR_EMPTY),
                     )
-                    .truncate(true),
+                    .truncate(),
                 );
             }
         });

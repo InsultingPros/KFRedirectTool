@@ -23,6 +23,6 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         kfuz2_egui::constants::APP_NAME,
         options,
-        Box::new(|cc| Box::new(kfuz2_egui::ui::app::Kfuz2Egui::new(cc))),
+        Box::new(|cc| Ok(Box::new(kfuz2_egui::ui::app::Kfuz2Egui::new(cc)))),
     )
 }
