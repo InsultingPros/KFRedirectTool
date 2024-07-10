@@ -8,8 +8,8 @@ authors = ["Shtoyan", "dkanus"]
 [dev-dependencies]
 kfuz2_cli = { path = "./../kfuz2_cli" }
 kfuz2_lib = { path = "./../kfuz2_lib" }
-serial_test = "2"
-sha1_smol = "1"
+serial_test = "3.1.1"
+sha1_smol = "1.0.0"
 
 [[test]]
 name = "cli_tests"
