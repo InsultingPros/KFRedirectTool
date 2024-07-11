@@ -1,65 +1,20 @@
+use common::{check_if_hash_eq, execution_result};
 use kfuz2_cli::types;
 use serial_test::serial;
-use sha1_smol::Sha1;
-use std::{
-    fs::File,
-    io::{self, BufReader, Read},
-    path::Path,
-    process::Command,
-};
 
 mod common;
-
-fn get_file_sha1(input_file: &str) -> Result<String, io::Error> {
-    let mut hasher: Sha1 = Sha1::new();
-    let mut buffer: Vec<u8> = vec![0u8; 1024];
-    let mut reader: BufReader<File> = BufReader::new(File::open(Path::new(input_file))?);
-
-    loop {
-        let count: usize = reader.read(&mut buffer)?;
-        if count == 0 {
-            break;
-        }
-        hasher.update(&buffer[..count]);
-    }
-
-    Ok(hasher.digest().to_string())
-}
-
-fn assert_or_panic_hash(input_file: &str, hash_to_compare: &str) {
-    if let Ok(file_hash) = get_file_sha1(input_file) {
-        assert_eq!(file_hash, hash_to_compare);
-    } else {
-        panic!("Could not gather {} hash...", input_file);
-    }
-}
-
-// if this panics - let it happen!
-fn execution_result(input_args: Option<&[&str]>) -> i32 {
-    match input_args {
-        Some(args) => {
-            let status: std::process::ExitStatus = Command::new(common::EXE_RELEASE)
-                .args(args)
-                .status()
-                .expect("failed to execute process");
-
-            status.code().unwrap()
-        }
-        None => types::exit_codes::ERROR_BAD_ARGUMENTS as i32,
-    }
-}
 
 // N.B. check these 2 again at the end!
 #[test]
 #[serial]
 fn initial_check_validation_file_u() {
-    assert_or_panic_hash(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
+    check_if_hash_eq(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
 }
 
 #[test]
 #[serial]
 fn initial_check_validation_file_uz2() {
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::VALIDATION_FILE_UZ2,
         common::SHA1_VALIDATION_FILE_UZ2,
     );
@@ -196,7 +151,7 @@ fn compression_correct_output_verbose() {
         ])),
         types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
         common::SHA1_VALIDATION_FILE_UZ2,
     );
@@ -215,7 +170,7 @@ fn compression_correct_output_verbose_quiet() {
         ])),
         types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
         common::SHA1_VALIDATION_FILE_UZ2,
     );
@@ -232,7 +187,7 @@ fn compression_correct_output() {
         ])),
         types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
         common::SHA1_VALIDATION_FILE_UZ2,
     );
@@ -245,7 +200,7 @@ fn compression_correct() {
         execution_result(Some(&[common::VALIDATION_FILE_U])),
         types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::VALIDATION_FILE_UZ2,
         common::SHA1_VALIDATION_FILE_UZ2,
     );
@@ -274,7 +229,7 @@ fn decompression_correct_output_verbose() {
         types::exit_codes::ERROR_SUCCESS as i32
     );
 
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::FILE_DECOMPRESSED_OUTPUT,
         common::SHA1_VALIDATION_FILE_U,
     );
@@ -292,7 +247,7 @@ fn decompression_correct_output() {
         ])),
         types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::FILE_DECOMPRESSED_OUTPUT,
         common::SHA1_VALIDATION_FILE_U,
     );
@@ -305,7 +260,7 @@ fn decompression_correct() {
         execution_result(Some(&["-d", common::VALIDATION_FILE_UZ2])),
         types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
+    check_if_hash_eq(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
 }
 
 #[test]
@@ -329,7 +284,7 @@ fn mixed_args_test() {
         ])),
         types::exit_codes::ERROR_SUCCESS as i32
     );
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
         common::SHA1_VALIDATION_FILE_UZ2,
     );
@@ -347,7 +302,7 @@ fn file_output_instead_of_directory() {
         ])),
         types::exit_codes::ERROR_CANNOT_MAKE as i32
     );
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
         common::SHA1_VALIDATION_FILE_UZ2,
     );
@@ -356,13 +311,13 @@ fn file_output_instead_of_directory() {
 #[test]
 #[serial]
 fn final_check_validation_file_u() {
-    assert_or_panic_hash(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
+    check_if_hash_eq(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
 }
 
 #[test]
 #[serial]
 fn final_check_validation_file_uz2() {
-    assert_or_panic_hash(
+    check_if_hash_eq(
         common::VALIDATION_FILE_UZ2,
         common::SHA1_VALIDATION_FILE_UZ2,
     );

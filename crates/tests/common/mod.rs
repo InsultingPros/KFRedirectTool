@@ -1,4 +1,13 @@
 #![allow(dead_code)]
+use kfuz2_cli::types;
+use sha1_smol::Sha1;
+use std::{
+    fs::File,
+    io::{self, BufReader, Read},
+    path::Path,
+    process::Command,
+};
+
 /// debug executable
 pub const EXE_DEBUG: &str = "..//..//target//debug//kfuz2_cli";
 /// release executable
@@ -33,3 +42,42 @@ pub const INCORRECT_FILE_UZ2: &str = "test_files//incorrect//UCC.uz2";
 pub const VANILLA_FILE: &str = "test_files//incorrect//KFMutators.u";
 /// Empty file
 pub const EMPTY_FILE: &str = "";
+
+pub fn get_file_sha1(input_file: &str) -> Result<String, io::Error> {
+    let mut hasher: Sha1 = Sha1::new();
+    let mut buffer: Vec<u8> = vec![0u8; 1024];
+    let mut reader: BufReader<File> = BufReader::new(File::open(Path::new(input_file))?);
+
+    loop {
+        let count: usize = reader.read(&mut buffer)?;
+        if count == 0 {
+            break;
+        }
+        hasher.update(&buffer[..count]);
+    }
+
+    Ok(hasher.digest().to_string())
+}
+
+pub fn check_if_hash_eq(input_file: &str, hash_to_compare: &str) {
+    if let Ok(file_hash) = get_file_sha1(input_file) {
+        assert_eq!(file_hash, hash_to_compare);
+    } else {
+        panic!("Could not gather {}'s SHA1...", input_file);
+    }
+}
+
+// if this panics - let it happen!
+pub fn execution_result(input_args: Option<&[&str]>) -> i32 {
+    match input_args {
+        Some(args) => {
+            let status: std::process::ExitStatus = Command::new(EXE_RELEASE)
+                .args(args)
+                .status()
+                .expect("failed to execute process");
+
+            status.code().expect("Status code was none!")
+        }
+        None => types::exit_codes::ERROR_BAD_ARGUMENTS as i32,
+    }
+}
