@@ -10,7 +10,7 @@ KF UZ2 is yet another compressor-decompressor designed for UE2-based games, offe
 - Supports all Unreal Engine 2 based games, but provides additional checks for KF1 files.
 - Works on 64-bit Linux, MacOS, Windows.
 - Does not require game DLLs or `UCC.exe`.
-- Boasts the [fastest](docs/Benchmark.md) file processing speed compared to other available compressors, thanks to the use of [zlib-ng](https://github.com/zlib-ng/zlib-ng).
+- Boasts the [fastest](docs/Benchmark.md) file processing speed compared to other available compressors, thanks to the use of [zlib-rs](https://github.com/memorysafety/zlib-rs).
 
 ## Crates
 

@@ -1,13 +1,13 @@
 <!-- markdownlint-disable MD028 -->
 [tinyuz2]: https://unrealadmin.org/forums/showthread.php?t=10192
 [uzLib]: https://unrealadmin.org/forums/showthread.php?p=172927
-[zlib-ng]: https://github.com/zlib-ng/zlib-ng
+[zlib-rs]: https://github.com/memorysafety/zlib-rs
 
 # Speed Comparison
 
 > [Go back to README](../crates/kfuz2_cli/README.md)
 
-> **Note** most of difference comes from [zlib-ng] usage. Underlying algorithms, error handling are almost identical.
+> **Note** most of difference comes from [zlib-rs] usage. Underlying algorithms, error handling are almost identical.
 
 Test Setup:
 

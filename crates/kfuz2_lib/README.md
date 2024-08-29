@@ -3,7 +3,7 @@
 > [Go back to README](../../README.md)
 
 - Contains core functionality for compressing-decompressing files.
-- Uses [zlib-ng](https://github.com/zlib-ng/zlib-ng) to achieve much [faster file processing](../../docs/Benchmark.md) compared to all analoges.
+- Uses [zlib-rs](https://github.com/memorysafety/zlib-rs) to achieve much [faster file processing](../../docs/Benchmark.md) compared to all analoges.
 
 ## Credits
 
