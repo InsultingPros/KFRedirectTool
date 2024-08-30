@@ -173,7 +173,8 @@ fn parse_compression_result(
         Err(e) => {
             println!("{e}");
             match e {
-                CompressStreamError::IsKFPackage(_) => {
+                CompressStreamError::IsKFPackage(_)
+                | CompressStreamError::FileAlreadyCompressed(_) => {
                     gui_app
                         .pbar
                         .file_num_ignored
