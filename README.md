@@ -22,7 +22,4 @@ This project consists of:
 
 ## Building
 
-For most part it's a simple `cargo build --release`, but some crates from dependencies require additional libraries:
-
-- [Cmake](https://cmake.org/download/) to compile [libz-sys](https://github.com/rust-lang/libz-sys).
-- `libgtk-3-dev` for your linux distribution, to compile part of [egui](https://github.com/emilk/egui).
+Just a simple `cargo build --release`, but for your linux distribution you may install `libgtk-3-dev`, (to compile part of [egui](https://github.com/emilk/egui)).
