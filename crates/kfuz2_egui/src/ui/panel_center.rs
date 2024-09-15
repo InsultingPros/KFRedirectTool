@@ -182,12 +182,16 @@ fn render_settings(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                 .text_color(constants::EXTENSION_COLOR),
         );
 
+        // N.B. egui has changed how focus works, next time don't forget about this:
+        // https://github.com/emilk/egui/discussions/5110#discussioncomment-10651410
         if ui
             .add(egui::Button::new("Save").min_size(crate::constants::BUTTON_SIZE_SMALL))
-            .clicked()
+            .hovered()
+            && ui.input(|i| i.pointer.primary_pressed())
         {
             gui_app.extension_list = gui_app.text_edit_extensions.clone();
         }
+
         if ui
             .add(egui::Button::new("Reset").min_size(crate::constants::BUTTON_SIZE_SMALL))
             .clicked()
