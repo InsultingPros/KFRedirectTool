@@ -143,7 +143,7 @@ fn render_settings(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
 
         ui.label("Log level")
             .on_hover_text("Select how much info you want to see in logs");
-        egui::ComboBox::from_id_source(0)
+        egui::ComboBox::from_id_salt(0)
             .selected_text(format!("{:?}", gui_app.log_level))
             .show_ui(ui, |ui| {
                 ui.set_min_width(60.0);

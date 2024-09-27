@@ -5,7 +5,7 @@ version = "2.0.0"
 edition = "2021"
 
 [dependencies]
-flate2 = { version = "1.0.33", features = [
+flate2 = { version = "1.0.34", features = [
     "zlib-rs",
 ], default-features = false }
 sha1_smol = "1"
