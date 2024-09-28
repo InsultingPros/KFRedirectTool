@@ -1,9 +1,9 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "tests"
-version = "1.0.0"
-edition = "2021"
-authors = ["Shtoyan", "dkanus"]
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
 
 [dev-dependencies]
 kfuz2_cli = { path = "./../kfuz2_cli" }
