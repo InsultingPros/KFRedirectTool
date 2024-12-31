@@ -6,6 +6,9 @@ authors.workspace = true
 edition.workspace = true
 version.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 # log = "0.4"anyhow = "1"
 eframe = { version = "0.30.0", default-features = false, features = [

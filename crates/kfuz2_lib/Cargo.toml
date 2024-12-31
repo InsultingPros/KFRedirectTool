@@ -5,6 +5,9 @@ authors.workspace = true
 edition.workspace = true
 version.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 flate2 = { version = "1.0.35", features = [
     "zlib-rs",

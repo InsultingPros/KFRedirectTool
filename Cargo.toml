@@ -17,3 +17,10 @@ codegen-units = 1
 lto = "fat"
 panic = "abort"
 strip = true
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+restriction = "warn"
+nursery = "warn"
+cargo = "warn"

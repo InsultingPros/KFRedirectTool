@@ -12,7 +12,7 @@ pub enum LogLevel {
 }
 
 /// Arguments for internal use.
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct InputArguments {
     /// input file's path
     pub input_path: std::path::PathBuf,
@@ -22,17 +22,6 @@ pub struct InputArguments {
     pub log_level: LogLevel,
     /// ignore KF1 vanilla files
     pub ignore_kf_files: bool,
-}
-
-impl Default for InputArguments {
-    fn default() -> Self {
-        Self {
-            input_path: std::path::PathBuf::new(),
-            output_path: std::path::PathBuf::new(),
-            ignore_kf_files: false,
-            log_level: LogLevel::Default,
-        }
-    }
 }
 
 pub struct ProcessingResult {
