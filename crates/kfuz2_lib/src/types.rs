@@ -3,7 +3,7 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 /// `kfuz2_lib` log levels.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogLevel {
     Verbose,
     #[default]

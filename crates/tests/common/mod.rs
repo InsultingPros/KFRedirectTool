@@ -63,21 +63,21 @@ pub fn check_if_hash_eq(input_file: &str, hash_to_compare: &str) {
     if let Ok(file_hash) = get_file_sha1(input_file) {
         assert_eq!(file_hash, hash_to_compare);
     } else {
-        panic!("Could not gather {}'s SHA1...", input_file);
+        panic!("Could not gather {input_file}'s SHA1...");
     }
 }
 
 // if this panics - let it happen!
 pub fn execution_result(input_args: Option<&[&str]>) -> i32 {
-    match input_args {
-        Some(args) => {
+    input_args.map_or_else(
+        || i32::from(types::exit_codes::ERROR_BAD_ARGUMENTS),
+        |args| {
             let status: std::process::ExitStatus = Command::new(EXE_RELEASE)
                 .args(args)
                 .status()
                 .expect("failed to execute process");
 
             status.code().expect("Status code was none!")
-        }
-        None => types::exit_codes::ERROR_BAD_ARGUMENTS as i32,
-    }
+        },
+    )
 }

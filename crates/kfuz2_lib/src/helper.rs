@@ -70,17 +70,15 @@ impl PathChecks for PathBuf {
     }
 
     fn is_default_kf_extension(&self) -> bool {
-        match self.extension().and_then(OsStr::to_str) {
-            Some(extension) => constants::DEFAULT_EXTENSIONS.contains(&extension),
-            _ => false,
-        }
+        self.extension()
+            .and_then(OsStr::to_str)
+            .is_some_and(|extension| constants::DEFAULT_EXTENSIONS.contains(&extension))
     }
 
     fn has_uz2_extension(&self) -> bool {
-        match self.extension().and_then(OsStr::to_str) {
-            Some(extension) => extension.to_lowercase() == constants::COMPRESSED_EXTENSION,
-            _ => false,
-        }
+        self.extension()
+            .and_then(OsStr::to_str)
+            .is_some_and(|extension| extension.to_lowercase() == constants::COMPRESSED_EXTENSION)
     }
 
     fn open_output_ue_stream(&self) -> Result<BufWriter<File>, io::Error> {

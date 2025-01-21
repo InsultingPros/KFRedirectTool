@@ -25,10 +25,10 @@ fn collect_input_files(gui_app: &ui::app::Kfuz2Egui) -> Vec<PathBuf> {
             .into_iter()
             .filter_map(std::result::Result::ok)
             .filter(|e| {
-                return match e.path().extension().and_then(std::ffi::OsStr::to_str) {
-                    Some(ext) => gui_app.extension_list.contains(ext),
-                    None => false,
-                };
+                e.path()
+                    .extension()
+                    .and_then(std::ffi::OsStr::to_str)
+                    .is_some_and(|ext| gui_app.extension_list.contains(ext))
             })
         {
             result.push(entry.into_path());

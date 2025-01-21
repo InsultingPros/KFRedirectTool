@@ -40,7 +40,7 @@ pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArgu
         result.output_path = PathBuf::from(extracted_output);
     } else {
         // if none, assign same path as input. Will use this in further checks
-        result.output_path = result.input_path.clone();
+        result.output_path.clone_from(&result.input_path);
     }
 
     // silent has higher priority

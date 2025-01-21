@@ -189,7 +189,9 @@ fn render_settings(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
             .hovered()
             && ui.input(|i| i.pointer.primary_pressed())
         {
-            gui_app.extension_list = gui_app.text_edit_extensions.clone();
+            gui_app
+                .extension_list
+                .clone_from(&gui_app.text_edit_extensions);
         }
 
         if ui
@@ -202,7 +204,9 @@ fn render_settings(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
 
         // if we changed something but did not save -> revert everything
         if extension_response.lost_focus() {
-            gui_app.text_edit_extensions = gui_app.extension_list.clone();
+            gui_app
+                .text_edit_extensions
+                .clone_from(&gui_app.extension_list);
         }
     });
 }

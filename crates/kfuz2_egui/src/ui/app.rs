@@ -118,7 +118,7 @@ impl Kfuz2Egui {
             return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         }
 
-        Kfuz2Egui::default()
+        Self::default()
     }
 }
 

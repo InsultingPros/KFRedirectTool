@@ -26,7 +26,7 @@ fn initial_check_validation_file_uz2() {
 fn show_help_arguments() {
     assert_eq!(
         execution_result(Some(&["-h"])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
 }
 
@@ -35,7 +35,7 @@ fn show_help_arguments() {
 fn empty_arguments() {
     assert_eq!(
         execution_result(None),
-        types::exit_codes::ERROR_BAD_ARGUMENTS as i32
+        i32::from(types::exit_codes::ERROR_BAD_ARGUMENTS)
     );
 }
 
@@ -44,7 +44,7 @@ fn empty_arguments() {
 fn non_complete_argument_o() {
     assert_eq!(
         execution_result(Some(&["-o"])),
-        types::exit_codes::ARGUMENT_PARSING_ERROR as i32
+        i32::from(types::exit_codes::ARGUMENT_PARSING_ERROR)
     );
 }
 
@@ -53,7 +53,7 @@ fn non_complete_argument_o() {
 fn non_complete_argument_d() {
     assert_eq!(
         execution_result(Some(&["-d"])),
-        types::exit_codes::ARGUMENT_PARSING_ERROR as i32
+        i32::from(types::exit_codes::ARGUMENT_PARSING_ERROR)
     );
 }
 
@@ -63,7 +63,7 @@ fn non_complete_argument_d() {
 fn compress_incorrect_extension_exe() {
     assert_eq!(
         execution_result(Some(&[common::INCORRECT_FILE_EXT])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -72,7 +72,7 @@ fn compress_incorrect_extension_exe() {
 fn compress_incorrect_file_from_exe() {
     assert_eq!(
         execution_result(Some(&[common::INCORRECT_FILE])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
 }
 
@@ -81,7 +81,7 @@ fn compress_incorrect_file_from_exe() {
 fn compress_nocheck_incorrect_file() {
     assert_eq!(
         execution_result(Some(&[common::INCORRECT_FILE, "--nocheck"])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
 }
 
@@ -90,7 +90,7 @@ fn compress_nocheck_incorrect_file() {
 fn decompress_incorrect_file_uz2() {
     assert_eq!(
         execution_result(Some(&["-d", common::INCORRECT_FILE_UZ2])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -99,7 +99,7 @@ fn decompress_incorrect_file_uz2() {
 fn decompress_nocheck_incorrect_file_uz2() {
     assert_eq!(
         execution_result(Some(&["-d", common::INCORRECT_FILE_UZ2, "--nocheck"])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -108,7 +108,7 @@ fn decompress_nocheck_incorrect_file_uz2() {
 fn compress_vanilla_file() {
     assert_eq!(
         execution_result(Some(&[common::VANILLA_FILE])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -117,7 +117,7 @@ fn compress_vanilla_file() {
 fn compress_nocheck_vanilla_file() {
     assert_eq!(
         execution_result(Some(&[common::VANILLA_FILE, "--nocheck"])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
 }
 
@@ -126,7 +126,7 @@ fn compress_nocheck_vanilla_file() {
 fn compress_compressed_ext_file() {
     assert_eq!(
         execution_result(Some(&[common::VALIDATION_FILE_UZ2])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -135,7 +135,7 @@ fn compress_compressed_ext_file() {
 fn decompress_decompressed_ext_file() {
     assert_eq!(
         execution_result(Some(&["-d", common::VALIDATION_FILE_U])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -149,7 +149,7 @@ fn compression_correct_output_verbose() {
             common::OUTPUT_COMPRESSED,
             common::VALIDATION_FILE_U
         ])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
     check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
@@ -168,7 +168,7 @@ fn compression_correct_output_verbose_quiet() {
             common::OUTPUT_COMPRESSED,
             common::VALIDATION_FILE_U
         ])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
     check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
@@ -185,7 +185,7 @@ fn compression_correct_output() {
             common::OUTPUT_COMPRESSED,
             common::VALIDATION_FILE_U
         ])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
     check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
@@ -198,7 +198,7 @@ fn compression_correct_output() {
 fn compression_correct() {
     assert_eq!(
         execution_result(Some(&[common::VALIDATION_FILE_U])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
     check_if_hash_eq(
         common::VALIDATION_FILE_UZ2,
@@ -211,7 +211,7 @@ fn compression_correct() {
 fn compression_incorrect_input() {
     assert_eq!(
         execution_result(Some(&[common::OUTPUT_DECOMPRESSED])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -226,7 +226,7 @@ fn decompression_correct_output_verbose() {
             "-d",
             common::FILE_COMPRESSED_OUTPUT,
         ])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
 
     check_if_hash_eq(
@@ -245,7 +245,7 @@ fn decompression_correct_output() {
             "-d",
             common::FILE_COMPRESSED_OUTPUT
         ])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
     check_if_hash_eq(
         common::FILE_DECOMPRESSED_OUTPUT,
@@ -258,7 +258,7 @@ fn decompression_correct_output() {
 fn decompression_correct() {
     assert_eq!(
         execution_result(Some(&["-d", common::VALIDATION_FILE_UZ2])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
     check_if_hash_eq(common::VALIDATION_FILE_U, common::SHA1_VALIDATION_FILE_U);
 }
@@ -268,7 +268,7 @@ fn decompression_correct() {
 fn decompression_incorrect_input() {
     assert_eq!(
         execution_result(Some(&[common::OUTPUT_COMPRESSED])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
 }
 
@@ -282,7 +282,7 @@ fn mixed_args_test() {
             common::VALIDATION_FILE_U,
             "-v"
         ])),
-        types::exit_codes::ERROR_SUCCESS as i32
+        i32::from(types::exit_codes::ERROR_SUCCESS)
     );
     check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,
@@ -300,7 +300,7 @@ fn file_output_instead_of_directory() {
             common::VALIDATION_FILE_U,
             "-v"
         ])),
-        types::exit_codes::ERROR_CANNOT_MAKE as i32
+        i32::from(types::exit_codes::ERROR_CANNOT_MAKE)
     );
     check_if_hash_eq(
         common::FILE_COMPRESSED_OUTPUT,

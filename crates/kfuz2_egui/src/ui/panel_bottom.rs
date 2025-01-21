@@ -16,10 +16,10 @@ pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
 
         ui.horizontal(|ui| {
             let empty_path = &PathBuf::new();
-            let output_destination = match &gui_app.output_dir {
-                Some(value) => value,
-                None => empty_path,
-            };
+            let output_destination = gui_app
+                .output_dir
+                .as_ref()
+                .map_or(empty_path, |value| value);
 
             let output_selected: bool = gui_app
                 .output_dir
