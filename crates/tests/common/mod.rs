@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use kfuz2_cli::types;
+use kfuz2_cli::exit_codes;
 use sha1_smol::Sha1;
 use std::{
     fs::File,
@@ -70,7 +70,7 @@ pub fn check_if_hash_eq(input_file: &str, hash_to_compare: &str) {
 // if this panics - let it happen!
 pub fn execution_result(input_args: Option<&[&str]>) -> i32 {
     input_args.map_or_else(
-        || i32::from(types::exit_codes::ERROR_BAD_ARGUMENTS),
+        || i32::from(exit_codes::ERROR_BAD_ARGUMENTS),
         |args| {
             let status: std::process::ExitStatus = Command::new(EXE_RELEASE)
                 .args(args)

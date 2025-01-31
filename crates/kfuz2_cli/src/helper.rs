@@ -2,7 +2,7 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-use crate::{cli, types::exit_codes};
+use crate::{exit_codes, Options};
 use anyhow::{bail, Context};
 use kfuz2_lib::compressor::compress;
 use kfuz2_lib::decompressor::decompress;
@@ -17,7 +17,7 @@ use std::{path::PathBuf, process::ExitCode};
 /// # Errors
 ///
 /// Will return `Err` if input is none.
-pub fn compose_input_arguments(env_arguments: &cli::Options) -> Result<InputArguments, ExitCode> {
+pub fn compose_input_arguments(env_arguments: &Options) -> Result<InputArguments, ExitCode> {
     // 1. vanilla file check
     let mut result: InputArguments = InputArguments {
         ignore_kf_files: !env_arguments.nocheck,

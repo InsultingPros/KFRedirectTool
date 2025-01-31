@@ -3,16 +3,16 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use kfuz2_cli::{
-    cli,
+    exit_codes,
     helper::{compose_input_arguments, try_to_compress, try_to_decompress},
-    types::exit_codes,
+    Options,
 };
 use kfuz2_lib::types::{InputArguments, LogLevel::Minimal};
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
     // get enviroment arguments
-    let env_arguments: cli::Options = gumdrop::Options::parse_args_default_or_exit();
+    let env_arguments: Options = gumdrop::Options::parse_args_default_or_exit();
 
     // compose arguments for internal use
     let mut input_arguments: InputArguments = match compose_input_arguments(&env_arguments) {
