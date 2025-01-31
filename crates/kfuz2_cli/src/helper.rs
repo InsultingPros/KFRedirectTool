@@ -3,9 +3,9 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::{exit_codes, Options};
-use anyhow::{bail, Context};
 use kfuz2_lib::compressor::compress;
 use kfuz2_lib::decompressor::decompress;
+use kfuz2_lib::errors::{CompressStreamError, DecompressStreamError};
 use kfuz2_lib::helper::{
     additional_processing_information, validate_compressible_path, validate_decompressible_path,
     PathChecks,
@@ -61,7 +61,7 @@ pub fn compose_input_arguments(env_arguments: &Options) -> Result<InputArguments
 /// # Errors
 ///
 /// Will return `Err` if fail to create input-output streams, correctly compress the data or remove file on failure.
-pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<()> {
+pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), CompressStreamError> {
     validate_compressible_path(input_arguments)?;
 
     // create streams
@@ -76,7 +76,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
                     input_arguments
                         .input_path
                         .get_file_name()
-                        .context("Should not fail!")?,
+                        .unwrap_or("Should not fail!"),
                     result.time
                 );
                 if input_arguments.log_level == LogLevel::Verbose {
@@ -86,7 +86,8 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
         }
         Err(e) => {
             std::fs::remove_file(&input_arguments.output_path)?;
-            bail!("Terminating: {}", e)
+            // eprintln!("Terminating: {e}");
+            return Err(e);
         }
     };
 
@@ -97,7 +98,9 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> anyhow::Result<(
 /// # Errors
 ///
 /// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
-pub fn try_to_decompress(input_arguments: &mut InputArguments) -> anyhow::Result<()> {
+pub fn try_to_decompress(
+    input_arguments: &mut InputArguments,
+) -> Result<(), DecompressStreamError> {
     validate_decompressible_path(input_arguments)?;
 
     let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
@@ -111,7 +114,7 @@ pub fn try_to_decompress(input_arguments: &mut InputArguments) -> anyhow::Result
                     input_arguments
                         .input_path
                         .get_file_name()
-                        .context("Should not fail!")?,
+                        .unwrap_or("Should not fail!"),
                     result.time
                 );
                 if input_arguments.log_level == LogLevel::Verbose {
@@ -121,7 +124,8 @@ pub fn try_to_decompress(input_arguments: &mut InputArguments) -> anyhow::Result
         }
         Err(e) => {
             std::fs::remove_file(&input_arguments.output_path)?;
-            bail!("Terminating: {}", e)
+            // eprintln!("Terminating: {e}");
+            return Err(e);
         }
     };
 

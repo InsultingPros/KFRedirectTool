@@ -10,6 +10,5 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-anyhow = "1"
 gumdrop = "0.8"
 kfuz2_lib = { path = "..//kfuz2_lib" }

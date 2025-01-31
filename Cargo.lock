@@ -1969,7 +1969,6 @@ dependencies = [
 name = "kfuz2_cli"
 version = "1.6.1"
 dependencies = [
- "anyhow",
  "gumdrop",
  "kfuz2_lib",
 ]
