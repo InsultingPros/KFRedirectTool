@@ -2,7 +2,8 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-pub mod helper;
+use kfuz2_lib::types::{InputArguments, LogLevel};
+use std::{path::PathBuf, process::ExitCode};
 
 // Reference: https://docs.rs/gumdrop/latest/gumdrop/
 /// `kfuz2_cli` supported arguments. For online help check: <https://github.com/InsultingPros/KFRedirectTool>
@@ -78,4 +79,48 @@ pub mod exit_codes {
     pub const ARGUMENT_PARSING_ERROR: u8 = 2;
     pub const ERROR_CANNOT_MAKE: u8 = 1;
     pub const ERROR_BAD_ARGUMENTS: u8 = 128;
+}
+
+/// Compose arguments for internal use
+/// # Errors
+///
+/// Will return `Err` if input is none.
+pub fn compose_input_arguments(env_arguments: &Options) -> Result<InputArguments, ExitCode> {
+    // 1. vanilla file check
+    let mut result: InputArguments = InputArguments {
+        ignore_kf_files: !env_arguments.nocheck,
+        ..Default::default()
+    };
+    // 2. input path
+    // decompression
+    if let Some(decompress_argument) = &env_arguments.decompress {
+        result.input_path = PathBuf::from(decompress_argument);
+    }
+    // compression
+    else {
+        if env_arguments.input_file.is_empty() {
+            return Err(ExitCode::from(exit_codes::ERROR_BAD_ARGUMENTS));
+        }
+        result.input_path = PathBuf::from(&env_arguments.input_file[0]);
+    }
+    // 3. output path
+    if let Some(extracted_output) = &env_arguments.output {
+        result.output_path = PathBuf::from(extracted_output);
+    } else {
+        // if none, assign same path as input. Will use this in further checks
+        result.output_path.clone_from(&result.input_path);
+    }
+
+    // silent has higher priority
+    if env_arguments.quiet {
+        result.log_level = LogLevel::Minimal;
+        return Ok(result);
+    }
+
+    if env_arguments.verbose {
+        result.log_level = LogLevel::Verbose;
+        return Ok(result);
+    }
+
+    Ok(result)
 }

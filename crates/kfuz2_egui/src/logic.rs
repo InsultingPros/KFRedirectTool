@@ -5,14 +5,9 @@
 #![allow(clippy::cast_possible_truncation)]
 use crate::ui;
 use kfuz2_lib::{
-    compressor::compress,
-    decompressor::decompress,
     errors::{CompressStreamError, DecompressStreamError},
-    helper::{
-        additional_processing_information, validate_compressible_path,
-        validate_decompressible_path, PathChecks,
-    },
-    types::{InputArguments, LogLevel},
+    helper::{try_to_compress, try_to_decompress},
+    types::InputArguments,
 };
 use std::{path::PathBuf, sync::atomic::Ordering, time::Instant};
 use walkdir::WalkDir;
@@ -118,7 +113,7 @@ fn parse_decompression_result(
     gui_app: &ui::app::Kfuz2Egui,
     start: Instant,
 ) {
-    match try_to_decompress(
+    match try_to_decompress_c(
         &mut InputArguments {
             input_path: file_list_path.into(),
             output_path: gui_app.output_dir.clone().unwrap(),
@@ -155,7 +150,7 @@ fn parse_compression_result(
     gui_app: &ui::app::Kfuz2Egui,
     start: Instant,
 ) {
-    match try_to_compress(
+    match try_to_compress_c(
         &mut InputArguments {
             input_path: file_list_path.into(),
             output_path: gui_app.output_dir.clone().unwrap(),
@@ -202,50 +197,21 @@ fn parse_compression_result(
 /// # Errors
 ///
 /// Will return `Err` if fail to create input-output streams, correctly compress the data or remove file on failure.
-pub fn try_to_compress(
+pub fn try_to_compress_c(
     input_arguments: &mut InputArguments,
     cancel: bool,
 ) -> Result<(), CompressStreamError> {
     if cancel {
         return Err(CompressStreamError::Canceled);
     }
-
-    validate_compressible_path(input_arguments)?;
-
-    // create streams
-    let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
-    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
-
-    match compress(&mut input_stream, &mut output_stream, input_arguments) {
-        Ok(result) => {
-            if input_arguments.log_level != LogLevel::Minimal {
-                println!(
-                    "{} compressed in {:?}",
-                    input_arguments.input_path.get_file_name().unwrap_or("404"),
-                    result.time
-                );
-                if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result);
-                }
-            }
-            Ok(())
-        }
-        Err(e) => {
-            // print!("{}", e);
-            std::fs::remove_file(&input_arguments.output_path)?;
-            Err(e)
-            // Err(CompressStreamError::FailedToCompress(
-            //     input_arguments.input_path.to_owned(),
-            // ))
-        }
-    }
+    try_to_compress(input_arguments)
 }
 
 /// Try to decompress given file.
 /// # Errors
 ///
 /// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
-pub fn try_to_decompress(
+pub fn try_to_decompress_c(
     input_arguments: &mut InputArguments,
     cancel: bool,
 ) -> Result<(), DecompressStreamError> {
@@ -253,34 +219,7 @@ pub fn try_to_decompress(
         return Err(DecompressStreamError::Canceled);
     }
 
-    validate_decompressible_path(input_arguments)?;
-
-    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
-    let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
-
-    match decompress(&mut input_stream, &mut output_stream, input_arguments) {
-        Ok(result) => {
-            if input_arguments.log_level != LogLevel::Minimal {
-                println!(
-                    "{} decompressed in {:?}",
-                    input_arguments.input_path.get_file_name().unwrap_or("404"),
-                    result.time
-                );
-                if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result);
-                }
-            }
-            Ok(())
-        }
-        Err(e) => {
-            // print!("{}", e);
-            std::fs::remove_file(&input_arguments.output_path)?;
-            Err(e)
-            // Err(DecompressStreamError::FailedToCompress(
-            //     input_arguments.input_path.to_owned(),
-            // ))
-        }
-    }
+    try_to_decompress(input_arguments)
 }
 
 /// Reset progress bar atomics

@@ -3,6 +3,9 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 #![allow(clippy::cast_precision_loss)]
+use crate::compressor::compress;
+use crate::decompressor::decompress;
+use crate::errors::{CompressStreamError, DecompressStreamError};
 use crate::types::{InputArguments, LogLevel, ProcessingResult};
 use crate::{constants, errors};
 use sha1_smol::Sha1;
@@ -262,4 +265,79 @@ pub fn additional_processing_information(info: &ProcessingResult) {
     );
 
     println!("`-- {}, chunk count: {}", &size_info, info.chunk_count);
+}
+
+/// Try to compress given file.
+/// # Errors
+///
+/// Will return `Err` if fail to create input-output streams, correctly compress the data or remove file on failure.
+pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), CompressStreamError> {
+    validate_compressible_path(input_arguments)?;
+
+    // create streams
+    let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
+    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
+
+    match compress(&mut input_stream, &mut output_stream, input_arguments) {
+        Ok(result) => {
+            if input_arguments.log_level != LogLevel::Minimal {
+                println!(
+                    "{} compressed in {:?}",
+                    input_arguments
+                        .input_path
+                        .get_file_name()
+                        .unwrap_or("Should not fail!"),
+                    result.time
+                );
+                if input_arguments.log_level == LogLevel::Verbose {
+                    additional_processing_information(&result);
+                }
+            }
+        }
+        Err(e) => {
+            std::fs::remove_file(&input_arguments.output_path)?;
+            // eprintln!("Terminating: {e}");
+            return Err(e);
+        }
+    };
+
+    Ok(())
+}
+
+/// Try to decompress given file.
+/// # Errors
+///
+/// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
+pub fn try_to_decompress(
+    input_arguments: &mut InputArguments,
+) -> Result<(), DecompressStreamError> {
+    validate_decompressible_path(input_arguments)?;
+
+    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
+    let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
+
+    match decompress(&mut input_stream, &mut output_stream, input_arguments) {
+        Ok(result) => {
+            if input_arguments.log_level != LogLevel::Minimal {
+                println!(
+                    "{} decompressed in {:?}",
+                    input_arguments
+                        .input_path
+                        .get_file_name()
+                        .unwrap_or("Should not fail!"),
+                    result.time
+                );
+                if input_arguments.log_level == LogLevel::Verbose {
+                    additional_processing_information(&result);
+                }
+            }
+        }
+        Err(e) => {
+            std::fs::remove_file(&input_arguments.output_path)?;
+            // eprintln!("Terminating: {e}");
+            return Err(e);
+        }
+    };
+
+    Ok(())
 }
