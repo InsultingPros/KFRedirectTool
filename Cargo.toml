@@ -9,8 +9,9 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Shtoyan", "dkanus"]
-edition = "2021"
+edition = "2024"
 version = "1.6.1"
+rust-version = "1.85"
 publish = false
 
 [profile.release]

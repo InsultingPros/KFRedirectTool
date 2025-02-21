@@ -4,6 +4,7 @@ name = "kfuz2_lib"
 authors.workspace = true
 edition.workspace = true
 version.workspace = true
+rust-version.workspace = true
 publish.workspace = true
 
 [lints]
