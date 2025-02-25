@@ -2,7 +2,7 @@
 use kfuz2_cli::exit_codes;
 use sha1_smol::Sha1;
 use std::{
-    fs::File,
+    fs::{self, File},
     io::{self, BufReader, Read},
     path::Path,
     process::Command,
@@ -13,33 +13,32 @@ pub const EXE_DEBUG: &str = "..//..//target//debug//kfuz2_cli";
 /// release executable
 pub const EXE_RELEASE: &str = "..//..//target//release//kfuz2_cli";
 
-/// Directory for `compress` output
-pub const OUTPUT_COMPRESSED: &str = "test_files//compressed";
-/// Directory for `decompress` output
-pub const OUTPUT_DECOMPRESSED: &str = "test_files//decompressed";
-
-/// `SHA1` hash for validation file
-pub const SHA1_VALIDATION_FILE_U: &str = "e81de24a8d78e58c104dfffbd201da416e49218a";
-/// File for validation, gathered from [here](https://github.com/InsultingPros/BitCore).
-pub const VALIDATION_FILE_U: &str = "test_files//validation//BitCore.u";
-/// `SHA1` hash for compressed validation file
-pub const SHA1_VALIDATION_FILE_UZ2: &str = "ee5015514aa3f641017606521cce4a2994fbf065";
-/// Processed file after `compression`, with `output` omitted
-pub const VALIDATION_FILE_UZ2: &str = "test_files//validation//BitCore.u.uz2";
-
+/// Directory for `compress` output.
+pub const OUTPUT_COMPRESSED_DIR: &str = "test_files//output_compressed";
 /// Processed file after `compression`
-pub const FILE_COMPRESSED_OUTPUT: &str = "test_files//compressed//BitCore.u.uz2";
-/// Processed file after `decompression`
-pub const FILE_DECOMPRESSED_OUTPUT: &str = "test_files//decompressed//BitCore.u";
+pub const OUTPUT_COMPRESSED_FILE: &str = "test_files//output_compressed//BitCore.u.uz2";
 
-/// Incorrect file extension
-pub const INCORRECT_FILE_EXT: &str = "test_files//incorrect//UCC.exe";
-/// Correct extension, but incorrect package
-pub const INCORRECT_FILE: &str = "test_files//incorrect//UCC.u";
-/// Correct 'uz2' extension, but incorrect file
-pub const INCORRECT_FILE_UZ2: &str = "test_files//incorrect//UCC.uz2";
-/// Vanilla game packages must be omitted
-pub const VANILLA_FILE: &str = "test_files//incorrect//KFMutators.u";
+/// Directory for `decompress` output.
+pub const OUTPUT_DECOMPRESSED_DIR: &str = "test_files//output_decompressed";
+/// Processed file after `decompression`
+pub const OUTPUT_DECOMPRESSED_FILE: &str = "test_files//output_decompressed//BitCore.u";
+
+/// File for validation, gathered from [here](https://github.com/InsultingPros/BitCore).
+pub const REFERENCE_FILE_U: &str = "test_files//reference_correct_files//BitCore.u";
+/// `SHA1` hash for validation file
+pub const REFERENCE_FILE_U_HASH: &str = "e81de24a8d78e58c104dfffbd201da416e49218a";
+/// File for validation, gathered from [here](https://github.com/InsultingPros/BitCore).
+pub const REFERENCE_FILE_UZ2: &str = "test_files//reference_correct_files//BitCore.uz2";
+
+/// `UCC.exe`, not a valid file to process.
+pub const INCORRECT_FILE_EXT: &str = "test_files//reference_incorrect_files//UCC.exe";
+/// `UCC.exe` with extension changed to `u`.
+pub const INCORRECT_FILE: &str = "test_files//reference_incorrect_files//UCC.u";
+/// `UCC.exe` compressed and with only `uz2` extension. Should not process.
+pub const INCORRECT_FILE_UZ2: &str = "test_files//reference_incorrect_files//UCC.uz2";
+/// Vanilla `KFMutators.u` package, to validate the `--nocheck` key.
+pub const INCORRECT_FILE_VANILLA: &str = "test_files//reference_incorrect_files//KFMutators.u";
+
 /// Empty file
 pub const EMPTY_FILE: &str = "";
 
@@ -68,7 +67,7 @@ pub fn check_if_hash_eq(input_file: &str, hash_to_compare: &str) {
 }
 
 // if this panics - let it happen!
-pub fn execution_result(input_args: Option<&[&str]>) -> i32 {
+pub fn execute_with_arguments(input_args: Option<&[&str]>) -> i32 {
     input_args.map_or_else(
         || i32::from(exit_codes::ERROR_BAD_ARGUMENTS),
         |args| {
@@ -80,4 +79,14 @@ pub fn execution_result(input_args: Option<&[&str]>) -> i32 {
             status.code().expect("Status code was none!")
         },
     )
+}
+
+pub fn cleanup_leftover_files() {
+    fs::remove_dir_all(OUTPUT_COMPRESSED_DIR)
+        .and_then(|()| fs::create_dir(OUTPUT_COMPRESSED_DIR))
+        .expect("should not fail!");
+
+    fs::remove_dir_all(OUTPUT_DECOMPRESSED_DIR)
+        .and_then(|()| fs::create_dir(OUTPUT_DECOMPRESSED_DIR))
+        .expect("should not fail!");
 }
