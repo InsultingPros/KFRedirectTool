@@ -3,7 +3,7 @@ members = [
     "crates//kfuz2_cli",
     "crates//kfuz2_egui",
     "crates//kfuz2_lib",
-    "crates//tests",
+    "crates//tests", "crates/kfuz2_server",
 ]
 resolver = "2"
 
