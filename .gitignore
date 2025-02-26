@@ -12,3 +12,6 @@ target/
 
 # MacOS
 .DS_Store
+
+# test config for file server
+kfuz2_server.toml

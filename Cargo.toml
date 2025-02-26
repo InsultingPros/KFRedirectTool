@@ -4,6 +4,7 @@ members = [
     "crates//kfuz2_egui",
     "crates//kfuz2_lib",
     "crates//tests",
+    "crates/kfuz2_server",
 ]
 resolver = "2"
 
@@ -27,3 +28,5 @@ nursery = "warn"
 
 [workspace.dependencies]
 thiserror = "2.*"
+serde = { version = "1", default-features = false, features = ["derive"] }
+flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
