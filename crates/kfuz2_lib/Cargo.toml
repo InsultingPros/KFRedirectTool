@@ -15,4 +15,4 @@ flate2 = { version = "1.0.35", features = [
     "zlib-rs",
 ], default-features = false }
 sha1_smol = "1"
-thiserror = "2"
+thiserror = { workspace = true }

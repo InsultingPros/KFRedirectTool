@@ -4,6 +4,7 @@ members = [
     "crates//kfuz2_egui",
     "crates//kfuz2_lib",
     "crates//tests",
+    "crates/kfuz2_server",
 ]
 resolver = "2"
 
@@ -24,3 +25,6 @@ strip = true
 all = "warn"
 pedantic = "warn"
 nursery = "warn"
+
+[workspace.dependencies]
+thiserror = "2.*"
