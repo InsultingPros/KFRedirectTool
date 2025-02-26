@@ -83,12 +83,10 @@ fn render_input_fields(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
                         .min_size(crate::constants::BUTTON_SIZE_MEDIUM),
                 )
                 .clicked()
+                && let Some(path) = rfd::FileDialog::new().pick_folder()
+                && path.exists()
             {
-                if let Some(path) = rfd::FileDialog::new().pick_folder() {
-                    if path.exists() {
-                        gui_app.output_dir = Some(path);
-                    }
-                }
+                gui_app.output_dir = Some(path);
             }
             // label
             if let Some(input) = &gui_app.output_dir {
