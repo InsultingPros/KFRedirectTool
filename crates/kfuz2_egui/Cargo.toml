@@ -22,7 +22,7 @@ kfuz2_lib = { path = "..//kfuz2_lib" }
 poll-promise = "0.*"
 rayon = "1"
 rfd = "0.*"
-serde = { version = "1", features = ["derive"] }
+serde = { workspace = true }
 walkdir = "2"
 
 [build-dependencies]

@@ -14,3 +14,6 @@ target/
 .DS_Store
 .idea/vcs.xml
 .idea/workspace.xml
+
+# test config for file server
+kfuz2_server.toml
