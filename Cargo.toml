@@ -5,15 +5,18 @@ members = [
   "crates//kfuz2_egui",
   "crates//kfuz2_lib",
   "crates//tests",
+  "crates/kfuz2_server",
 ]
 
 [workspace.package]
 version = "1.6.3"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.95"
 publish = false
 
 [workspace.dependencies]
+flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
+serde = { version = "1", default-features = false, features = ["derive"] }
 thiserror = "2.*"
 
 [workspace.lints.clippy]
