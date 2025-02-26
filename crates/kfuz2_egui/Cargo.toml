@@ -12,7 +12,9 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+serde = { workspace = true }
 kfuz2_lib = { path = "..//kfuz2_lib" }
+# log = "0.4"anyhow = "1"
 eframe = { version = "0.31.0", default-features = false, features = [
     "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
@@ -27,7 +29,6 @@ num_cpus = "1"
 poll-promise = "0.*"
 rayon = "1"
 rfd = "0.*"
-serde = { version = "1", features = ["derive"] }
 walkdir = "2"
 
 [build-dependencies]
