@@ -1,4 +1,3 @@
-use kfuz2_server::ServerErrors;
 use kfuz2_server::{config::load_config, server::run_server};
 
 #[tokio::main]
@@ -6,14 +5,14 @@ use kfuz2_server::{config::load_config, server::run_server};
 /// _
 /// # Panics
 /// _
-pub async fn main() -> Result<(), ServerErrors> {
+pub async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let res = load_config("").await?;
     dbg!(
-        &res.config.ip4,
-        &res.config.port,
-        &res.config.cache_memory_limit,
-        &res.config.disk_cache_limit,
-        &res.servers
+        &res.ip4,
+        &res.port,
+        &res.cache_memory_limit,
+        &res.disk_cache_limit,
+        &res.server
     );
 
     run_server(&res).await

@@ -1,18 +1,11 @@
 use crate::ServerErrors::{self, TomlDeError};
 use serde::{Deserialize, Serialize};
-use std::net::Ipv4Addr;
+use std::{collections::HashMap, net::Ipv4Addr, path::PathBuf};
 use tokio::fs;
 
 const CONFIG_NAME: &str = "kfuz2_server.toml";
 
 // Top level struct to hold the TOML data.
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ConfigData {
-    pub config: Config,
-    /// Mapping from URL alias (e.g. "`just_server`") to the base directory.
-    pub servers: Servers,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     /// IP to listen.
@@ -23,6 +16,35 @@ pub struct Config {
     pub cache_memory_limit: usize,
     /// Maximum disk space (in bytes) for the optional disk cache.
     pub disk_cache_limit: usize,
+    /// Mapping from URL alias (e.g. "`just_server`") to the base directory.
+    pub server: HashMap<String, ServerEntry>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ServerEntry {
+    pub url_alias: String,
+    pub base_directory: PathBuf,
+    pub redirect_directory: PathBuf,
+}
+
+impl ServerEntry {
+    fn new(url_alias: &str, base_directory: &str, redirect_directory: &str) -> Self {
+        Self {
+            url_alias: String::from(url_alias),
+            base_directory: PathBuf::from(base_directory),
+            redirect_directory: PathBuf::from(redirect_directory),
+        }
+    }
+}
+
+impl Default for ServerEntry {
+    fn default() -> Self {
+        Self {
+            url_alias: "test_server".to_string(),
+            base_directory: PathBuf::from("D://Games//KF Dedicated Server"),
+            redirect_directory: PathBuf::from("D://Games//KF Dedicated Server//Redirect"),
+        }
+    }
 }
 
 impl Default for Config {
@@ -32,34 +54,27 @@ impl Default for Config {
             port: 8080,
             cache_memory_limit: 100 * 1024 * 1024, // 100 MB,
             disk_cache_limit: 500 * 1024 * 1024,   // 500 MB
-        }
-    }
-}
+            server: {
+                let mut hmap = HashMap::new();
+                let mut server_entry = ServerEntry::new(
+                    "nice_server",
+                    "GameServers/NiceServer",
+                    "GameServers/NiceServer/Server",
+                );
+                hmap.insert(server_entry.url_alias.to_string(), server_entry);
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Servers {
-    pub server_entry: Vec<ServerEntry>,
-}
+                server_entry = ServerEntry::new(
+                    "just_server",
+                    "GameServers/JustServer",
+                    "GameServers/JustServer/Server",
+                );
+                hmap.insert(server_entry.url_alias.to_string(), server_entry);
 
-impl Default for Servers {
-    fn default() -> Self {
-        Self {
-            server_entry: vec![ServerEntry::default()],
-        }
-    }
-}
+                server_entry = ServerEntry::default();
+                hmap.insert(server_entry.url_alias.to_string(), server_entry);
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ServerEntry {
-    pub url_alias: String,
-    pub base_directory: String,
-}
-
-impl Default for ServerEntry {
-    fn default() -> Self {
-        Self {
-            url_alias: String::from("just_server"), // nice_server
-            base_directory: String::from("GameServers/JustServer"), // GameServers/NiceServer
+                hmap
+            },
         }
     }
 }
@@ -67,12 +82,12 @@ impl Default for ServerEntry {
 /// Loads configuration from the specified file.
 /// # Errors
 /// _
-pub async fn load_config(_: &str) -> Result<ConfigData, ServerErrors> {
+pub async fn load_config(_: &str) -> Result<Config, ServerErrors> {
     let mut contents = (fs::read_to_string(CONFIG_NAME).await).unwrap_or_else(|_| String::new());
 
     // println!("{contents}");
 
-    let data: ConfigData = match toml::from_str(&contents) {
+    let data: Config = match toml::from_str(&contents) {
         // If successful, return data as `Data` struct.
         // `d` is a local variable.
         Ok(d) => d,
@@ -81,7 +96,7 @@ pub async fn load_config(_: &str) -> Result<ConfigData, ServerErrors> {
             println!(
                 "Unable to load data from `{CONFIG_NAME}`, error: {err}. Created new file for you! Go fill the fields by your taste."
             );
-            contents = toml::to_string(&ConfigData::default())?;
+            contents = toml::to_string(&Config::default())?;
             fs::write(CONFIG_NAME, contents).await?;
             return Err(TomlDeError(err));
         }

@@ -1,9 +1,19 @@
-[config]
 ip4 = "127.0.0.1"
 port = 8080
 cache_memory_limit = 104857600
 disk_cache_limit = 524288000
 
-[[servers.server_entry]]
+[server.just_server]
 url_alias = "just_server"
 base_directory = "GameServers/JustServer"
+redirect_directory = "GameServers/JustServer/Server"
+
+[server.test_server]
+url_alias = "test_server"
+base_directory = "D://Games//KF Dedicated Server"
+redirect_directory = "D://Games//KF Dedicated Server//Redirect"
+
+[server.nice_server]
+url_alias = "nice_server"
+base_directory = "GameServers/NiceServer"
+redirect_directory = "GameServers/NiceServer/Server"

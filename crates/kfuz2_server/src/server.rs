@@ -1,96 +1,216 @@
-use bytes::Bytes;
-use futures_util::TryStreamExt;
-use http_body_util::{BodyExt, Full, StreamBody, combinators::BoxBody};
-use hyper::body::Frame;
+use http_body_util::{BodyExt as _, Full};
+use hyper::body::Bytes;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
-use hyper::{Method, Request, Response, Result, StatusCode};
+use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
+use std::convert::Infallible;
+use std::fs::File;
+use std::io::Read;
 use std::net::{IpAddr, SocketAddr};
-use std::path::PathBuf;
-use tokio::{fs::File, net::TcpListener};
-use tokio_util::io::ReaderStream;
+use std::path::Path;
+use tokio::net::TcpListener;
+use tokio::signal;
 
-use crate::ServerErrors;
-use crate::config::ConfigData;
+use crate::config::Config;
 
-static INDEX: &str = "index.html";
-static NOTFOUND: &[u8] = b"Not Found";
+const HTML_TEMPLATE1: &str = r#"
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>File Download Server</title>
+                <link
+                    rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+                >
+                </head>
+                <body>
+                    <h1>Available Files</h1>
+                    <ul>
+                        <li><a href="/download/example.txt">example.txt</a></li>
+                        <li><a href="/download/kfuz2_server.toml">kfuz2_server.toml</a></li>
+                    </ul>
+                </body>
+            </html>
+            "#;
+
+const HTML_TEMPLATE2: &str = r#"<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="css/pico.min.css">
+    <title>Hello world!</title>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Hello world!</h1>
+    </main>
+  </body>
+</html>"#;
+
+type BoxBody = http_body_util::combinators::BoxBody<Bytes, hyper::Error>;
+
+// Helper function to convert a string to BoxBody
+fn full<T: Into<Bytes>>(chunk: T) -> BoxBody {
+    Full::new(chunk.into())
+        .map_err(|never| match never {})
+        .boxed()
+}
 
 /// # Errors
 /// _
-pub async fn run_server(args: &ConfigData) -> std::result::Result<(), ServerErrors> {
-    let address: SocketAddr = SocketAddr::new(IpAddr::V4(args.config.ip4), args.config.port);
-    let listener: TcpListener = TcpListener::bind(address).await?;
-    println!("Listening on http://{address}");
+/// # Panics
+/// _
+pub async fn run_server(args: &Config) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Define the address to bind to
+    let addr: SocketAddr = SocketAddr::new(IpAddr::V4(args.ip4), args.port);
+    // Create TCP listener
+    let listener: TcpListener = TcpListener::bind(addr).await?;
 
-    let test_path: PathBuf = PathBuf::from(INDEX);
-    println!(
-        "test_path is: {:#?}, exists: {:#?}",
-        test_path,
-        test_path.try_exists()
-    );
-    loop {
-        let (stream, _) = listener.accept().await?;
-        let io = TokioIo::new(stream);
+    // Create a directory for files if it doesn't exist
+    if !Path::new("files").exists() {
+        std::fs::create_dir("files").expect("Failed to create files directory");
+    }
 
-        tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(io, service_fn(response_examples))
-                .await
-            {
-                println!("Failed to serve connection: {err:?}");
+    println!("Server running on http://{addr}");
+    println!("Press Ctrl+C to stop the server");
+
+    // Create a task to handle the shutdown signal
+    let shutdown = shutdown_signal();
+    let server = async {
+        loop {
+            // Accept incoming connections
+            let (stream, _) = listener.accept().await?;
+            let io = TokioIo::new(stream);
+            // dbg!(&io);
+
+            // Spawn a task to handle the connection
+            tokio::task::spawn(async move {
+                if let Err(err) = http1::Builder::new()
+                    .serve_connection(io, service_fn(handle_request))
+                    .await
+                {
+                    eprintln!("Error serving connection: {err:?}");
+                }
+            });
+        }
+
+        #[allow(unreachable_code)]
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    };
+
+    // Run the server until a shutdown signal is received
+    tokio::select! {
+        result = server => {
+            if let Err(e) = result {
+                eprintln!("Server error: {e:?}");
             }
-        });
+        },
+        () = shutdown => {
+            println!("Shutting down gracefully...");
+        }
     }
+
+    println!("Server has been shut down");
+    Ok(())
 }
 
-async fn response_examples(
+async fn handle_request(
     req: Request<hyper::body::Incoming>,
-) -> Result<Response<BoxBody<Bytes, std::io::Error>>> {
-    match (req.method(), req.uri().path()) {
-        (&Method::GET, "/" | "/index.html") => {
-            print!("sending index!");
-            simple_file_send(&PathBuf::from(INDEX)).await
+) -> Result<Response<BoxBody>, Infallible> {
+    let method = req.method();
+    let path = req.uri().path();
+    dbg!(method, path);
+
+    match (method, path) {
+        (&hyper::Method::GET, "/") => {
+            // Serve a simple HTML page with download links
+            let html = HTML_TEMPLATE1;
+            Ok(Response::builder()
+                .status(StatusCode::OK)
+                .body(full(html))
+                .unwrap())
         }
-        (&Method::GET, "/no_file.html") => {
-            // Test what happens when file cannot be found
-            simple_file_send(&PathBuf::from("this_file_should_not_exist.html")).await
+        (&hyper::Method::GET, path) if path.starts_with("/download/") => {
+            // Extract the filename from the path
+            let filename = &path[10..]; // Skip "/download/"
+
+            // For security, check that the filename doesn't contain path traversal
+            if filename.contains("..") {
+                return Ok(Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(full("Invalid filename"))
+                    .unwrap());
+            }
+
+            // Construct the file path (assuming files are in a "files" directory)
+            let file_path = format!("files/{filename}");
+
+            // Try to open the file
+            match File::open(&file_path) {
+                Ok(mut file) => {
+                    // Read the file contents
+                    let mut contents = Vec::new();
+                    if file.read_to_end(&mut contents).is_err() {
+                        return Ok(Response::builder()
+                            .status(StatusCode::INTERNAL_SERVER_ERROR)
+                            .body(full("Failed to read file"))
+                            .unwrap());
+                    }
+
+                    // Set Content-Disposition header for download
+                    Ok(Response::builder()
+                        .status(StatusCode::OK)
+                        .header(
+                            "Content-Disposition",
+                            format!("attachment; filename=\"{filename}\""),
+                        )
+                        .header("Content-Type", "application/octet-stream")
+                        .body(full(contents))
+                        .unwrap())
+                }
+                Err(_) => {
+                    // File not found
+                    Ok(Response::builder()
+                        .status(StatusCode::NOT_FOUND)
+                        .body(full("File not found"))
+                        .unwrap())
+                }
+            }
         }
-        _ => Ok(not_found()),
+        // Return 404 for other routes
+        _ => Ok(Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body(full("Not Found"))
+            .unwrap()),
     }
 }
 
-/// HTTP status code 404
-fn not_found() -> Response<BoxBody<Bytes, std::io::Error>> {
-    Response::builder()
-        .status(StatusCode::NOT_FOUND)
-        .body(Full::new(NOTFOUND.into()).map_err(|e| match e {}).boxed())
-        .unwrap()
-}
+// Simple signal handler that works cross-platform
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl+C handler");
+    };
 
-async fn simple_file_send(filename: &PathBuf) -> Result<Response<BoxBody<Bytes, std::io::Error>>> {
-    // Open file for reading
-    let file = File::open(filename).await;
-    if file.is_err() {
-        eprintln!("ERROR: Unable to open file.");
-        return Ok(not_found());
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("Failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        () = ctrl_c => {},
+        () = terminate => {},
     }
 
-    let file: File = file.unwrap();
-
-    // Wrap to a tokio_util::io::ReaderStream
-    let reader_stream = ReaderStream::new(file);
-
-    // Convert to http_body_util::BoxBody
-    let stream_body = StreamBody::new(reader_stream.map_ok(Frame::data));
-    let boxed_body = stream_body.boxed();
-
-    // Send response
-    let response = Response::builder()
-        .status(StatusCode::OK)
-        .body(boxed_body)
-        .unwrap();
-
-    Ok(response)
+    println!("Shutdown signal received, starting graceful shutdown");
 }
