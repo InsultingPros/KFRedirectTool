@@ -1,5 +1,5 @@
 ip4 = "127.0.0.1"
-port = 8080
+port = 80
 cache_memory_limit = 104857600
 disk_cache_limit = 524288000
 

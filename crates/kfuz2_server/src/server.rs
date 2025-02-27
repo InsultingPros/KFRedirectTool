@@ -4,6 +4,7 @@ use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
+use percent_encoding::percent_decode_str;
 use std::convert::Infallible;
 use std::fs::File;
 use std::io::Read;
@@ -13,6 +14,8 @@ use tokio::net::TcpListener;
 use tokio::signal;
 
 use crate::config::Config;
+
+const REDIRECT_DIR: &str = "D://Games//KF Dedicated Server//Redirect";
 
 const HTML_TEMPLATE1: &str = r#"
             <!DOCTYPE html>
@@ -28,7 +31,7 @@ const HTML_TEMPLATE1: &str = r#"
                     <h1>Available Files</h1>
                     <ul>
                         <li><a href="/download/example.txt">example.txt</a></li>
-                        <li><a href="/download/kfuz2_server.toml">kfuz2_server.toml</a></li>
+                        <li><a href="/download/KF_Invasion.u.uz2">KF_Invasion.u.uz2</a></li>
                     </ul>
                 </body>
             </html>
@@ -70,8 +73,8 @@ pub async fn run_server(args: &Config) -> Result<(), Box<dyn std::error::Error +
     let listener: TcpListener = TcpListener::bind(addr).await?;
 
     // Create a directory for files if it doesn't exist
-    if !Path::new("files").exists() {
-        std::fs::create_dir("files").expect("Failed to create files directory");
+    if !Path::new(REDIRECT_DIR).exists() {
+        std::fs::create_dir(REDIRECT_DIR).expect("Failed to create files directory");
     }
 
     println!("Server running on http://{addr}");
@@ -133,9 +136,14 @@ async fn handle_request(
                 .body(full(html))
                 .unwrap())
         }
-        (&hyper::Method::GET, path) if path.starts_with("/download/") => {
+        // if path.starts_with("/download/")
+        (&hyper::Method::GET, path) => {
             // Extract the filename from the path
-            let filename = &path[10..]; // Skip "/download/"
+            // let filename = &path[10..]; // Skip "/download/"
+            let filename = percent_decode_str(&path[10..])
+                .decode_utf8()
+                .unwrap_or_default()
+                .to_string();
 
             // For security, check that the filename doesn't contain path traversal
             if filename.contains("..") {
@@ -146,7 +154,7 @@ async fn handle_request(
             }
 
             // Construct the file path (assuming files are in a "files" directory)
-            let file_path = format!("files/{filename}");
+            let file_path = format!("{REDIRECT_DIR}/{filename}");
 
             // Try to open the file
             match File::open(&file_path) {

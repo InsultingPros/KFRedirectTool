@@ -51,7 +51,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             ip4: Ipv4Addr::LOCALHOST,
-            port: 8080,
+            port: 80,
             cache_memory_limit: 100 * 1024 * 1024, // 100 MB,
             disk_cache_limit: 500 * 1024 * 1024,   // 500 MB
             server: {
