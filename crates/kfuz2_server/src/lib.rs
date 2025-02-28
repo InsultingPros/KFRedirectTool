@@ -1,5 +1,7 @@
 // pub mod cache;
+pub mod compressor;
 pub mod config;
+pub mod html_templates;
 pub mod server;
 
 #[derive(thiserror::Error, Debug)]

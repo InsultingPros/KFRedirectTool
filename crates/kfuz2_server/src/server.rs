@@ -14,44 +14,9 @@ use tokio::net::TcpListener;
 use tokio::signal;
 
 use crate::config::Config;
+use crate::html_templates::HTML_TEMPLATE1;
 
 const REDIRECT_DIR: &str = "D://Games//KF Dedicated Server//Redirect";
-
-const HTML_TEMPLATE1: &str = r#"
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>File Download Server</title>
-                <link
-                    rel="stylesheet"
-                    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-                >
-                </head>
-                <body>
-                    <h1>Available Files</h1>
-                    <ul>
-                        <li><a href="/download/example.txt">example.txt</a></li>
-                        <li><a href="/download/KF_Invasion.u.uz2">KF_Invasion.u.uz2</a></li>
-                    </ul>
-                </body>
-            </html>
-            "#;
-
-const HTML_TEMPLATE2: &str = r#"<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <link rel="stylesheet" href="css/pico.min.css">
-    <title>Hello world!</title>
-  </head>
-  <body>
-    <main class="container">
-      <h1>Hello world!</h1>
-    </main>
-  </body>
-</html>"#;
 
 type BoxBody = http_body_util::combinators::BoxBody<Bytes, hyper::Error>;
 
@@ -124,34 +89,29 @@ async fn handle_request(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody>, Infallible> {
     let method = req.method();
-    let path = req.uri().path();
-    dbg!(method, path);
+    let uri = req.uri().path();
+    dbg!(method, uri);
 
-    match (method, path) {
-        (&hyper::Method::GET, "/") => {
-            // Serve a simple HTML page with download links
-            let html = HTML_TEMPLATE1;
-            Ok(Response::builder()
-                .status(StatusCode::OK)
-                .body(full(html))
-                .unwrap())
-        }
+    match (method, uri) {
+        // Serve a simple HTML page with download links
+        (&hyper::Method::GET, "/") => Ok(Response::builder()
+            .status(StatusCode::OK)
+            .body(full(HTML_TEMPLATE1))
+            .unwrap()),
+
+        // download attempt!
         // if path.starts_with("/download/")
         (&hyper::Method::GET, path) => {
-            // Extract the filename from the path
-            // let filename = &path[10..]; // Skip "/download/"
-            let filename = percent_decode_str(&path[10..])
-                .decode_utf8()
-                .unwrap_or_default()
-                .to_string();
-
             // For security, check that the filename doesn't contain path traversal
-            if filename.contains("..") {
+            if path.contains("..") {
                 return Ok(Response::builder()
                     .status(StatusCode::BAD_REQUEST)
                     .body(full("Invalid filename"))
                     .unwrap());
             }
+            // Extract the filename from the path
+            // let filename = &path[10..]; //
+            let normalized_uri: String = normalize_path(path);
 
             // Construct the file path (assuming files are in a "files" directory)
             let file_path = format!("{REDIRECT_DIR}/{filename}");
@@ -188,12 +148,22 @@ async fn handle_request(
                 }
             }
         }
+
         // Return 404 for other routes
         _ => Ok(Response::builder()
             .status(StatusCode::NOT_FOUND)
             .body(full("Not Found"))
             .unwrap()),
     }
+}
+
+/// Fix Percent-encoded strings, KF1 love to do that...
+fn normalize_path(input: &str) -> String {
+    // Skip "/download/"
+    percent_decode_str(&input[10..])
+        .decode_utf8()
+        .unwrap_or_default()
+        .to_string()
 }
 
 // Simple signal handler that works cross-platform
