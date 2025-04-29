@@ -24,3 +24,6 @@ strip = true
 all = "warn"
 pedantic = "warn"
 nursery = "warn"
+
+[workspace.dependencies]
+thiserror = "2.*"

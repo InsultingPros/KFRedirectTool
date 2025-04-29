@@ -12,7 +12,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-# log = "0.4"anyhow = "1"
+kfuz2_lib = { path = "..//kfuz2_lib" }
 eframe = { version = "0.31.0", default-features = false, features = [
     "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
@@ -23,7 +23,6 @@ eframe = { version = "0.31.0", default-features = false, features = [
 ] }
 env_logger = "0.*"
 image = "0.*"
-kfuz2_lib = { path = "..//kfuz2_lib" }
 num_cpus = "1"
 poll-promise = "0.*"
 rayon = "1"
