@@ -299,7 +299,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), Compr
             // eprintln!("Terminating: {e}");
             return Err(e);
         }
-    };
+    }
 
     Ok(())
 }
@@ -337,7 +337,7 @@ pub fn try_to_decompress(
             // eprintln!("Terminating: {e}");
             return Err(e);
         }
-    };
+    }
 
     Ok(())
 }

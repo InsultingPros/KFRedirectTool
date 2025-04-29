@@ -46,7 +46,7 @@ pub fn decompress(
                     "Failed to read compressed chunk size from input",
                 )));
             }
-        };
+        }
         // 2. read 4 bytes to get uncompressed chunk size
         match input_stream.read_exact(&mut uncompressed_chunk_size_b) {
             Ok(()) => {}
@@ -62,7 +62,7 @@ pub fn decompress(
                     "Failed to read uncompressed chunk size from input",
                 )));
             }
-        };
+        }
         // 1.1. get and validate `compressed` chunk size
         let compressed_chunk_size: usize = u32::from_le_bytes(compressed_chunk_size_b) as usize;
         if compressed_chunk_size > constants::COMPRESSED_CHUNK_SIZE {
@@ -99,7 +99,7 @@ pub fn decompress(
                     "Failed to read chunk from input",
                 )));
             }
-        };
+        }
         // 4. decompress the chunk
         let decompressed_bytes: Vec<u8> =
             decompress_single_chunk(&buffer[..compressed_chunk_size], &mut decoder)?;

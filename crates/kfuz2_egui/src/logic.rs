@@ -132,7 +132,7 @@ fn parse_decompression_result(
             println!("{e}");
             gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
         }
-    };
+    }
     gui_app
         .pbar
         .time_elapsed
@@ -180,7 +180,7 @@ fn parse_compression_result(
                 }
             }
         }
-    };
+    }
     gui_app
         .pbar
         .time_elapsed

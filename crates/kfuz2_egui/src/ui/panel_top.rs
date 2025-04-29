@@ -49,7 +49,7 @@ pub fn render_panel(
                     .clicked()
                 {
                     ui.close_menu();
-                };
+                }
 
                 ui.separator();
 
@@ -61,7 +61,7 @@ pub fn render_panel(
                     .clicked()
                 {
                     ui.close_menu();
-                };
+                }
             });
         });
     });
