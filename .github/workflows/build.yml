@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build Debug and Test
 
 on:
   push:
@@ -45,8 +45,8 @@ jobs:
           cache-targets: true
           cache-all-crates: true
 
-      - name: Build Release
-        run: cargo build --release --locked
+      - name: Build Debug
+        run: cargo build --locked
 
       - name: Run CLI Tests
         run: cargo test --locked

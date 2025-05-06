@@ -71,7 +71,7 @@ pub fn execute_with_arguments(input_args: Option<&[&str]>) -> i32 {
     input_args.map_or_else(
         || i32::from(exit_codes::ERROR_BAD_ARGUMENTS),
         |args| {
-            let status: std::process::ExitStatus = Command::new(EXE_RELEASE)
+            let status: std::process::ExitStatus = Command::new(EXE_DEBUG)
                 .args(args)
                 .status()
                 .expect("failed to execute process");
