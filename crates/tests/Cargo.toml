@@ -14,6 +14,7 @@ workspace = true
 kfuz2_cli = { path = "./../kfuz2_cli" }
 kfuz2_lib = { path = "./../kfuz2_lib" }
 sha1_smol = "1.*"
+assert_cmd = "2"
 serial_test = { version = "3.*", default-features = false, features = [
     "logging",      # (enabled by default) — Switches on debug logging
     "test_logging", # — Switches on debug with env_logger. Generally only needed by internal serial_test work.

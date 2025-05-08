@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+use assert_cmd::cargo::CommandCargoExt as _;
 use kfuz2_cli::exit_codes;
 use sha1_smol::Sha1;
 use std::{
@@ -7,11 +7,6 @@ use std::{
     path::Path,
     process::Command,
 };
-
-/// debug executable
-pub const EXE_DEBUG: &str = "..//..//target//debug//kfuz2_cli";
-/// release executable
-pub const EXE_RELEASE: &str = "..//..//target//release//kfuz2_cli";
 
 /// Directory for `compress` output.
 pub const OUTPUT_COMPRESSED_DIR: &str = "test_files//output_compressed";
@@ -38,9 +33,6 @@ pub const INCORRECT_FILE: &str = "test_files//reference_incorrect_files//UCC.u";
 pub const INCORRECT_FILE_UZ2: &str = "test_files//reference_incorrect_files//UCC.uz2";
 /// Vanilla `KFMutators.u` package, to validate the `--nocheck` key.
 pub const INCORRECT_FILE_VANILLA: &str = "test_files//reference_incorrect_files//KFMutators.u";
-
-/// Empty file
-pub const EMPTY_FILE: &str = "";
 
 pub fn get_file_sha1(input_file: &str) -> Result<String, io::Error> {
     let mut hasher: Sha1 = Sha1::new();
@@ -71,7 +63,8 @@ pub fn execute_with_arguments(input_args: Option<&[&str]>) -> i32 {
     input_args.map_or_else(
         || i32::from(exit_codes::ERROR_BAD_ARGUMENTS),
         |args| {
-            let status: std::process::ExitStatus = Command::new(EXE_DEBUG)
+            let status = Command::cargo_bin("kfuz2_cli")
+                .expect("no bin found!")
                 .args(args)
                 .status()
                 .expect("failed to execute process");

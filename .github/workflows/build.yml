@@ -49,4 +49,4 @@ jobs:
         run: cargo build --locked
 
       - name: Run CLI Tests
-        run: cargo test --locked
+        run: cargo test --locked -- --test-threads 1
