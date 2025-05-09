@@ -1,26 +1,27 @@
-pub const HTML_TEMPLATE1: &str = r#"
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>File Download Server</title>
-                    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-                <link
-                    rel="stylesheet"
-                    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-                >
-                </head>
-                <body>
-                    <h1>Available Files</h1>
-                    <ul>
-                        <li><a href="/download/example.txt">example.txt</a></li>
-                        <li><a href="/download/KF_Invasion.u.uz2">KF_Invasion.u.uz2</a></li>
-                    </ul>
-                </body>
-            </html>
-            "#;
+pub const HTML_TEMPLATE1: &str = r#"<!DOCTYPE html>
+<html>
+  <head>
+    <title>File Download Server</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+    >
+  </head>
+  <body>
+    <h1>Available Files</h1>
+    <ul>
+      <li><a href="/download/doesnt_exist.txt">doesnt_exist.txt</a></li>
+      <li><a href="/download/KF_Invasion.u.uz2">1 KF_Invasion.u.uz2</a></li>
+      <li><a href="/KF_Invasion.u.uz2">2 KF_Invasion.u.uz2</a></li>
+      <li><a href="KF_Invasion.u.uz2">3 KF_Invasion.u.uz2</a></li>
+    </ul>
+  </body>
+</html>
+"#;
 
 #[allow(dead_code)]
-pub const HTML_TEMPLATE2: &str = r#"<!doctype html>
+pub const HTML_TEMPLATE2: &str = r#"<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -34,4 +35,5 @@ pub const HTML_TEMPLATE2: &str = r#"<!doctype html>
       <h1>Hello world!</h1>
     </main>
   </body>
-</html>"#;
+</html>
+"#;

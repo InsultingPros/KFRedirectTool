@@ -98,7 +98,10 @@ pub async fn handle_request(req: Request<hyper::body::Incoming>) -> Result<MyBox
         (&hyper::Method::GET, path) => Ok(handle_file_download(path).await),
 
         // Return 404 for other routes
-        _ => Ok(build_response(StatusCode::NOT_FOUND, "Not Found")),
+        _ => Ok(build_response(
+            StatusCode::METHOD_NOT_ALLOWED,
+            "Method not allowed!",
+        )),
     }
 }
 
