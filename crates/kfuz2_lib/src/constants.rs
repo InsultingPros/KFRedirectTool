@@ -2,6 +2,8 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
+use phf::phf_set;
+
 /// KF1 packages signature byte
 pub const KF_SIGNATURE: [u8; 4] = [0xC2, 0x83, 0x2A, 0x9E];
 /// Size of compressed chunks - 4 bytes, 0-33096
@@ -14,7 +16,8 @@ pub const DEFAULT_EXTENSIONS: [&str; 8] = ["u", "utx", "usx", "ukx", "uax", "rom
 pub const COMPRESSED_EXTENSION: &str = "uz2";
 
 /// List of vanilla packages, will be omitted from compression
-pub const KF_DEFAULT_PACKAGES: [&str; 627] = [
+// Create a static perfect hash set at compile time!
+pub const KF_DEFAULT_PACKAGES: phf::Set<&'static str> = phf_set! {
     "20credits.utx",
     "22chartex.utx",
     "22patch.usx",
@@ -642,4 +645,4 @@ pub const KF_DEFAULT_PACKAGES: [&str; 627] = [
     "yahct_anim.ukx",
     "zed_fx_sm.usx",
     "zed_pieces.usx",
-];
+};

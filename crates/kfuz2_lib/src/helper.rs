@@ -69,7 +69,7 @@ impl PathChecks for PathBuf {
             return false;
         };
 
-        constants::KF_DEFAULT_PACKAGES.contains(&file_name.to_lowercase().as_str())
+        constants::KF_DEFAULT_PACKAGES.contains(file_name.to_lowercase().as_str())
     }
 
     fn is_default_kf_extension(&self) -> bool {
