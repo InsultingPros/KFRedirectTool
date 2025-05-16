@@ -3,10 +3,10 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::{
-    constants, errors::CompressStreamError, helper::get_sha1_hasher, types::InputArguments,
+    constants, errors::UZ2LibErrors, helper::get_sha1_hasher, types::InputArguments,
     types::ProcessingResult,
 };
-use flate2::{write::ZlibEncoder, Compression};
+use flate2::{Compression, write::ZlibEncoder};
 use sha1_smol::Sha1;
 use std::{
     fs::File,
@@ -22,7 +22,7 @@ pub fn compress(
     input_stream: &mut BufReader<File>,
     output_stream: &mut BufWriter<File>,
     input_arguments: &InputArguments,
-) -> Result<ProcessingResult, CompressStreamError> {
+) -> Result<ProcessingResult, UZ2LibErrors> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::UNCOMPRESSED_CHUNK_SIZE];
     let mut encoder: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::default());
@@ -73,7 +73,7 @@ pub fn compress(
 fn compress_single_chunk(
     buffer: &[u8],
     encoder: &mut ZlibEncoder<Vec<u8>>,
-) -> Result<Vec<u8>, CompressStreamError> {
+) -> Result<Vec<u8>, UZ2LibErrors> {
     // compress
     encoder.write_all(buffer)?;
     // flush contents and reset

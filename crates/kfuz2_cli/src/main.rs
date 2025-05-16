@@ -2,7 +2,7 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-use kfuz2_cli::{compose_input_arguments, exit_codes, Options};
+use kfuz2_cli::{Options, compose_input_arguments, exit_codes};
 use kfuz2_lib::{
     helper::{try_to_compress, try_to_decompress},
     types::{InputArguments, LogLevel::Minimal},

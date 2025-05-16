@@ -4,10 +4,10 @@
 
 #![allow(clippy::cast_precision_loss)]
 use crate::compressor::compress;
+use crate::constants;
 use crate::decompressor::decompress;
-use crate::errors::{CompressStreamError, DecompressStreamError};
+use crate::errors::UZ2LibErrors;
 use crate::types::{InputArguments, LogLevel, ProcessingResult};
-use crate::{constants, errors};
 use sha1_smol::Sha1;
 use std::path::PathBuf;
 use std::{
@@ -42,9 +42,7 @@ pub trait PathChecks {
     /// # Errors
     ///
     /// Will return `Err` if fail to create input stream.
-    fn open_input_ue_stream_with_checks(
-        &self,
-    ) -> Result<BufReader<File>, errors::CompressStreamError>;
+    fn open_input_ue_stream_with_checks(&self) -> Result<BufReader<File>, UZ2LibErrors>;
 }
 
 impl PathChecks for PathBuf {
@@ -92,14 +90,12 @@ impl PathChecks for PathBuf {
         Ok(BufReader::new(File::open(self)?))
     }
 
-    fn open_input_ue_stream_with_checks(
-        &self,
-    ) -> Result<BufReader<File>, errors::CompressStreamError> {
+    fn open_input_ue_stream_with_checks(&self) -> Result<BufReader<File>, UZ2LibErrors> {
         let mut reader = BufReader::new(File::open(self)?);
 
         match reader.file_header_is_correct() {
             Ok(()) => Ok(reader),
-            Err(_) => Err(errors::CompressStreamError::InvalidPackage(self.clone())),
+            Err(_) => Err(UZ2LibErrors::InvalidPackage(self.clone())),
         }
     }
 }
@@ -109,11 +105,11 @@ pub trait FileCheck {
     /// # Errors
     ///
     /// Will return `Err` if fail to read / rewind or signature doesn't match.
-    fn file_header_is_correct(&mut self) -> Result<(), errors::OtherError>;
+    fn file_header_is_correct(&mut self) -> Result<(), UZ2LibErrors>;
 }
 
 impl FileCheck for BufReader<File> {
-    fn file_header_is_correct(&mut self) -> Result<(), errors::OtherError> {
+    fn file_header_is_correct(&mut self) -> Result<(), UZ2LibErrors> {
         let mut buf_file_header: Vec<u8> = vec![0u8; 4];
         self.read_exact(&mut buf_file_header)?;
         self.rewind()?;
@@ -121,7 +117,7 @@ impl FileCheck for BufReader<File> {
         if buf_file_header == constants::KF_SIGNATURE {
             Ok(())
         } else {
-            Err(errors::OtherError::InvalidFileHeader)
+            Err(UZ2LibErrors::InvalidFileHeader)
         }
     }
 }
@@ -132,28 +128,28 @@ impl FileCheck for BufReader<File> {
 /// Will return `Err` if one of checks fail.
 pub fn validate_compressible_path(
     input_arguments: &mut InputArguments,
-) -> Result<(), errors::CompressStreamError> {
+) -> Result<(), UZ2LibErrors> {
     // input is a directory
     if !input_arguments.input_path.is_file() {
-        return Err(errors::CompressStreamError::FileDoesntExist(
+        return Err(UZ2LibErrors::FileDoesntExist(
             input_arguments.input_path.clone(),
         ));
     }
     // input has `uz2` extension
     if input_arguments.input_path.has_uz2_extension() {
-        return Err(errors::CompressStreamError::FileAlreadyCompressed(
+        return Err(UZ2LibErrors::FileAlreadyCompressed(
             input_arguments.input_path.clone(),
         ));
     }
     // ignore core kf1 files or not
     if input_arguments.ignore_kf_files {
         if !input_arguments.input_path.is_default_kf_extension() {
-            return Err(errors::CompressStreamError::NotKFExtension(
+            return Err(UZ2LibErrors::NotKFExtension(
                 input_arguments.input_path.clone(),
             ));
         }
         if input_arguments.input_path.is_vanilla_package() {
-            return Err(errors::CompressStreamError::IsKFPackage(
+            return Err(UZ2LibErrors::IsKFPackage(
                 input_arguments.input_path.clone(),
             ));
         }
@@ -167,7 +163,7 @@ pub fn validate_compressible_path(
         // create directory if it doesn't exist
         if !input_arguments.output_path.exists() {
             fs::create_dir(&input_arguments.output_path).map_err(|e| {
-                errors::CompressStreamError::CreateDirError(e, input_arguments.output_path.clone())
+                UZ2LibErrors::CreateDirError(e, input_arguments.output_path.clone())
             })?;
         }
         // convert directory path to final file path
@@ -178,7 +174,7 @@ pub fn validate_compressible_path(
                 constants::COMPRESSED_EXTENSION
             ));
         } else {
-            return Err(errors::CompressStreamError::FileNameError(
+            return Err(UZ2LibErrors::FileNameError(
                 input_arguments.output_path.clone(),
             ));
         }
@@ -193,16 +189,16 @@ pub fn validate_compressible_path(
 /// Will return `Err` if one of checks fail.
 pub fn validate_decompressible_path(
     input_arguments: &mut InputArguments,
-) -> Result<(), errors::DecompressStreamError> {
+) -> Result<(), UZ2LibErrors> {
     // input is a directory
     if !input_arguments.input_path.is_file() {
-        return Err(errors::DecompressStreamError::FileDoesntExist(
+        return Err(UZ2LibErrors::FileDoesntExist(
             input_arguments.input_path.clone(),
         ));
     }
     // input has `uz2` extension
     if !input_arguments.input_path.has_uz2_extension() {
-        return Err(errors::DecompressStreamError::FileAlreadyDecompressed(
+        return Err(UZ2LibErrors::FileAlreadyDecompressed(
             input_arguments.input_path.clone(),
         ));
     }
@@ -214,10 +210,7 @@ pub fn validate_decompressible_path(
     else {
         if !input_arguments.output_path.exists() {
             fs::create_dir(&input_arguments.output_path).map_err(|e| {
-                errors::DecompressStreamError::CreateDirError(
-                    e,
-                    input_arguments.output_path.clone(),
-                )
+                UZ2LibErrors::CreateDirError(e, input_arguments.output_path.clone())
             })?;
         }
 
@@ -225,7 +218,7 @@ pub fn validate_decompressible_path(
             input_arguments.output_path = input_arguments.output_path.join(input_file_name);
             input_arguments.output_path.set_extension("");
         } else {
-            return Err(errors::DecompressStreamError::FileNameError(
+            return Err(UZ2LibErrors::FileNameError(
                 input_arguments.output_path.clone(),
             ));
         }
@@ -271,7 +264,7 @@ pub fn additional_processing_information(info: &ProcessingResult) {
 /// # Errors
 ///
 /// Will return `Err` if fail to create input-output streams, correctly compress the data or remove file on failure.
-pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), CompressStreamError> {
+pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), UZ2LibErrors> {
     validate_compressible_path(input_arguments)?;
 
     // create streams
@@ -308,9 +301,7 @@ pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), Compr
 /// # Errors
 ///
 /// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
-pub fn try_to_decompress(
-    input_arguments: &mut InputArguments,
-) -> Result<(), DecompressStreamError> {
+pub fn try_to_decompress(input_arguments: &mut InputArguments) -> Result<(), UZ2LibErrors> {
     validate_decompressible_path(input_arguments)?;
 
     let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;

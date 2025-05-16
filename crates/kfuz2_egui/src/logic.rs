@@ -5,7 +5,7 @@
 #![allow(clippy::cast_possible_truncation)]
 use crate::ui;
 use kfuz2_lib::{
-    errors::{CompressStreamError, DecompressStreamError},
+    errors::UZ2LibErrors,
     helper::{try_to_compress, try_to_decompress},
     types::InputArguments,
 };
@@ -168,8 +168,7 @@ fn parse_compression_result(
         Err(e) => {
             println!("{e}");
             match e {
-                CompressStreamError::IsKFPackage(_)
-                | CompressStreamError::FileAlreadyCompressed(_) => {
+                UZ2LibErrors::IsKFPackage(_) | UZ2LibErrors::FileAlreadyCompressed(_) => {
                     gui_app
                         .pbar
                         .file_num_ignored
@@ -200,9 +199,9 @@ fn parse_compression_result(
 pub fn try_to_compress_c(
     input_arguments: &mut InputArguments,
     cancel: bool,
-) -> Result<(), CompressStreamError> {
+) -> Result<(), UZ2LibErrors> {
     if cancel {
-        return Err(CompressStreamError::Canceled);
+        return Err(UZ2LibErrors::Canceled);
     }
     try_to_compress(input_arguments)
 }
@@ -214,9 +213,9 @@ pub fn try_to_compress_c(
 pub fn try_to_decompress_c(
     input_arguments: &mut InputArguments,
     cancel: bool,
-) -> Result<(), DecompressStreamError> {
+) -> Result<(), UZ2LibErrors> {
     if cancel {
-        return Err(DecompressStreamError::Canceled);
+        return Err(UZ2LibErrors::Canceled);
     }
 
     try_to_decompress(input_arguments)

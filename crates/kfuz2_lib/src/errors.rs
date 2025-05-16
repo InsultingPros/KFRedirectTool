@@ -5,9 +5,8 @@
 use std::{io::IntoInnerError, path::PathBuf};
 
 #[derive(thiserror::Error, Debug)]
-pub enum CompressStreamError {
+pub enum UZ2LibErrors {
     #[error(transparent)]
-    // #[error("failed to read the file")]
     IOError(#[from] std::io::Error),
     #[error(transparent)]
     InnerError(#[from] IntoInnerError<std::io::BufWriter<std::fs::File>>),
@@ -29,35 +28,10 @@ pub enum CompressStreamError {
     FailedToCompress(PathBuf),
     #[error("Processing canceled")]
     Canceled,
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum DecompressStreamError {
-    #[error(transparent)]
-    // #[error("Failed to decompress the stream!")]
-    IOError(#[from] std::io::Error),
-    #[error(transparent)]
-    InnerError(#[from] IntoInnerError<std::io::BufWriter<std::fs::File>>),
     #[error("Error while decompressing. Invalid data!")]
     InvalidData,
-    #[error("Input `{:?}` doens't exist!", .0)]
-    FileDoesntExist(PathBuf),
     #[error("Input `{:?}` is already decompressed!", .0)]
     FileAlreadyDecompressed(PathBuf),
-    #[error("Unable to create output directory `{:?}`!", .0)]
-    CreateDirError(#[source] std::io::Error, PathBuf),
-    #[error("Unable to extract file name from {:?}", .0)]
-    FileNameError(PathBuf),
-    #[error("Failed to compress file {:?}", .0)]
-    FailedToCompress(PathBuf),
-    #[error("Processing canceled")]
-    Canceled,
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum OtherError {
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
     #[error("Incorrect file header!")]
     InvalidFileHeader,
 }

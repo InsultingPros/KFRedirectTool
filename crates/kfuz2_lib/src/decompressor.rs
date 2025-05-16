@@ -4,7 +4,7 @@
 
 use crate::{
     constants,
-    errors::DecompressStreamError,
+    errors::UZ2LibErrors,
     helper::get_sha1_hasher,
     types::{InputArguments, ProcessingResult},
 };
@@ -24,7 +24,7 @@ pub fn decompress(
     input_stream: &mut BufReader<File>,
     output_stream: &mut BufWriter<File>,
     input_arguments: &InputArguments,
-) -> Result<ProcessingResult, DecompressStreamError> {
+) -> Result<ProcessingResult, UZ2LibErrors> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::COMPRESSED_CHUNK_SIZE];
     let mut compressed_chunk_size_b: [u8; 4] = [0u8; 4];
@@ -41,7 +41,7 @@ pub fn decompress(
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     break;
                 }
-                return Err(DecompressStreamError::IOError(Error::new(
+                return Err(UZ2LibErrors::IOError(Error::new(
                     e.kind(),
                     "Failed to read compressed chunk size from input",
                 )));
@@ -52,12 +52,12 @@ pub fn decompress(
             Ok(()) => {}
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                    return Err(DecompressStreamError::IOError(Error::new(
+                    return Err(UZ2LibErrors::IOError(Error::new(
                         e.kind(),
                         "Tried to read beyond end of file!",
                     )));
                 }
-                return Err(DecompressStreamError::IOError(Error::new(
+                return Err(UZ2LibErrors::IOError(Error::new(
                     e.kind(),
                     "Failed to read uncompressed chunk size from input",
                 )));
@@ -66,7 +66,7 @@ pub fn decompress(
         // 1.1. get and validate `compressed` chunk size
         let compressed_chunk_size: usize = u32::from_le_bytes(compressed_chunk_size_b) as usize;
         if compressed_chunk_size > constants::COMPRESSED_CHUNK_SIZE {
-            return Err(DecompressStreamError::IOError(Error::new(
+            return Err(UZ2LibErrors::IOError(Error::new(
                 ErrorKind::InvalidData,
                 format!(
                     "compressed_chunk_size ({}) is bigger than max allowed chunk size ({})",
@@ -78,7 +78,7 @@ pub fn decompress(
         // 2.1. get and validate `uncompressed` chunk size
         let uncompressed_chunk_size: usize = u32::from_le_bytes(uncompressed_chunk_size_b) as usize;
         if uncompressed_chunk_size > constants::UNCOMPRESSED_CHUNK_SIZE {
-            return Err(DecompressStreamError::IOError(Error::new(
+            return Err(UZ2LibErrors::IOError(Error::new(
                 ErrorKind::InvalidData,
                 format!(
                     "uncompressed_chunk_size ({}) is bigger than max allowed chunk size ({})",
@@ -94,7 +94,7 @@ pub fn decompress(
                 if e.kind() == std::io::ErrorKind::UnexpectedEof {
                     break;
                 }
-                return Err(DecompressStreamError::IOError(Error::new(
+                return Err(UZ2LibErrors::IOError(Error::new(
                     e.kind(),
                     "Failed to read chunk from input",
                 )));
@@ -105,7 +105,7 @@ pub fn decompress(
             decompress_single_chunk(&buffer[..compressed_chunk_size], &mut decoder)?;
         // 5. compare decompressed result with uncompressed chunk size
         if decompressed_bytes.len() != uncompressed_chunk_size {
-            return Err(DecompressStreamError::IOError(Error::new(
+            return Err(UZ2LibErrors::IOError(Error::new(
                 ErrorKind::InvalidData,
                 format!(
                     "The decompressed chunk has a different size ({}) than the saved value ({}). Damaged file?",
@@ -140,7 +140,7 @@ pub fn decompress(
 fn decompress_single_chunk(
     buffer: &[u8],
     decoder: &mut ZlibDecoder<Vec<u8>>,
-) -> Result<Vec<u8>, DecompressStreamError> {
+) -> Result<Vec<u8>, UZ2LibErrors> {
     decoder.write_all(buffer)?;
     let decompressed_chunk: Vec<u8> = decoder.reset(Vec::new())?;
 
