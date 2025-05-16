@@ -2017,7 +2017,7 @@ dependencies = [
 
 [[package]]
 name = "kfuz2_cli"
-version = "1.6.1"
+version = "1.6.3"
 dependencies = [
  "gumdrop",
  "kfuz2_lib",
@@ -2025,7 +2025,7 @@ dependencies = [
 
 [[package]]
 name = "kfuz2_egui"
-version = "1.6.1"
+version = "1.6.3"
 dependencies = [
  "eframe",
  "env_logger",
@@ -2042,7 +2042,7 @@ dependencies = [
 
 [[package]]
 name = "kfuz2_lib"
-version = "1.6.1"
+version = "1.6.3"
 dependencies = [
  "flate2",
  "phf",
@@ -3701,7 +3701,7 @@ checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
 name = "tests"
-version = "1.6.1"
+version = "1.6.3"
 dependencies = [
  "assert_cmd",
  "kfuz2_cli",
