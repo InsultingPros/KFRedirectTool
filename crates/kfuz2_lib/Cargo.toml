@@ -5,7 +5,11 @@ authors.workspace = true
 edition.workspace = true
 version.workspace = true
 rust-version.workspace = true
-publish.workspace = true
+description = "Creates uz2 files and does it fast."
+license = "GPL-3.0"
+repository = "https://github.com/InsultingPros/KFRedirectTool/tree/main/crates/kfuz2_lib"
+keywords = ["unreal"]
+categories = ["compression"]
 
 [lints]
 workspace = true
