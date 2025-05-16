@@ -8,7 +8,7 @@ on:
     types: [created]
 
 jobs:
-  publish:
+  publish-github-binaries:
     name: Publish for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -56,3 +56,21 @@ jobs:
         name: Publish to Crates.io
         continue-on-error: true
         run: cargo publish
+
+  crates_io_publish:
+    name: Publish (crates.io)
+    needs:
+      - publish-github-binaries
+
+    runs-on: macos-14
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo login
+        run: |-
+          echo "${{ secrets.CRATES_IO_API_TOKEN }}" | cargo login
+
+      - name: "cargo release publish"
+        run: cargo publish -p kfuz2_lib
