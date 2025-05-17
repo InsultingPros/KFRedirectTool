@@ -3,7 +3,7 @@
 name = "kfuz2_lib"
 authors.workspace = true
 edition.workspace = true
-version.workspace = true
+version = "1.6.3"
 rust-version.workspace = true
 description = "Creates uz2 files and does it fast."
 license = "GPL-3.0"

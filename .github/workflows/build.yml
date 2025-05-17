@@ -14,7 +14,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-11-arm]
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-24.04-arm
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
 
     name: Start `cargo build / test` on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -46,7 +52,7 @@ jobs:
           cache-all-crates: true
 
       - name: Build Debug
-        run: cargo build --locked
+        run: cargo build --locked --target ${{ matrix.target }}
 
       - name: Run CLI Tests
-        run: cargo test --locked -- --test-threads 1
+        run: cargo test --locked --target ${{ matrix.target }} -- --test-threads 1
