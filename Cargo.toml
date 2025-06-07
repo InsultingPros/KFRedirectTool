@@ -1,29 +1,30 @@
 [workspace]
-members = [
-    "crates//kfuz2_cli",
-    "crates//kfuz2_egui",
-    "crates//kfuz2_lib",
-    "crates//tests",
-]
 resolver = "2"
+members = [
+  "crates//kfuz2_cli",
+  "crates//kfuz2_egui",
+  "crates//kfuz2_lib",
+  "crates//tests",
+]
 
 [workspace.package]
+version = "1.6.3"
 authors = ["Shtoyan", "dkanus"]
 edition = "2024"
-version = "1.6.3"
 rust-version = "1.85"
 publish = false
 
-[profile.release]
-codegen-units = 1
-lto = "fat"
-panic = "abort"
-strip = true
+[workspace.dependencies]
+thiserror = "2.*"
 
 [workspace.lints.clippy]
 all = "warn"
-pedantic = "warn"
 nursery = "warn"
+pedantic = "warn"
 
-[workspace.dependencies]
-thiserror = "2.*"
+[profile.release]
+strip = true
+lto = "fat"
+panic = "abort"
+codegen-units = 1
+

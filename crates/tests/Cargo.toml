@@ -1,27 +1,28 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "tests"
+version.workspace = true
 authors.workspace = true
 edition.workspace = true
-version.workspace = true
 rust-version.workspace = true
 publish.workspace = true
-
-[lints]
-workspace = true
-
-[dev-dependencies]
-kfuz2_cli = { path = "./../kfuz2_cli" }
-kfuz2_lib = { path = "./../kfuz2_lib" }
-sha1_smol = "1.*"
-assert_cmd = "2"
-serial_test = { version = "3.*", default-features = false, features = [
-    "logging",      # (enabled by default) — Switches on debug logging
-    "test_logging", # — Switches on debug with env_logger. Generally only needed by internal serial_test work.
-    # "async",        # (enabled by default) — Enables async features (and requires the futures package)
-    "file_locks", # — The file_locks feature unlocks the file_serial/file_parallel macros
-] }
 
 [[test]]
 name = "cli_tests"
 path = "cli_tests.rs"
+
+[dev-dependencies]
+assert_cmd = "2"
+kfuz2_cli = { path = "./../kfuz2_cli" }
+kfuz2_lib = { path = "./../kfuz2_lib" }
+serial_test = { version = "3.*", default-features = false, features = [
+  # "async",        # (enabled by default) — Enables async features (and requires the futures package)
+  "file_locks",  # — The file_locks feature unlocks the file_serial/file_parallel macros
+  "logging",  # (enabled by default) — Switches on debug logging
+  "test_logging",  # — Switches on debug with env_logger. Generally only needed by internal serial_test work.
+] }
+sha1_smol = "1.*"
+
+[lints]
+workspace = true
+
