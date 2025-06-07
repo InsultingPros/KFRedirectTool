@@ -3,7 +3,7 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::constants;
-use eframe::egui::{self, ViewportCommand};
+use eframe::egui::{self, UiKind, ViewportCommand};
 
 /// Render `top` panel of UI.
 pub fn render_panel(
@@ -13,7 +13,7 @@ pub fn render_panel(
 ) {
     egui::TopBottomPanel::top("top").show(ctx, |ui| {
         // menu bar
-        egui::menu::bar(ui, |ui| {
+        egui::MenuBar::new().ui(ui, |ui| {
             ui.menu_button("File", |ui| {
                 if ui.button("Quit").clicked() {
                     ctx.send_viewport_cmd(ViewportCommand::Close);
@@ -35,7 +35,7 @@ pub fn render_panel(
                     *gui_app = super::app::Kfuz2Egui::default();
                     ctx.memory_mut(|mem| *mem = egui::Memory::default());
                     super::theme::edit_fonts(ctx);
-                    ui.close_menu();
+                    ui.close_kind(UiKind::Menu);
                 }
             });
             ui.add_space(constants::PADDING_SMALL);
@@ -48,7 +48,7 @@ pub fn render_panel(
                     )
                     .clicked()
                 {
-                    ui.close_menu();
+                    ui.close_kind(UiKind::Menu);
                 }
 
                 ui.separator();
@@ -60,7 +60,7 @@ pub fn render_panel(
                     )
                     .clicked()
                 {
-                    ui.close_menu();
+                    ui.close_kind(UiKind::Menu);
                 }
             });
         });
