@@ -1,28 +1,25 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "kfuz2_egui"
-build = "build.rs"
+version.workspace = true
 authors.workspace = true
 edition.workspace = true
-version.workspace = true
 rust-version.workspace = true
+build = "build.rs"
 publish.workspace = true
 
-[lints]
-workspace = true
-
 [dependencies]
-kfuz2_lib = { path = "..//kfuz2_lib" }
-eframe = { version = "0.31.0", default-features = false, features = [
-    "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
-    "default_fonts", # Embed the default egui fonts.
-    "glow",          # Use the glow rendering backend. Alternative: "wgpu".
-    "persistence",   # Enable restoring app state when restarting the app.
-    "x11",           # Enables compiling for x11.
-    "wayland",       # Enables wayland support and fixes clipboard issue.
+eframe = { version = "0.32", default-features = false, features = [
+  "accesskit",  # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
+  "default_fonts",  # Embed the default egui fonts.
+  "glow",  # Use the glow rendering backend. Alternative: "wgpu".
+  "persistence",  # Enable restoring app state when restarting the app.
+  "wayland",  # Enables wayland support and fixes clipboard issue.
+  "x11",  # Enables compiling for x11.
 ] }
 env_logger = "0.*"
 image = "0.*"
+kfuz2_lib = { path = "..//kfuz2_lib" }
 num_cpus = "1"
 poll-promise = "0.*"
 rayon = "1"
@@ -32,3 +29,7 @@ walkdir = "2"
 
 [build-dependencies]
 winres = "0.1.*"
+
+[lints]
+workspace = true
+
