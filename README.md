@@ -21,6 +21,12 @@ This project consists of:
 - [kfuz2_cli](crates/kfuz2_cli/README.md) - CLI application for compressing-decompressing UE2 based game files.
 - [kfuz2_egui](crates/kfuz2_egui/README.md) - gui application based on [egui].
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/media/egui_dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="./docs/media/egui_light.png">
+  <img alt="Fallback image description" src="./docs/media/egui_dark.png">
+</picture>
+
 ## Building
 
 Just a simple `cargo build --release`, but for your linux distribution you may install `libgtk-3-dev`, (to compile part of [egui]).
