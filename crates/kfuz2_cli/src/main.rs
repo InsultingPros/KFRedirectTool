@@ -20,25 +20,19 @@ fn main() -> ExitCode {
     };
 
     // process file
-    if env_arguments.decompress.is_some() {
-        match try_to_decompress(&mut input_arguments) {
-            Ok(()) => ExitCode::from(exit_codes::ERROR_SUCCESS),
-            Err(e) => {
-                if input_arguments.log_level != Minimal {
-                    eprintln!("Terminated with error: {e}");
-                }
-                std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE))
-            }
-        }
+    let operation = if env_arguments.decompress.is_some() {
+        try_to_decompress
     } else {
-        match try_to_compress(&mut input_arguments) {
-            Ok(()) => ExitCode::from(exit_codes::ERROR_SUCCESS),
-            Err(e) => {
-                if input_arguments.log_level != Minimal {
-                    eprintln!("Terminated with error: {e}");
-                }
-                std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE))
+        try_to_compress
+    };
+
+    match operation(&mut input_arguments) {
+        Ok(()) => ExitCode::from(exit_codes::ERROR_SUCCESS),
+        Err(e) => {
+            if input_arguments.log_level != Minimal {
+                eprintln!("Terminated with error: {e}");
             }
+            std::process::exit(i32::from(exit_codes::ERROR_CANNOT_MAKE))
         }
     };
 
