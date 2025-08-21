@@ -9,9 +9,9 @@ build = "build.rs"
 publish.workspace = true
 
 [dependencies]
-eframe = { version = "0.32", default-features = false, features = [
-  "accesskit",  # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
+eframe = { version = "0.33", default-features = false, features = [
   "default_fonts",  # Embed the default egui fonts.
+  "accesskit",  # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
   "glow",  # Use the glow rendering backend. Alternative: "wgpu".
   "persistence",  # Enable restoring app state when restarting the app.
   "wayland",  # Enables wayland support and fixes clipboard issue.
@@ -32,4 +32,3 @@ winres = "0.1.*"
 
 [lints]
 workspace = true
-
