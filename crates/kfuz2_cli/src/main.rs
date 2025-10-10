@@ -16,7 +16,12 @@ fn main() -> ExitCode {
     // compose arguments for internal use
     let mut input_arguments: InputArguments = match compose_input_arguments(&env_arguments) {
         Ok(result) => result,
-        Err(exit_code) => return exit_code,
+        Err(exit_code) => {
+            eprintln!(
+                "Terminated with error: Missing required arguments. Try 'kfuz2_cli --help' for more information."
+            );
+            return exit_code;
+        }
     };
 
     // process file
