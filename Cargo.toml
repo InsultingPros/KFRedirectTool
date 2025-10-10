@@ -9,7 +9,6 @@ members = [
 
 [workspace.package]
 version = "1.6.3"
-authors = ["Shtoyan", "dkanus"]
 edition = "2024"
 rust-version = "1.85"
 publish = false
@@ -27,4 +26,3 @@ strip = true
 lto = "fat"
 panic = "abort"
 codegen-units = 1
-

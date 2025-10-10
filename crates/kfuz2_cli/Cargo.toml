@@ -2,7 +2,6 @@
 [package]
 name = "kfuz2_cli"
 version.workspace = true
-authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
@@ -13,4 +12,3 @@ kfuz2_lib = { path = "..//kfuz2_lib" }
 
 [lints]
 workspace = true
-

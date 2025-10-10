@@ -2,7 +2,6 @@
 [package]
 name = "kfuz2_lib"
 version = "1.6.3"
-authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 description = "Creates uz2 files and does it fast."
@@ -19,4 +18,3 @@ thiserror = { workspace = true }
 
 [lints]
 workspace = true
-
