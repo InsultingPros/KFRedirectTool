@@ -58,6 +58,8 @@ pub fn check_if_hash_eq(input_file: &str, hash_to_compare: &str) {
     }
 }
 
+// https://users.rust-lang.org/t/cargo-bin-deprecated/136080/7
+#[allow(deprecated)]
 // if this panics - let it happen!
 pub fn execute_with_arguments(input_args: Option<&[&str]>) -> i32 {
     input_args.map_or_else(
