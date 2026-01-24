@@ -125,8 +125,8 @@ pub fn decompress(
     }
 
     // this also must throw error
-    let input_size: u64 = input_stream.get_mut().metadata()?.len();
-    let output_size: u64 = output_stream.get_mut().metadata()?.len();
+    let input_size: u64 = input_stream.get_ref().metadata()?.len();
+    let output_size: u64 = output_stream.get_ref().metadata()?.len();
 
     Ok(ProcessingResult {
         time: start.elapsed(),
