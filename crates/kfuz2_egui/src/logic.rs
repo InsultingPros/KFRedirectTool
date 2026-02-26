@@ -9,6 +9,7 @@ use kfuz2_lib::{
     helper::{try_to_compress, try_to_decompress},
     types::InputArguments,
 };
+use rayon::prelude::*;
 use std::{path::PathBuf, sync::atomic::Ordering, time::Instant};
 use walkdir::WalkDir;
 
@@ -47,16 +48,8 @@ pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
             parse_compression_result(file_list_path, gui_app, start);
         }
     } else {
-        let num_cpu: usize = num_cpus::get();
-
-        rayon::scope(|s| {
-            for chunk in file_list.chunks(num_cpu) {
-                s.spawn(move |_| {
-                    for chunk_path in chunk {
-                        parse_compression_result(chunk_path, gui_app, start);
-                    }
-                });
-            }
+        file_list.par_iter().for_each(|chunk_path| {
+            parse_compression_result(chunk_path, gui_app, start);
         });
     }
 
@@ -85,16 +78,8 @@ pub fn start_decompression(gui_app: &ui::app::Kfuz2Egui) {
             parse_decompression_result(file_list_path, gui_app, start);
         }
     } else {
-        let num_cpu: usize = num_cpus::get();
-
-        rayon::scope(|s| {
-            for chunk in file_list.chunks(num_cpu) {
-                s.spawn(move |_| {
-                    for chunk_path in chunk {
-                        parse_decompression_result(chunk_path, gui_app, start);
-                    }
-                });
-            }
+        file_list.par_iter().for_each(|chunk_path| {
+            parse_decompression_result(chunk_path, gui_app, start);
         });
     }
 
