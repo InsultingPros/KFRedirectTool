@@ -4,11 +4,6 @@
 
 A Rust library for creating `uz2` redirect files for Killing Floor 1 / Unreal Engine 2.5 games.
 
-```toml
-[dependencies]
-kfuz2_lib = "1"
-```
-
 Compiler support: requires rustc **1.85+**
 
 ## Features
@@ -21,17 +16,27 @@ Compiler support: requires rustc **1.85+**
 
 ## Usage
 
-```rust
-use kfuz2_lib::helper::try_to_compress;
-use kfuz2_lib::types::InputArguments;
+```toml
+[dependencies]
+kfuz2_lib = "1"
+```
 
+```rust
+# use kfuz2_lib::errors::UZ2LibErrors;
+use std::path::PathBuf;
+use kfuz2_lib::helper::try_to_compress;
+use kfuz2_lib::types::{InputArguments, LogLevel};
+
+# fn main() -> Result<(), UZ2LibErrors> {
 let mut input_arguments = InputArguments {
-        input_path: path_to_unreal_file,
-        output_path: path_to_desired_output_directory,
-        log_level: kfuz2_lib::types::LogLevel::Default,
-        ignore_kf_files: true,
-    };
-try_to_compress(&mut input_arguments)?;
+    input_path: PathBuf::from("path_to_unreal_file"),
+    output_path: PathBuf::from("path_to_desired_output_directory"),
+    log_level: LogLevel::Default,
+    ignore_kf_files: true,
+};
+try_to_compress(&mut input_arguments);
+# Ok(())
+# }
 ```
 
 ## Acknowledgments
