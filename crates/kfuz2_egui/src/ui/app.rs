@@ -8,8 +8,8 @@ use kfuz2_lib::types::LogLevel;
 use std::{
     path::PathBuf,
     sync::{
-        atomic::{AtomicBool, AtomicU16, AtomicU32, AtomicU64, Ordering},
         Arc,
+        atomic::{AtomicBool, AtomicU16, AtomicU32, AtomicU64, Ordering},
     },
 };
 
@@ -58,6 +58,8 @@ pub struct ProgressBarStuff {
     pub file_num_success: Arc<AtomicU16>,
     /// Failed files number.
     pub file_num_failed: Arc<AtomicU16>,
+    /// Failed files number.
+    pub file_num_canceled: Arc<AtomicU16>,
     /// Ignored files number.
     pub file_num_ignored: Arc<AtomicU16>,
     /// Time elapsed for current operation, as `seconds` + `milliseconds`
@@ -68,6 +70,7 @@ impl ProgressBarStuff {
     pub fn reset(&self) {
         self.file_num_success.swap(0u16, Ordering::Relaxed);
         self.file_num_failed.swap(0u16, Ordering::Relaxed);
+        self.file_num_canceled.swap(0u16, Ordering::Relaxed);
         self.file_num_ignored.swap(0u16, Ordering::Relaxed);
         self.time_elapsed.0.swap(0u64, Ordering::Relaxed);
         self.time_elapsed.1.swap(0u32, Ordering::Relaxed);
@@ -82,6 +85,7 @@ impl Default for ProgressBarStuff {
             file_num_total: Arc::new(AtomicU16::new(0u16)),
             file_num_success: Arc::new(AtomicU16::new(0u16)),
             file_num_failed: Arc::new(AtomicU16::new(0u16)),
+            file_num_canceled: Arc::new(AtomicU16::new(0u16)),
             file_num_ignored: Arc::new(AtomicU16::new(0u16)),
             time_elapsed: Arc::new((AtomicU64::new(0u64), AtomicU32::new(0u32))),
         }
@@ -128,10 +132,10 @@ impl eframe::App for Kfuz2Egui {
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        super::panel_top::render_panel(self, ctx, frame);
-        super::panel_bottom::render_panel(self, ctx);
+    fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        super::panel_top::render_panel(self, ui, frame);
+        super::panel_bottom::render_panel(self, ui);
         // N.B. `center` must always be at the end!
-        super::panel_center::render_panel(self, ctx);
+        super::panel_center::render_panel(self, ui);
     }
 }

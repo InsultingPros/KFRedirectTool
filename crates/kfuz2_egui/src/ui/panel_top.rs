@@ -8,15 +8,15 @@ use eframe::egui::{self, UiKind, ViewportCommand};
 /// Render `top` panel of UI.
 pub fn render_panel(
     gui_app: &mut super::app::Kfuz2Egui,
-    ctx: &egui::Context,
+    ui: &mut egui::Ui,
     _frame: &mut eframe::Frame,
 ) {
-    egui::TopBottomPanel::top("top").show(ctx, |ui| {
+    egui::Panel::top("top").show_inside(ui, |ui| {
         // menu bar
         egui::MenuBar::new().ui(ui, |ui| {
             ui.menu_button("File", |ui| {
                 if ui.button("Quit").clicked() {
-                    ctx.send_viewport_cmd(ViewportCommand::Close);
+                    ui.send_viewport_cmd(ViewportCommand::Close);
                 }
             });
             ui.add_space(constants::PADDING_SMALL);
@@ -33,8 +33,8 @@ pub fn render_panel(
                     .clicked()
                 {
                     *gui_app = super::app::Kfuz2Egui::default();
-                    ctx.memory_mut(|mem| *mem = egui::Memory::default());
-                    super::theme::edit_fonts(ctx);
+                    ui.memory_mut(|mem| *mem = egui::Memory::default());
+                    super::theme::edit_fonts(ui);
                     ui.close_kind(UiKind::Menu);
                 }
             });

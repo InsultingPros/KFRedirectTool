@@ -10,8 +10,8 @@ use std::{path::PathBuf, sync::atomic::Ordering};
 const DISABLED_MSG: &str = "Select any output directory to activate this button";
 
 /// Render `bottom` panel of UI.
-pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
-    egui::TopBottomPanel::bottom("bottom").show(ctx, |ui| {
+pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ui: &mut egui::Ui) {
+    egui::Panel::bottom("bottom").show_inside(ui, |ui| {
         ui.add_space(constants::PADDING_BIG);
 
         ui.horizontal(|ui| {
@@ -63,13 +63,11 @@ pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
                 .on_disabled_hover_text(DISABLED_MSG)
                 .clicked()
             {
-                gui_app.pbar.animated_once = Some(true);
-                gui_app.cancel_processing.swap(false, Ordering::Relaxed);
-
-                let cp_ui_app = gui_app.clone();
+                reset_pbar(gui_app);
+                let mut cp_ui_app = gui_app.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_compression", move || {
-                    crate::logic::start_compression(&cp_ui_app);
+                    crate::logic::start_compression(&mut cp_ui_app);
                 });
             }
 
@@ -83,19 +81,25 @@ pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &egui::Context) {
                 .on_disabled_hover_text(DISABLED_MSG)
                 .clicked()
             {
-                gui_app.pbar.animated_once = Some(true);
-                gui_app.cancel_processing.swap(false, Ordering::Relaxed);
-
-                let cp_ui_app = gui_app.clone();
+                reset_pbar(gui_app);
+                let mut cp_ui_app = gui_app.clone();
                 // we only use promise for non blocking behavior
                 let _ = Promise::spawn_thread("slow_decompression", move || {
-                    crate::logic::start_decompression(&cp_ui_app);
+                    crate::logic::start_decompression(&mut cp_ui_app);
                 });
             }
         });
 
         ui.add_space(constants::PADDING_BIG);
     });
+}
+
+/// Reset progress bar atomics
+fn reset_pbar(gui_app: &mut super::app::Kfuz2Egui) {
+    gui_app.pbar.reset();
+    gui_app.pbar.animate = false;
+    gui_app.pbar.animated_once = Some(true);
+    gui_app.cancel_processing.swap(false, Ordering::Relaxed);
 }
 
 #[cfg(target_os = "windows")]

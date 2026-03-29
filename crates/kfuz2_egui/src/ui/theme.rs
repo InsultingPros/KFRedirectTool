@@ -8,7 +8,7 @@ use eframe::egui::{self, FontFamily::Proportional, FontId, TextStyle};
 ///
 /// Reference: <https://github.com/emilk/egui/discussions/1478#discussioncomment-2549924>
 pub fn edit_fonts(ctx: &egui::Context) {
-    let mut style: egui::Style = (*ctx.style()).clone();
+    let mut style: egui::Style = (*ctx.global_style()).clone();
     style.text_styles = [
         (TextStyle::Body, FontId::new(13.0, Proportional)),
         (TextStyle::Button, FontId::new(13.0, Proportional)),
@@ -18,7 +18,7 @@ pub fn edit_fonts(ctx: &egui::Context) {
     ]
     .into();
 
-    ctx.set_style(style);
+    ctx.set_global_style(style);
 }
 
 /// Load app icon.

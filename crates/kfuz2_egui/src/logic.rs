@@ -33,13 +33,20 @@ fn collect_input_files(gui_app: &ui::app::Kfuz2Egui) -> Vec<PathBuf> {
     result
 }
 
+fn set_pbar_file_length(gui_app: &ui::app::Kfuz2Egui, file_length: u16) {
+    gui_app
+        .pbar
+        .file_num_total
+        .swap(file_length, Ordering::Release);
+}
+
 /// Start compression
 /// # Panics
 ///
 /// Will panic if fail to unwrap output. FIX ME!
-pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
+pub fn start_compression(gui_app: &mut ui::app::Kfuz2Egui) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
-    reset_atomics(gui_app, file_list.len() as u16);
+    set_pbar_file_length(gui_app, file_list.len() as u16);
     println!("Starting compression!");
     let start: Instant = Instant::now();
 
@@ -54,22 +61,24 @@ pub fn start_compression(gui_app: &ui::app::Kfuz2Egui) {
     }
 
     println!(
-        "Compression done in {:?}, successful: {}, failed: {}, ignored: {}, total: {}",
+        "Compression done in {:?}, successful: {:?}, failed: {:?}, ignored: {:?}, canceled: {:?}, total: {:?}",
         start.elapsed(),
-        gui_app.pbar.file_num_success.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_ignored.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_total.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_success,
+        gui_app.pbar.file_num_failed,
+        gui_app.pbar.file_num_ignored,
+        gui_app.pbar.file_num_canceled,
+        gui_app.pbar.file_num_total,
     );
+    gui_app.pbar.animate = false;
 }
 
 /// Start decompression
 /// # Panics
 ///
 /// Will panic if fail to unwrap output. FIX ME!
-pub fn start_decompression(gui_app: &ui::app::Kfuz2Egui) {
+pub fn start_decompression(gui_app: &mut ui::app::Kfuz2Egui) {
     let file_list: Vec<PathBuf> = collect_input_files(gui_app);
-    reset_atomics(gui_app, file_list.len() as u16);
+    set_pbar_file_length(gui_app, file_list.len() as u16);
     println!("Starting decompression!");
     let start: Instant = Instant::now();
 
@@ -84,97 +93,92 @@ pub fn start_decompression(gui_app: &ui::app::Kfuz2Egui) {
     }
 
     println!(
-        "Decompression done in {:?}, successful: {}, failed: {}, ignored: {}, total: {}",
+        "Decompression done in {:?}, successful: {:?}, failed: {:?}, ignored: {:?}, canceled: {:?}, total: {:?}",
         start.elapsed(),
-        gui_app.pbar.file_num_success.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_failed.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_ignored.load(Ordering::Relaxed),
-        gui_app.pbar.file_num_total.load(Ordering::Relaxed),
+        gui_app.pbar.file_num_success,
+        gui_app.pbar.file_num_failed,
+        gui_app.pbar.file_num_ignored,
+        gui_app.pbar.file_num_canceled,
+        gui_app.pbar.file_num_total,
     );
+    gui_app.pbar.animate = false;
 }
 
 fn parse_decompression_result(
     file_list_path: &PathBuf,
     gui_app: &ui::app::Kfuz2Egui,
-    start: Instant,
+    time: Instant,
 ) {
-    match try_to_decompress_c(
+    let result = try_to_decompress_c(
         &mut InputArguments {
             input_path: file_list_path.into(),
             output_path: gui_app.output_dir.clone().unwrap(),
             ignore_kf_files: gui_app.ignore_kf_files,
             log_level: gui_app.log_level,
         },
-        gui_app.cancel_processing.load(Ordering::Relaxed),
-    ) {
-        Ok(()) => {
-            gui_app
-                .pbar
-                .file_num_success
-                .fetch_add(1, Ordering::Relaxed);
-        }
-        Err(e) => {
-            println!("{e}");
-            gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
-        }
-    }
-    gui_app
-        .pbar
-        .time_elapsed
-        .0
-        .swap(start.elapsed().as_secs(), Ordering::Relaxed);
-    gui_app
-        .pbar
-        .time_elapsed
-        .1
-        .swap(start.elapsed().subsec_millis(), Ordering::Relaxed);
+        gui_app.cancel_processing.load(Ordering::Acquire),
+    );
+    update_pbar_file_statuses(gui_app, &result);
+    update_elapsed_time(gui_app, time);
 }
 
-fn parse_compression_result(
-    file_list_path: &PathBuf,
-    gui_app: &ui::app::Kfuz2Egui,
-    start: Instant,
-) {
-    match try_to_compress_c(
+fn parse_compression_result(file_list_path: &PathBuf, gui_app: &ui::app::Kfuz2Egui, time: Instant) {
+    let result = try_to_compress_c(
         &mut InputArguments {
             input_path: file_list_path.into(),
             output_path: gui_app.output_dir.clone().unwrap(),
             ignore_kf_files: gui_app.ignore_kf_files,
             log_level: gui_app.log_level,
         },
-        gui_app.cancel_processing.load(Ordering::Relaxed),
-    ) {
+        gui_app.cancel_processing.load(Ordering::Acquire),
+    );
+    update_pbar_file_statuses(gui_app, &result);
+    update_elapsed_time(gui_app, time);
+}
+
+fn update_pbar_file_statuses(gui_app: &ui::app::Kfuz2Egui, result: &Result<(), UZ2LibErrors>) {
+    match result {
         Ok(()) => {
             gui_app
                 .pbar
                 .file_num_success
-                .fetch_add(1, Ordering::Relaxed);
+                .fetch_add(1, Ordering::Release);
         }
         Err(e) => {
             println!("{e}");
+
             match e {
                 UZ2LibErrors::IsKFPackage(_) | UZ2LibErrors::FileAlreadyCompressed(_) => {
                     gui_app
                         .pbar
                         .file_num_ignored
-                        .fetch_add(1, Ordering::Relaxed);
+                        .fetch_add(1, Ordering::Release);
+                }
+                UZ2LibErrors::Canceled => {
+                    gui_app
+                        .pbar
+                        .file_num_canceled
+                        .fetch_add(1, Ordering::Release);
                 }
                 _ => {
-                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Relaxed);
+                    gui_app.pbar.file_num_failed.fetch_add(1, Ordering::Release);
                 }
             }
         }
     }
+}
+
+fn update_elapsed_time(gui_app: &ui::app::Kfuz2Egui, time: Instant) {
     gui_app
         .pbar
         .time_elapsed
         .0
-        .swap(start.elapsed().as_secs(), Ordering::Relaxed);
+        .swap(time.elapsed().as_secs(), Ordering::Release);
     gui_app
         .pbar
         .time_elapsed
         .1
-        .swap(start.elapsed().subsec_millis(), Ordering::Relaxed);
+        .swap(time.elapsed().subsec_millis(), Ordering::Release);
 }
 
 /// Try to compress given file.
@@ -204,13 +208,4 @@ pub fn try_to_decompress_c(
     }
 
     try_to_decompress(input_arguments)
-}
-
-/// Reset progress bar atomics
-fn reset_atomics(gui_app: &ui::app::Kfuz2Egui, file_length: u16) {
-    gui_app.pbar.reset();
-    gui_app
-        .pbar
-        .file_num_total
-        .swap(file_length, Ordering::Relaxed);
 }

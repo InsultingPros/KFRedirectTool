@@ -7,8 +7,8 @@ use eframe::egui;
 use std::sync::atomic::Ordering;
 
 /// Render `center` panel of UI.
-pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ctx: &eframe::egui::Context) {
-    egui::CentralPanel::default().show(ctx, |ui| {
+pub fn render_panel(gui_app: &mut super::app::Kfuz2Egui, ui: &mut egui::Ui) {
+    egui::CentralPanel::default().show_inside(ui, |ui| {
         ui.add_space(constants::PADDING_MEDIUM);
 
         render_input_fields(ui, gui_app);
@@ -228,10 +228,10 @@ fn render_progress(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
         }
         let progress_bar = egui::ProgressBar::new(progress)
             .text(format!(
-                "{:.1}% Time elapsed: {}.{} seconds.",
+                "{:.1}% Time elapsed: {:?}.{:?} seconds.",
                 progress * 100f32,
-                gui_app.pbar.time_elapsed.0.load(Ordering::Relaxed),
-                gui_app.pbar.time_elapsed.1.load(Ordering::Relaxed)
+                gui_app.pbar.time_elapsed.0,
+                gui_app.pbar.time_elapsed.1
             ))
             .animate(gui_app.pbar.animate);
 
