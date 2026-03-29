@@ -7,20 +7,23 @@ rust-version.workspace = true
 publish.workspace = true
 
 [[test]]
-name = "cli_tests"
-path = "cli_tests.rs"
+name = "cli_random"
+path = "cli_random.rs"
+
+[[test]]
+name = "cli_decompressions"
+path = "cli_decompressions.rs"
+
+[[test]]
+name = "cli_compressions"
+path = "cli_compressions.rs"
 
 [dev-dependencies]
-assert_cmd = "2"
+escargot = "0.5"
 kfuz2_cli = { path = "./../kfuz2_cli" }
 kfuz2_lib = { path = "./../kfuz2_lib" }
-serial_test = { version = "3.*", default-features = false, features = [
-  # "async",        # (enabled by default) — Enables async features (and requires the futures package)
-  "file_locks",  # — The file_locks feature unlocks the file_serial/file_parallel macros
-  "logging",  # (enabled by default) — Switches on debug logging
-  "test_logging",  # — Switches on debug with env_logger. Generally only needed by internal serial_test work.
-] }
 sha1_smol = "1.*"
+tempfile = "3"
 
 [lints]
 workspace = true
