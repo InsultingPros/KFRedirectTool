@@ -6,13 +6,13 @@ use crate::{
     constants, errors::UZ2LibErrors, helper::get_sha1_hasher, types::InputArguments,
     types::ProcessingResult,
 };
-use flate2::{Compression, write::ZlibEncoder};
 use sha1_smol::Sha1;
 use std::{
     fs::File,
     io::{BufReader, BufWriter, Read, Write},
     time::Instant,
 };
+use zlib_rs::{DeflateConfig, ReturnCode, compress_bound, compress_slice};
 
 /// Compress input stream.
 /// # Errors
@@ -25,7 +25,8 @@ pub fn compress(
 ) -> Result<ProcessingResult, UZ2LibErrors> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::UNCOMPRESSED_CHUNK_SIZE];
-    let mut encoder: ZlibEncoder<Vec<u8>> = ZlibEncoder::new(Vec::new(), Compression::default());
+    let mut compress_buf: Vec<u8> = vec![0u8; compress_bound(constants::UNCOMPRESSED_CHUNK_SIZE)];
+    let deflate_config: DeflateConfig = DeflateConfig::default();
     let mut hasher: Option<Sha1> = get_sha1_hasher(&input_arguments.log_level);
 
     let start: Instant = Instant::now();
@@ -38,7 +39,13 @@ pub fn compress(
         }
 
         let chunk_size_original: &[u8] = &buffer[..bytes_read].len().to_le_bytes()[..4];
-        let compressed_bytes: Vec<u8> = compress_single_chunk(&buffer[..bytes_read], &mut encoder)?;
+        // let compressed_bytes: Vec<u8> = compress_single_chunk(&buffer[..bytes_read], &mut encoder)?;
+        let (compressed_bytes, rc) =
+            compress_slice(&mut compress_buf, &buffer[..bytes_read], deflate_config);
+        // shouldn't happen, but just in case
+        if rc != ReturnCode::Ok {
+            return Err(UZ2LibErrors::ZlibRsError);
+        }
         let chunk_size_compressed: &[u8] = &compressed_bytes.len().to_le_bytes()[..4];
 
         // 1. Compressed chunk size     :   int     :   4 Bytes        :0-33096
@@ -46,12 +53,12 @@ pub fn compress(
         // 2. Uncompressed chunk size   :   int     :   4 Bytes        :0-32768
         output_stream.write_all(chunk_size_original)?;
         // 3. Compressed data           :   bytes   :   0-33096 Bytes
-        output_stream.write_all(&compressed_bytes)?;
+        output_stream.write_all(compressed_bytes)?;
 
         if let Some(ref mut sha1) = hasher {
             sha1.update(chunk_size_compressed);
             sha1.update(chunk_size_original);
-            sha1.update(&compressed_bytes);
+            sha1.update(compressed_bytes);
         }
 
         chunk_count += 1;
@@ -68,16 +75,4 @@ pub fn compress(
         input_file_size: input_size,
         output_file_size: output_size,
     })
-}
-
-fn compress_single_chunk(
-    buffer: &[u8],
-    encoder: &mut ZlibEncoder<Vec<u8>>,
-) -> Result<Vec<u8>, UZ2LibErrors> {
-    // compress
-    encoder.write_all(buffer)?;
-    // flush contents and reset
-    let compressed_chunk: Vec<u8> = encoder.reset(Vec::new())?;
-
-    Ok(compressed_chunk)
 }

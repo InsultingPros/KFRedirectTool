@@ -1323,7 +1323,6 @@ checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
- "zlib-rs",
 ]
 
 [[package]]
@@ -1980,10 +1979,10 @@ dependencies = [
 name = "kfuz2_lib"
 version = "1.6.3"
 dependencies = [
- "flate2",
  "phf",
  "sha1_smol",
  "thiserror 2.0.18",
+ "zlib-rs",
 ]
 
 [[package]]

@@ -11,10 +11,10 @@ keywords = ["unreal"]
 categories = ["compression"]
 
 [dependencies]
-flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
 phf = { version = "0.*", features = ["macros"] }
 sha1_smol = "1"
 thiserror = { workspace = true }
+zlib-rs = "0.6"
 
 [lints]
 workspace = true

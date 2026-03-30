@@ -8,13 +8,13 @@ use crate::{
     helper::get_sha1_hasher,
     types::{InputArguments, ProcessingResult},
 };
-use flate2::write::ZlibDecoder;
 use sha1_smol::Sha1;
 use std::{
     fs::File,
     io::{BufReader, BufWriter, Error, ErrorKind, Read, Write},
     time::Instant,
 };
+use zlib_rs::{InflateConfig, ReturnCode, compress_bound, decompress_slice};
 
 /// Decompress input file.
 /// # Errors
@@ -27,41 +27,36 @@ pub fn decompress(
 ) -> Result<ProcessingResult, UZ2LibErrors> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::COMPRESSED_CHUNK_SIZE];
+    let mut decompress_buf: Vec<u8> = vec![0u8; compress_bound(constants::COMPRESSED_CHUNK_SIZE)];
     let mut compressed_chunk_size_b: [u8; 4] = [0u8; 4];
     let mut uncompressed_chunk_size_b: [u8; 4] = [0u8; 4];
-    let mut decoder: ZlibDecoder<Vec<u8>> = ZlibDecoder::new(Vec::new());
+    let inflate_config: InflateConfig = InflateConfig::default();
     let mut hasher: Option<Sha1> = get_sha1_hasher(&input_arguments.log_level);
 
     let start: Instant = Instant::now();
     loop {
         // 1. read 4 bytes to get compressed chunk size
-        match input_stream.read_exact(&mut compressed_chunk_size_b) {
-            Ok(()) => {}
-            Err(e) => {
-                if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                    break;
-                }
-                return Err(UZ2LibErrors::IOError(Error::new(
-                    e.kind(),
-                    "Failed to read compressed chunk size from input",
-                )));
+        if let Err(e) = input_stream.read_exact(&mut compressed_chunk_size_b) {
+            if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                break;
             }
+            return Err(UZ2LibErrors::IOError(Error::new(
+                e.kind(),
+                "Failed to read compressed chunk size from input",
+            )));
         }
         // 2. read 4 bytes to get uncompressed chunk size
-        match input_stream.read_exact(&mut uncompressed_chunk_size_b) {
-            Ok(()) => {}
-            Err(e) => {
-                if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                    return Err(UZ2LibErrors::IOError(Error::new(
-                        e.kind(),
-                        "Tried to read beyond end of file!",
-                    )));
-                }
+        if let Err(e) = input_stream.read_exact(&mut uncompressed_chunk_size_b) {
+            if e.kind() == std::io::ErrorKind::UnexpectedEof {
                 return Err(UZ2LibErrors::IOError(Error::new(
                     e.kind(),
-                    "Failed to read uncompressed chunk size from input",
+                    "Tried to read beyond end of file!",
                 )));
             }
+            return Err(UZ2LibErrors::IOError(Error::new(
+                e.kind(),
+                "Failed to read uncompressed chunk size from input",
+            )));
         }
         // 1.1. get and validate `compressed` chunk size
         let compressed_chunk_size: usize = u32::from_le_bytes(compressed_chunk_size_b) as usize;
@@ -88,21 +83,25 @@ pub fn decompress(
             )));
         }
         // 3. read the chunk!
-        match input_stream.read_exact(&mut buffer[..compressed_chunk_size]) {
-            Ok(()) => {}
-            Err(e) => {
-                if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                    break;
-                }
-                return Err(UZ2LibErrors::IOError(Error::new(
-                    e.kind(),
-                    "Failed to read chunk from input",
-                )));
+        if let Err(e) = input_stream.read_exact(&mut buffer[..compressed_chunk_size]) {
+            if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                break;
             }
+            return Err(UZ2LibErrors::IOError(Error::new(
+                e.kind(),
+                "Failed to read chunk from input",
+            )));
         }
         // 4. decompress the chunk
-        let decompressed_bytes: Vec<u8> =
-            decompress_single_chunk(&buffer[..compressed_chunk_size], &mut decoder)?;
+        let (decompressed_bytes, rc) = decompress_slice(
+            &mut decompress_buf,
+            &buffer[..compressed_chunk_size],
+            inflate_config,
+        );
+        // shouldn't happen, but just in case
+        if rc != ReturnCode::Ok {
+            return Err(UZ2LibErrors::ZlibRsError);
+        }
         // 5. compare decompressed result with uncompressed chunk size
         if decompressed_bytes.len() != uncompressed_chunk_size {
             return Err(UZ2LibErrors::IOError(Error::new(
@@ -115,10 +114,10 @@ pub fn decompress(
             )));
         }
         // 6. write everything to output
-        output_stream.write_all(&decompressed_bytes)?;
+        output_stream.write_all(decompressed_bytes)?;
         // 7. optionally compose sha1 hash
         if let Some(ref mut sha1) = hasher {
-            sha1.update(&decompressed_bytes);
+            sha1.update(decompressed_bytes);
         }
 
         chunk_count += 1;
@@ -135,14 +134,4 @@ pub fn decompress(
         input_file_size: input_size,
         output_file_size: output_size,
     })
-}
-
-fn decompress_single_chunk(
-    buffer: &[u8],
-    decoder: &mut ZlibDecoder<Vec<u8>>,
-) -> Result<Vec<u8>, UZ2LibErrors> {
-    decoder.write_all(buffer)?;
-    let decompressed_chunk: Vec<u8> = decoder.reset(Vec::new())?;
-
-    Ok(decompressed_chunk)
 }

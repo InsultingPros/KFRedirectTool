@@ -34,4 +34,6 @@ pub enum UZ2LibErrors {
     FileAlreadyDecompressed(PathBuf),
     #[error("Incorrect file header!")]
     InvalidFileHeader,
+    #[error("Incorrect return code!")]
+    ZlibRsError,
 }
