@@ -10,8 +10,7 @@ use crate::{
 };
 use sha1_smol::Sha1;
 use std::{
-    fs::File,
-    io::{BufReader, BufWriter, Error, ErrorKind, Read, Write},
+    io::{Error, ErrorKind, Read, Write},
     time::Instant,
 };
 use zlib_rs::{InflateConfig, ReturnCode, compress_bound, decompress_slice};
@@ -21,8 +20,8 @@ use zlib_rs::{InflateConfig, ReturnCode, compress_bound, decompress_slice};
 ///
 /// Will return `Err` if fail to read / decompress data or write to stream.
 pub fn decompress(
-    input_stream: &mut BufReader<File>,
-    output_stream: &mut BufWriter<File>,
+    input_stream: &mut impl Read,
+    output_stream: &mut impl Write,
     input_arguments: &InputArguments,
 ) -> Result<ProcessingResult, UZ2LibErrors> {
     let mut chunk_count: u32 = 0;
@@ -32,6 +31,8 @@ pub fn decompress(
     let mut uncompressed_chunk_size_b: [u8; 4] = [0u8; 4];
     let inflate_config: InflateConfig = InflateConfig::default();
     let mut hasher: Option<Sha1> = get_sha1_hasher(&input_arguments.log_level);
+    let mut input_size: u64 = 0;
+    let mut output_size: u64 = 0;
 
     let start: Instant = Instant::now();
     loop {
@@ -70,6 +71,9 @@ pub fn decompress(
                 ),
             )));
         }
+
+        // update input size
+        input_size += 8 + (compressed_chunk_size as u64);
         // 2.1. get and validate `uncompressed` chunk size
         let uncompressed_chunk_size: usize = u32::from_le_bytes(uncompressed_chunk_size_b) as usize;
         if uncompressed_chunk_size > constants::UNCOMPRESSED_CHUNK_SIZE {
@@ -113,6 +117,10 @@ pub fn decompress(
                 ),
             )));
         }
+
+        // update output size
+        output_size += decompressed_bytes.len() as u64;
+
         // 6. write everything to output
         output_stream.write_all(decompressed_bytes)?;
         // 7. optionally compose sha1 hash
@@ -122,10 +130,6 @@ pub fn decompress(
 
         chunk_count += 1;
     }
-
-    // this also must throw error
-    let input_size: u64 = input_stream.get_ref().metadata()?.len();
-    let output_size: u64 = output_stream.get_ref().metadata()?.len();
 
     Ok(ProcessingResult {
         time: start.elapsed(),
