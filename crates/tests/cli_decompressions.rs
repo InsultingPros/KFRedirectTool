@@ -50,7 +50,6 @@ fn decompress_decompressed_ext_file() {
 #[test]
 fn decompression_correct_output_verbose() {
     let tmp_dir = get_temp_dir();
-    println!("{tmp_dir:?}");
     assert_eq!(
         execute_with_arguments(Some(&[
             "-v",
@@ -62,7 +61,6 @@ fn decompression_correct_output_verbose() {
         i32::from(exit_codes::ERROR_SUCCESS)
     );
     let result_file = tmp_dir.path().join("BitCore.u");
-    println!("{result_file:?}");
 
     check_if_hash_eq(result_file.to_str().unwrap(), common::REF_BITCORE_U_HASH);
 }

@@ -2,14 +2,10 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-#![allow(clippy::cast_precision_loss)]
-use crate::compressor::compress;
+use crate::InputArguments;
 use crate::constants;
-use crate::decompressor::decompress;
 use crate::errors::UZ2LibErrors;
-use crate::types::{InputArguments, LogLevel, ProcessingResult};
-use sha1_smol::Sha1;
-use std::path::PathBuf;
+use std::path::Path;
 use std::{
     ffi::OsStr,
     fs::File,
@@ -45,13 +41,14 @@ pub trait PathChecks {
     fn open_input_ue_stream_with_checks(&self) -> Result<BufReader<File>, UZ2LibErrors>;
 }
 
-impl PathChecks for PathBuf {
+impl<T: AsRef<Path>> PathChecks for T {
     fn append_compressed_ext(&mut self) -> bool {
-        let Some(old_extension) = self.extension().and_then(OsStr::to_str) else {
+        let mut path_buf = self.as_ref().to_path_buf();
+        let Some(old_extension) = path_buf.extension().and_then(OsStr::to_str) else {
             return false;
         };
 
-        self.set_extension(format!(
+        path_buf.set_extension(format!(
             "{}.{}",
             old_extension,
             constants::COMPRESSED_EXTENSION
@@ -59,7 +56,7 @@ impl PathChecks for PathBuf {
     }
 
     fn get_file_name(&self) -> Option<&str> {
-        self.file_name().and_then(OsStr::to_str)
+        self.as_ref().file_name().and_then(OsStr::to_str)
     }
 
     fn is_vanilla_package(&self) -> bool {
@@ -71,13 +68,15 @@ impl PathChecks for PathBuf {
     }
 
     fn is_default_kf_extension(&self) -> bool {
-        self.extension()
+        self.as_ref()
+            .extension()
             .and_then(OsStr::to_str)
             .is_some_and(|extension| constants::DEFAULT_EXTENSIONS.contains(&extension))
     }
 
     fn has_uz2_extension(&self) -> bool {
-        self.extension()
+        self.as_ref()
+            .extension()
             .and_then(OsStr::to_str)
             .is_some_and(|extension| extension.to_lowercase() == constants::COMPRESSED_EXTENSION)
     }
@@ -95,7 +94,7 @@ impl PathChecks for PathBuf {
 
         match reader.file_header_is_correct() {
             Ok(()) => Ok(reader),
-            Err(_) => Err(UZ2LibErrors::InvalidPackage(self.clone())),
+            Err(_) => Err(UZ2LibErrors::InvalidPackage(self.as_ref().to_path_buf())),
         }
     }
 }
@@ -108,7 +107,7 @@ pub trait FileCheck {
     fn file_header_is_correct(&mut self) -> Result<(), UZ2LibErrors>;
 }
 
-impl FileCheck for BufReader<File> {
+impl<T: Read + Seek> FileCheck for T {
     fn file_header_is_correct(&mut self) -> Result<(), UZ2LibErrors> {
         let mut buf_file_header: Vec<u8> = vec![0u8; 4];
         self.read_exact(&mut buf_file_header)?;
@@ -126,7 +125,7 @@ impl FileCheck for BufReader<File> {
 /// # Errors
 ///
 /// Will return `Err` if one of checks fail.
-pub fn validate_compressible_path(
+pub fn validate_compressible_paths(
     input_arguments: &mut InputArguments,
 ) -> Result<(), UZ2LibErrors> {
     // input is a directory
@@ -187,7 +186,7 @@ pub fn validate_compressible_path(
 /// # Errors
 ///
 /// Will return `Err` if one of checks fail.
-pub fn validate_decompressible_path(
+pub fn validate_decompressible_paths(
     input_arguments: &mut InputArguments,
 ) -> Result<(), UZ2LibErrors> {
     // input is a directory
@@ -221,112 +220,6 @@ pub fn validate_decompressible_path(
             return Err(UZ2LibErrors::FileNameError(
                 input_arguments.output_path.clone(),
             ));
-        }
-    }
-
-    Ok(())
-}
-
-/// Spawn and return`sha1` hasher.
-#[must_use]
-pub fn get_sha1_hasher(log_level: &LogLevel) -> Option<Sha1> {
-    match log_level {
-        LogLevel::Verbose => Some(Sha1::new()),
-        _ => None,
-    }
-}
-
-/// Print processed file's SHA1, chunks, file sizes and ratio.
-///
-/// ## Example
-///
-/// ``` text
-/// BitCore.u compressed in 334.3411ms
-/// |-- SHA1: ee5015514aa3f641017606521cce4a2994fbf065
-/// `-- Size 7491kb -> 5531kb (ratio 0.74), chunk count: 235
-/// ```
-pub fn additional_processing_information(info: &ProcessingResult) {
-    if let Some(sha1) = &info.hasher {
-        println!("|-- SHA1: {}", sha1.digest());
-    }
-
-    let size_info: String = format!(
-        "Size {:.5}kb -> {:.5}kb (ratio {:.2})",
-        info.input_file_size / 1024,
-        info.output_file_size / 1024,
-        info.output_file_size as f64 / info.input_file_size as f64
-    );
-
-    println!("`-- {}, chunk count: {}", &size_info, info.chunk_count);
-}
-
-/// Try to compress given file.
-/// # Errors
-///
-/// Will return `Err` if fail to create input-output streams, correctly compress the data or remove file on failure.
-pub fn try_to_compress(input_arguments: &mut InputArguments) -> Result<(), UZ2LibErrors> {
-    validate_compressible_path(input_arguments)?;
-
-    // create streams
-    let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
-    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
-
-    match compress(&mut input_stream, &mut output_stream, input_arguments) {
-        Ok(result) => {
-            if input_arguments.log_level != LogLevel::Minimal {
-                println!(
-                    "{} compressed in {:?}",
-                    input_arguments
-                        .input_path
-                        .get_file_name()
-                        .unwrap_or("Should not fail!"),
-                    result.time
-                );
-                if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result);
-                }
-            }
-        }
-        Err(e) => {
-            std::fs::remove_file(&input_arguments.output_path)?;
-            // eprintln!("Terminating: {e}");
-            return Err(e);
-        }
-    }
-
-    Ok(())
-}
-
-/// Try to decompress given file.
-/// # Errors
-///
-/// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
-pub fn try_to_decompress(input_arguments: &mut InputArguments) -> Result<(), UZ2LibErrors> {
-    validate_decompressible_path(input_arguments)?;
-
-    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
-    let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
-
-    match decompress(&mut input_stream, &mut output_stream, input_arguments) {
-        Ok(result) => {
-            if input_arguments.log_level != LogLevel::Minimal {
-                println!(
-                    "{} decompressed in {:?}",
-                    input_arguments
-                        .input_path
-                        .get_file_name()
-                        .unwrap_or("Should not fail!"),
-                    result.time
-                );
-                if input_arguments.log_level == LogLevel::Verbose {
-                    additional_processing_information(&result);
-                }
-            }
-        }
-        Err(e) => {
-            std::fs::remove_file(&input_arguments.output_path)?;
-            // eprintln!("Terminating: {e}");
-            return Err(e);
         }
     }
 

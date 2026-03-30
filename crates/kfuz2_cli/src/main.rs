@@ -4,8 +4,7 @@
 
 use kfuz2_cli::{Options, compose_input_arguments, exit_codes};
 use kfuz2_lib::{
-    helper::{try_to_compress, try_to_decompress},
-    types::{InputArguments, LogLevel::Minimal},
+    InputArguments, LogLevel::Minimal, compressor::run_compression, decompressor::run_decompression,
 };
 use std::process::ExitCode;
 
@@ -26,9 +25,9 @@ fn main() -> ExitCode {
 
     // process file
     let operation = if env_arguments.decompress.is_some() {
-        try_to_decompress
+        run_decompression
     } else {
-        try_to_compress
+        run_compression
     };
 
     match operation(&mut input_arguments) {

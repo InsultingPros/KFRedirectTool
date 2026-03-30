@@ -5,9 +5,8 @@
 #![allow(clippy::cast_possible_truncation)]
 use crate::ui;
 use kfuz2_lib::{
+    InputArguments, compressor::run_compression, decompressor::run_decompression,
     errors::UZ2LibErrors,
-    helper::{try_to_compress, try_to_decompress},
-    types::InputArguments,
 };
 use rayon::prelude::*;
 use std::{path::PathBuf, sync::atomic::Ordering, time::Instant};
@@ -192,7 +191,7 @@ pub fn try_to_compress_c(
     if cancel {
         return Err(UZ2LibErrors::Canceled);
     }
-    try_to_compress(input_arguments)
+    run_compression(input_arguments)
 }
 
 /// Try to decompress given file.
@@ -207,5 +206,5 @@ pub fn try_to_decompress_c(
         return Err(UZ2LibErrors::Canceled);
     }
 
-    try_to_decompress(input_arguments)
+    run_decompression(input_arguments)
 }

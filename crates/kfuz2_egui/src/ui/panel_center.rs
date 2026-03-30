@@ -150,19 +150,19 @@ fn render_settings(ui: &mut egui::Ui, gui_app: &mut super::app::Kfuz2Egui) {
 
                 ui.selectable_value(
                     &mut gui_app.log_level,
-                    kfuz2_lib::types::LogLevel::Verbose,
+                    kfuz2_lib::LogLevel::Verbose,
                     "Verbose",
                 )
                 .on_hover_text("Show additional log messages, with lots of details");
                 ui.selectable_value(
                     &mut gui_app.log_level,
-                    kfuz2_lib::types::LogLevel::Default,
+                    kfuz2_lib::LogLevel::Default,
                     "Default",
                 )
                 .on_hover_text("Show only essential log messages");
                 ui.selectable_value(
                     &mut gui_app.log_level,
-                    kfuz2_lib::types::LogLevel::Minimal,
+                    kfuz2_lib::LogLevel::Minimal,
                     "Minimal",
                 )
                 .on_hover_text("Show the bare minimum");

@@ -3,10 +3,10 @@
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
 use crate::{
-    constants,
+    InputArguments, LogLevel, ProcessingResult, constants,
     errors::UZ2LibErrors,
-    helper::get_sha1_hasher,
-    types::{InputArguments, ProcessingResult},
+    print_additional_information,
+    validator::{PathChecks as _, validate_decompressible_paths},
 };
 use sha1_smol::Sha1;
 use std::{
@@ -15,14 +15,73 @@ use std::{
 };
 use zlib_rs::{InflateConfig, ReturnCode, compress_bound, decompress_slice};
 
-/// Decompress input file.
+/// Try to decompress given file.
 /// # Errors
 ///
-/// Will return `Err` if fail to read / decompress data or write to stream.
+/// Will return `Err` if fail to create input-output streams, correctly decompress the data or remove file on failure.
+pub fn run_decompression(input_arguments: &mut InputArguments) -> Result<(), UZ2LibErrors> {
+    validate_decompressible_paths(input_arguments)?;
+
+    let mut input_stream = input_arguments.input_path.open_input_ue_stream()?;
+    let mut output_stream = input_arguments.output_path.open_output_ue_stream()?;
+
+    let op = match input_arguments.log_level {
+        LogLevel::Verbose => decompress_with_hash,
+        _ => decompress,
+    };
+
+    match op(&mut input_stream, &mut output_stream) {
+        Ok(result) => {
+            if input_arguments.log_level != LogLevel::Minimal {
+                println!(
+                    "{} decompressed in {:?}",
+                    input_arguments
+                        .input_path
+                        .get_file_name()
+                        .unwrap_or("Should not fail!"),
+                    result.time
+                );
+                if input_arguments.log_level == LogLevel::Verbose {
+                    print_additional_information(&result);
+                }
+            }
+        }
+        Err(e) => {
+            std::fs::remove_file(&input_arguments.output_path)?;
+            // eprintln!("Terminating: {e}");
+            return Err(e);
+        }
+    }
+
+    Ok(())
+}
+
+/// Compress input stream.
+/// # Errors
+///
+/// Will return `Err` if fail to read / compress data or write to stream.
 pub fn decompress(
     input_stream: &mut impl Read,
     output_stream: &mut impl Write,
-    input_arguments: &InputArguments,
+) -> Result<ProcessingResult, UZ2LibErrors> {
+    decompress_inner(input_stream, output_stream, false)
+}
+
+/// Compress input stream.
+/// # Errors
+///
+/// Will return `Err` if fail to read / compress data or write to stream.
+pub fn decompress_with_hash(
+    input_stream: &mut impl Read,
+    output_stream: &mut impl Write,
+) -> Result<ProcessingResult, UZ2LibErrors> {
+    decompress_inner(input_stream, output_stream, true)
+}
+
+fn decompress_inner(
+    input_stream: &mut impl Read,
+    output_stream: &mut impl Write,
+    hash_output: bool,
 ) -> Result<ProcessingResult, UZ2LibErrors> {
     let mut chunk_count: u32 = 0;
     let mut buffer: Vec<u8> = vec![0u8; constants::COMPRESSED_CHUNK_SIZE];
@@ -30,7 +89,7 @@ pub fn decompress(
     let mut compressed_chunk_size_b: [u8; 4] = [0u8; 4];
     let mut uncompressed_chunk_size_b: [u8; 4] = [0u8; 4];
     let inflate_config: InflateConfig = InflateConfig::default();
-    let mut hasher: Option<Sha1> = get_sha1_hasher(&input_arguments.log_level);
+    let mut hasher: Option<Sha1> = if hash_output { Some(Sha1::new()) } else { None };
     let mut input_size: u64 = 0;
     let mut output_size: u64 = 0;
 

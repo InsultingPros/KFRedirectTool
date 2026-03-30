@@ -2,7 +2,7 @@
 // Home Repo    : https://github.com/InsultingPros/KFRedirectTool
 // License      : https://www.gnu.org/licenses/gpl-3.0.en.html
 
-use kfuz2_lib::types::{InputArguments, LogLevel};
+use kfuz2_lib::{InputArguments, LogLevel};
 use std::{path::PathBuf, process::ExitCode};
 
 // Reference: https://docs.rs/gumdrop/latest/gumdrop/

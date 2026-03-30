@@ -24,8 +24,8 @@ kfuz2_lib = "1"
 ```rust
 # use kfuz2_lib::errors::UZ2LibErrors;
 use std::path::PathBuf;
-use kfuz2_lib::helper::try_to_compress;
-use kfuz2_lib::types::{InputArguments, LogLevel};
+use kfuz2_lib::compressor::run_compression;
+use kfuz2_lib::{InputArguments, LogLevel};
 
 # fn main() -> Result<(), UZ2LibErrors> {
 let mut input_arguments = InputArguments {
@@ -34,7 +34,7 @@ let mut input_arguments = InputArguments {
     log_level: LogLevel::Default,
     ignore_kf_files: true,
 };
-try_to_compress(&mut input_arguments);
+run_compression(&mut input_arguments);
 # Ok(())
 # }
 ```

@@ -4,7 +4,7 @@
 
 use crate::constants;
 use eframe::egui;
-use kfuz2_lib::types::LogLevel;
+use kfuz2_lib::LogLevel;
 use std::{
     path::PathBuf,
     sync::{

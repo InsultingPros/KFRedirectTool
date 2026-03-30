@@ -3,7 +3,6 @@ use kfuz2_cli::exit_codes;
 
 mod common;
 
-// file test
 #[test]
 fn compress_incorrect_extension_exe() {
     let tmp_dir = get_temp_dir();
